@@ -1,5 +1,10 @@
 import { test, expect } from "@playwright/test";
 
+test.afterEach(async ({ page }) => {
+  // Polling can leave route.fetch()/response.json() in flight at fixture teardown.
+  await page.unrouteAll({ behavior: "wait" });
+});
+
 test("Feed settings persist and incoming price observations preserve the chart viewport", async ({
   page,
 }) => {
