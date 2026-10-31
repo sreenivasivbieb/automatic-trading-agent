@@ -15,7 +15,10 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 FOUNDRY_URL = "https://github.com/foundry-rs/foundry/releases/download/v1.8.7/foundry_v1.8.7_linux_amd64.tar.gz"
 FOUNDRY_SHA256 = "ba470eb718e779e4b0e3f1520b5284231b1bf98e9a39de07fb8f77ed70525bcf"
-SOLC_URL = "https://binaries.soliditylang.org/linux-amd64/solc-linux-amd64-v0.8.24+commit.e11b9ed9"
+SOLC_URLS = [
+    "https://raw.githubusercontent.com/ethereum/solc-bin/gh-pages/linux-amd64/solc-linux-amd64-v0.8.24+commit.e11b9ed9",
+    "https://binaries.soliditylang.org/linux-amd64/solc-linux-amd64-v0.8.24+commit.e11b9ed9",
+]
 SOLC_SHA256 = "fb03a29a517452b9f12bcf459ef37d0a543765bb3bbc911e70a87d6a37c30d5f"
 
 
@@ -85,7 +88,14 @@ def main() -> None:
                 finally:
                     temporary.unlink(missing_ok=True)
     solc = ROOT / ".tools/solc/solc-0.8.24"
-    download(SOLC_URL, solc, SOLC_SHA256)
+    for index, url in enumerate(SOLC_URLS):
+        try:
+            download(url, solc, SOLC_SHA256)
+            break
+        except (OSError, ValueError):
+            if index + 1 == len(SOLC_URLS):
+                raise
+            print("Compiler mirror unavailable; trying the next official mirror.", flush=True)
     solc.chmod(0o755)
     print("Verified toolchain ready. No global installation or shared compiler cache is used.")
 
