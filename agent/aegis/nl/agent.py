@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import os
 import re
+import threading
 
 from aegis.nl.tools import SYSTEM_PROMPT, ToolCall, chat, execute_tool
 from aegis.risk.policy import AgentParams
@@ -64,6 +65,10 @@ def tool_schemas():
 class ControlAgent:
     def __init__(self, *, client=None, model=None):
         self.client, self.model = client, model
+        self.stopping = threading.Event()
+
+    def cancel_pending(self):
+        self.stopping.set()
 
     def close(self):
         if self.client is not None and hasattr(self.client, "close"):
@@ -84,6 +89,8 @@ class ControlAgent:
         return cls(client=Anthropic(api_key=key, timeout=15, max_retries=0), model=model)
 
     def respond(self, runtime, message: str):
+        if self.stopping.is_set():
+            raise ValueError("AEGIS control plane is shutting down")
         if self.client is None:
             return chat(runtime, message)
         # Do not forward wallet-key-shaped strings or credential requests to a provider.
@@ -119,6 +126,8 @@ class ControlAgent:
         applied = []
         try:
             for _ in range(3):
+                if self.stopping.is_set():
+                    raise ValueError("AEGIS control plane is shutting down")
                 response = self.client.messages.create(
                     model=self.model,
                     max_tokens=600,
@@ -153,6 +162,8 @@ class ControlAgent:
                 messages.append({"role": "assistant", "content": blocks})
                 results = []
                 for block in calls:
+                    if self.stopping.is_set():
+                        raise ValueError("AEGIS control plane is shutting down")
                     call = ToolCall.model_validate(
                         {"name": block["name"], "arguments": block["input"]}
                     )

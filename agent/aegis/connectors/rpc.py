@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import logging
 import re
+import threading
 import time
 from dataclasses import dataclass
 from typing import Any
@@ -83,11 +84,19 @@ class ReadOnlyRpc:
         self.client = httpx.Client(timeout=timeout, transport=transport, follow_redirects=False)
         self.sequence = 0
         self._cache: dict[tuple[str, str, str], Any] = {}
+        self._stopping = threading.Event()
+
+    def cancel_pending(self) -> None:
+        """Thread-safe shutdown signal: finish the current timed request, then stop retries/reads."""
+        self._stopping.set()
 
     def close(self) -> None:
+        self.cancel_pending()
         self.client.close()
 
     def _request(self, url: str, method: str, params: list) -> Any:
+        if self._stopping.is_set():
+            raise DiscoveryError("RPC reader is shutting down")
         self.sequence += 1
         response = self.client.post(
             url,
@@ -109,6 +118,8 @@ class ReadOnlyRpc:
         failures = []
         for attempt in range(self.attempts):
             for index, url in enumerate(self.urls):
+                if self._stopping.is_set():
+                    raise DiscoveryError("RPC reader is shutting down")
                 try:
                     # Recheck even cached/fallback endpoints; wrong-chain data is never accepted.
                     actual_chain = int(self._request(url, "eth_chainId", []), 16)
@@ -133,7 +144,7 @@ class ReadOnlyRpc:
                     )
                 )
             if attempt + 1 < self.attempts:
-                time.sleep(self.retry_delay * 2**attempt)
+                self._stopping.wait(self.retry_delay * 2**attempt)
         raise DiscoveryError(f"No verified RPC response for {method}: {', '.join(failures)}")
 
     def block(self, *, confirmations: int = 2, max_age_seconds: int = 60) -> BlockRef:

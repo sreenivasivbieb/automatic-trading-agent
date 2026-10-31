@@ -122,6 +122,12 @@ class AegisService:
     async def close(self):
         self.closing = True
         self.halted.set()
+        if self.agent:
+            self.agent.cancel_pending()
+        if self.runtime:
+            rpc = getattr(getattr(self.runtime.live, "reader", None), "rpc", None)
+            if hasattr(rpc, "cancel_pending"):
+                rpc.cancel_pending()
         if self.task:
             # Do not cancel a thread running a fill. Drain its work before closing its ledger.
             self.task.cancel()

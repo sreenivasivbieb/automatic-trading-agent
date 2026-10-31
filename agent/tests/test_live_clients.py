@@ -12,8 +12,8 @@ from aegis.connectors.rpc import DiscoveryError
 from aegis.data import load_network
 from aegis.execution.decision_log_client import decision_bytes
 from aegis.execution.fees import LiveFees
-from aegis.execution.live import receipt_fees
-from aegis.execution.vault_client import ReconciliationRequired, VaultClient
+from aegis.execution.live import LiveExecutionGateway, receipt_fees
+from aegis.execution.vault_client import ReconciliationRequired, TransactionReverted, VaultClient
 
 
 def test_live_constructor_requires_explicit_mainnet_ack_before_any_key_or_rpc(tmp_path):
@@ -178,3 +178,55 @@ def test_cancellation_retains_original_intent_and_blocks_replay_after_confirmati
         assert client.db.execute("SELECT status FROM txs").fetchone()[0] == "cancelled"
     finally:
         client.db.close()
+
+
+def test_swap_revert_reveals_original_intent_without_a_fill_or_repeat_send():
+    from aegis.connectors.mock import MockConnector
+
+    connector = MockConnector()
+    quote = connector.get_quote(connector.tokens["USDT"], connector.tokens["WHSK"], 1_000_000)
+    client, _, _ = pending_client()
+    client.db.execute("DELETE FROM txs")
+    client.db.execute(
+        "CREATE TABLE intents(key TEXT PRIMARY KEY,packet TEXT,state TEXT,outcome TEXT)"
+    )
+    client.role = "agent"
+    calls = []
+    receipt = {
+        "transactionHash": bytes.fromhex("ab" * 32),
+        "gasUsed": 10000,
+        "effectiveGasPrice": 2,
+    }
+    client.vault = SimpleNamespace(
+        functions=SimpleNamespace(
+            executionHash=lambda *a: SimpleNamespace(call=lambda: bytes(32)),
+            executeSwap=lambda *a: SimpleNamespace(call=lambda *a, **k: 1),
+        )
+    )
+
+    def send(*args):
+        calls.append(args[0])
+        raise TransactionReverted(receipt)
+
+    client.send = send
+    gateway = object.__new__(LiveExecutionGateway)
+    gateway.client, gateway.connector = client, connector
+    gateway._preflight = lambda *args, **kwargs: None
+    reveals = []
+    gateway.log = SimpleNamespace(
+        commit=lambda *a: (1, receipt), reveal=lambda *a: reveals.append(a) or receipt
+    )
+    try:
+        result = gateway.execute(
+            "revert-proof", quote, rationale="Explicit reverted receipt fixture"
+        )
+        assert result["status"] == "reverted" and len(reveals) == 1
+        assert (
+            gateway.execute("revert-proof", quote, rationale="Explicit reverted receipt fixture")
+            == result
+        )
+        assert calls == ["revert-proof:swap"]
+        assert client.db.execute("SELECT state FROM intents").fetchone()[0] == "complete"
+    finally:
+        client.db.close()
+        connector.close()

@@ -42,6 +42,28 @@ def test_read_client_refuses_send_methods():
         rpc.close()
 
 
+def test_rpc_shutdown_aborts_retry_and_stops_before_another_data_request():
+    calls = []
+
+    def handler(request):
+        calls.append(json.loads(request.content)["method"])
+        rpc.cancel_pending()
+        return rpc_response(request, "0xb1")
+
+    rpc = ReadOnlyRpc(
+        177,
+        ["https://first.test", "https://fallback.test"],
+        attempts=2,
+        transport=httpx.MockTransport(handler),
+    )
+    try:
+        with pytest.raises(DiscoveryError, match="shutting down"):
+            rpc.request("eth_blockNumber", [])
+        assert calls == ["eth_chainId"]
+    finally:
+        rpc.close()
+
+
 def test_wrong_chain_falls_back_without_reading_wrong_chain_state():
     methods = []
 

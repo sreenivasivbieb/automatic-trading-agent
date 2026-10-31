@@ -163,6 +163,19 @@ def main():
             report["steps"].append(
                 "Authenticated API reads the same two-fill ledger and three verified live pairs"
             )
+            testnet = request("GET", "/api/aegis/vault?network=testnet")
+            mainnet = request("GET", "/api/aegis/vault?network=mainnet")
+            assert testnet["chain_id"] == 133 and testnet["settlement_decimals"] == 18
+            assert mainnet["chain_id"] == 177 and mainnet["settlement_decimals"] == 6
+            if not testnet["registered"]:
+                proof = client.post(
+                    "/api/aegis/verify",
+                    json={"network": "testnet", "decision_id": 1, "reveal_tx": "0x" + "1" * 64},
+                )
+                assert proof.status_code == 409
+                report["steps"].append(
+                    "Owner metadata preserves chain-specific decimals; missing public deployment refuses a verification badge"
+                )
             reply = request("POST", "/api/aegis/chat", json={"message": "Be more conservative"})
             assert reply["data"]["params"]["position_size_pct"] == "3"
             request("POST", "/api/aegis/chat", json={"message": "Only trade HSK and USDT"})

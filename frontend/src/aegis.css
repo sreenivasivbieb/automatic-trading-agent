@@ -46,6 +46,19 @@
 .aegis-toolbar .inline {
   flex-wrap: wrap;
 }
+.aegis-toolbar .emergency-button {
+  display: inline-flex;
+  justify-content: center;
+  gap: 8px;
+  width: auto;
+  min-width: 112px;
+  height: 42px;
+  padding: 0 18px;
+  border-radius: 12px;
+  border-color: #c85d67;
+  background: #8a283340;
+  color: #ffb8bf;
+}
 .aegis-metrics {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));

@@ -12,7 +12,7 @@ from web3.logs import DISCARD
 from aegis.connectors.base import Quote
 from aegis.connectors.hskswap_v3 import encode_path
 from aegis.execution.decision_log_client import DecisionLogClient, decision_bytes
-from aegis.execution.vault_client import ReconciliationRequired
+from aegis.execution.vault_client import ReconciliationRequired, TransactionReverted
 from aegis.risk.engine import PaperLimits, RiskEngine, RiskRejected
 
 
@@ -169,7 +169,10 @@ class LiveExecutionGateway:
         receipt = None
         if submitted:
             # Resolve the known hash; never interpret a timeout as permission to create another swap.
-            receipt = self.client.confirm(submitted[0], key + ":swap")
+            try:
+                receipt = self.client.confirm(submitted[0], key + ":swap")
+            except TransactionReverted as exc:
+                return self._reverted(key, decision_id, payload, commit_receipt, exc.receipt)
         else:
             try:
                 self._preflight(
@@ -196,7 +199,10 @@ class LiveExecutionGateway:
                     (json.dumps(result), key),
                 )
                 return result
-            receipt = self.client.send(key + ":swap", function)
+            try:
+                receipt = self.client.send(key + ":swap", function)
+            except TransactionReverted as exc:
+                return self._reverted(key, decision_id, payload, commit_receipt, exc.receipt)
         events = self.client.vault.events.SwapExecuted().process_receipt(receipt, errors=DISCARD)
         matching = [e for e in events if e["args"]["decisionId"] == decision_id]
         if len(matching) != 1:
@@ -245,6 +251,22 @@ class LiveExecutionGateway:
             "confirmed_block": receipt["blockNumber"],
             "fees": receipt_fees([commit_receipt, receipt, reveal]),
             "verification": "Contract-enforced balance delta, matching event, confirmed canonical receipts and exact-byte reveal",
+        }
+        self.client.db.execute(
+            "UPDATE intents SET state='complete',outcome=? WHERE key=?", (json.dumps(result), key)
+        )
+        return result
+
+    def _reverted(self, key, decision_id, payload, commit_receipt, receipt):
+        reveal = self.log.reveal(key, decision_id, payload)
+        result = {
+            "status": "reverted",
+            "reason": "Canonical swap receipt reverted; no fill was recorded",
+            "decision_id": decision_id,
+            "commit_tx": Hex(commit_receipt["transactionHash"]),
+            "swap_tx": Hex(receipt["transactionHash"]),
+            "reveal_tx": Hex(reveal["transactionHash"]),
+            "fees": receipt_fees([commit_receipt, receipt, reveal]),
         }
         self.client.db.execute(
             "UPDATE intents SET state='complete',outcome=? WHERE key=?", (json.dumps(result), key)

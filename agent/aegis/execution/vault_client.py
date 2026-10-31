@@ -21,6 +21,12 @@ class ReconciliationRequired(RuntimeError):
     """A known submitted hash must be resolved before authorizing another operation."""
 
 
+class TransactionReverted(ValueError):
+    def __init__(self, receipt):
+        super().__init__("On-chain method reverted; canonical receipt is recorded")
+        self.receipt = receipt
+
+
 class VaultClient:
     def __init__(
         self,
@@ -260,7 +266,7 @@ class VaultClient:
                     "Cancellation confirmed; review and reveal the original unused intent"
                 )
             if status == "reverted":
-                raise ValueError("On-chain method reverted; receipt is recorded")
+                raise TransactionReverted(receipt)
             return receipt
         raise ReconciliationRequired(
             "Receipt or confirmation depth timed out; inspect the recorded hash"

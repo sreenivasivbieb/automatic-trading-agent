@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import socket
@@ -171,6 +172,15 @@ def main():
             "idempotent_replay": True,
             "agent_nonce_after_replay": nonce,
             "agent_received_output": False,
+            "source_sha256": {
+                str(p.relative_to(ROOT)): hashlib.sha256(p.read_bytes()).hexdigest()
+                for p in sorted(
+                    [
+                        *(ROOT / "agent/aegis").rglob("*.py"),
+                        *(ROOT / "contracts/src").rglob("*.sol"),
+                    ]
+                )
+            },
             "scope": "Actual signed commit/swap/reveal and receipt reconciliation on a loopback fork, using generated dev accounts. These hashes do not exist on public testnet.",
         }
         output = ROOT / "artifacts/aegis-signed-fork-flow.json"
