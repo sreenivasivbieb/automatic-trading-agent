@@ -1,0 +1,215 @@
+Compiling 1 files with Solc 0.8.24
+Solc 0.8.24 finished in 12.87s
+Compiler run successful!
+
+Ran 1 test for test/LiveFork.t.sol:LiveForkTest
+[PASS] testRealRouterGuardedStableExitOnLocalFork() (gas: 9283964)
+Traces:
+  [9314264] LiveForkTest::testRealRouterGuardedStableExitOnLocalFork()
+    ├─ [0] VM::envOr("AEGIS_LIVE_ORACLE_TESTS", false)
+    │   └─ ← [Return] <env var value>
+    ├─ [288] 0xCA8aAceEC5Db1e91B9Ed3a344bA026c4a2B3ebF6::decimals() [staticcall]
+    │   └─ ← [Return] 18
+    ├─ [2342] 0x98B6173A8B7DFc52ce8bc88f1184a918A1CCaa4F::decimals() [staticcall]
+    │   └─ ← [Return] 18
+    ├─ [1736959] → new OracleQuoteHarness@0x5615dEB798BB3E4dFa0139dFa1b3D433Cc23b72f
+    │   ├─ emit OwnershipTransferred(previousOwner: 0x0000000000000000000000000000000000000000, newOwner: LiveForkTest: [0x7FA9385bE102ac3EAc297483Dd6233D62b3e1496])
+    │   ├─ [2342] 0x98B6173A8B7DFc52ce8bc88f1184a918A1CCaa4F::decimals() [staticcall]
+    │   │   └─ ← [Return] 18
+    │   └─ ← [Return] 7267 bytes of code
+    ├─ [2696] 0xc076FB478b77633736738579c7f48D2539604a50::slot0() [staticcall]
+    │   └─ ← [Return] 10763304209649750455875929376 [1.076e28], -39926 [-3.992e4], 2, 16, 16, 0, true
+    ├─ [2636] OracleQuoteHarness::rawQuote(-39926 [-3.992e4], 1000000000000000000000000 [1e24], 0xCA8aAceEC5Db1e91B9Ed3a344bA026c4a2B3ebF6, 0x98B6173A8B7DFc52ce8bc88f1184a918A1CCaa4F) [staticcall]
+    │   └─ ← [Return] 54184797669941652495270722 [5.418e25]
+    ├─ [1850477] → new BandedTwapOracle@0x2e234DAe75C793f67A35089C9d99245E1C58470b
+    │   ├─ emit OwnershipTransferred(previousOwner: 0x0000000000000000000000000000000000000000, newOwner: LiveForkTest: [0x7FA9385bE102ac3EAc297483Dd6233D62b3e1496])
+    │   ├─ [2342] 0x98B6173A8B7DFc52ce8bc88f1184a918A1CCaa4F::decimals() [staticcall]
+    │   │   └─ ← [Return] 18
+    │   ├─ [264] 0xc076FB478b77633736738579c7f48D2539604a50::factory() [staticcall]
+    │   │   └─ ← [Return] 0x2dC2c21D1049F786C535bF9d45F999dB5474f3A0
+    │   ├─ [251] 0xc076FB478b77633736738579c7f48D2539604a50::fee() [staticcall]
+    │   │   └─ ← [Return] 3000
+    │   ├─ [2666] 0x2dC2c21D1049F786C535bF9d45F999dB5474f3A0::getPool(0xCA8aAceEC5Db1e91B9Ed3a344bA026c4a2B3ebF6, 0x98B6173A8B7DFc52ce8bc88f1184a918A1CCaa4F, 3000) [staticcall]
+    │   │   └─ ← [Return] 0xc076FB478b77633736738579c7f48D2539604a50
+    │   ├─ [266] 0xc076FB478b77633736738579c7f48D2539604a50::token0() [staticcall]
+    │   │   └─ ← [Return] 0x98B6173A8B7DFc52ce8bc88f1184a918A1CCaa4F
+    │   ├─ [308] 0xc076FB478b77633736738579c7f48D2539604a50::token1() [staticcall]
+    │   │   └─ ← [Return] 0xCA8aAceEC5Db1e91B9Ed3a344bA026c4a2B3ebF6
+    │   ├─ [266] 0xc076FB478b77633736738579c7f48D2539604a50::token0() [staticcall]
+    │   │   └─ ← [Return] 0x98B6173A8B7DFc52ce8bc88f1184a918A1CCaa4F
+    │   ├─ [288] 0xCA8aAceEC5Db1e91B9Ed3a344bA026c4a2B3ebF6::decimals() [staticcall]
+    │   │   └─ ← [Return] 18
+    │   ├─ emit MarketConfigured(token: 0xCA8aAceEC5Db1e91B9Ed3a344bA026c4a2B3ebF6, pool: 0xc076FB478b77633736738579c7f48D2539604a50, anchor: 54184797669941652495 [5.418e19], bandBps: 2000, windowSeconds: 60)
+    │   └─ ← [Return] 7162 bytes of code
+    ├─ [733393] → new DecisionLog@0xF62849F9A0B5Bf2913b396098F7c7019b51A820a
+    │   ├─ emit OwnershipTransferred(previousOwner: 0x0000000000000000000000000000000000000000, newOwner: LiveForkTest: [0x7FA9385bE102ac3EAc297483Dd6233D62b3e1496])
+    │   └─ ← [Return] 2914 bytes of code
+    ├─ [3844769] → new AegisVault@0x5991A2dF15A8F6A256D3Ec51E99254Cd3fb576A9
+    │   ├─ emit OwnershipTransferred(previousOwner: 0x0000000000000000000000000000000000000000, newOwner: LiveForkTest: [0x7FA9385bE102ac3EAc297483Dd6233D62b3e1496])
+    │   ├─ [2382] BandedTwapOracle::owner() [staticcall]
+    │   │   └─ ← [Return] LiveForkTest: [0x7FA9385bE102ac3EAc297483Dd6233D62b3e1496]
+    │   ├─ [2401] DecisionLog::owner() [staticcall]
+    │   │   └─ ← [Return] LiveForkTest: [0x7FA9385bE102ac3EAc297483Dd6233D62b3e1496]
+    │   ├─ [2579] DecisionLog::agent() [staticcall]
+    │   │   └─ ← [Return] 0x0000000000000000000000000000000000000B0b
+    │   ├─ [307] 0xa6914E66690c6794244B5f66a09eAEbf66254237::factory() [staticcall]
+    │   │   └─ ← [Return] 0x2dC2c21D1049F786C535bF9d45F999dB5474f3A0
+    │   ├─ [384] BandedTwapOracle::factory() [staticcall]
+    │   │   └─ ← [Return] 0x2dC2c21D1049F786C535bF9d45F999dB5474f3A0
+    │   ├─ [330] 0xa6914E66690c6794244B5f66a09eAEbf66254237::WETH9() [staticcall]
+    │   │   └─ ← [Return] 0xCA8aAceEC5Db1e91B9Ed3a344bA026c4a2B3ebF6
+    │   ├─ [2697] BandedTwapOracle::isAllowed(0xCA8aAceEC5Db1e91B9Ed3a344bA026c4a2B3ebF6) [staticcall]
+    │   │   └─ ← [Return] true
+    │   ├─ [208] BandedTwapOracle::settlement() [staticcall]
+    │   │   └─ ← [Return] 0x98B6173A8B7DFc52ce8bc88f1184a918A1CCaa4F
+    │   ├─ [7213] BandedTwapOracle::assets() [staticcall]
+    │   │   └─ ← [Return] [0x98B6173A8B7DFc52ce8bc88f1184a918A1CCaa4F, 0xCA8aAceEC5Db1e91B9Ed3a344bA026c4a2B3ebF6]
+    │   ├─ emit TokenAllowed(token: 0x98B6173A8B7DFc52ce8bc88f1184a918A1CCaa4F, allowed: true)
+    │   ├─ emit TokenAllowed(token: 0xCA8aAceEC5Db1e91B9Ed3a344bA026c4a2B3ebF6, allowed: true)
+    │   └─ ← [Return] 15884 bytes of code
+    ├─ [50001] DecisionLog::bindVault(AegisVault: [0x5991A2dF15A8F6A256D3Ec51E99254Cd3fb576A9])
+    │   ├─ emit VaultBound(vault: AegisVault: [0x5991A2dF15A8F6A256D3Ec51E99254Cd3fb576A9])
+    │   └─ ← [Stop]
+    ├─ [0] VM::deal(LiveForkTest: [0x7FA9385bE102ac3EAc297483Dd6233D62b3e1496], 1000000000000000000 [1e18])
+    │   └─ ← [Return]
+    ├─ [29110] AegisVault::receive{value: 100000000000000000}()
+    │   ├─ emit Deposited(token: 0x0000000000000000000000000000000000000000, amount: 100000000000000000 [1e17])
+    │   └─ ← [Stop]
+    ├─ [170413] AegisVault::wrapNative(100000000000000000 [1e17])
+    │   ├─ [30792] 0xCA8aAceEC5Db1e91B9Ed3a344bA026c4a2B3ebF6::deposit{value: 100000000000000000}()
+    │   │   ├─ emit Transfer(from: 0x0000000000000000000000000000000000000000, to: AegisVault: [0x5991A2dF15A8F6A256D3Ec51E99254Cd3fb576A9], amount: 100000000000000000 [1e17])
+    │   │   ├─ emit Deposit(param0: AegisVault: [0x5991A2dF15A8F6A256D3Ec51E99254Cd3fb576A9], param1: 100000000000000000 [1e17])
+    │   │   └─ ← [Stop]
+    │   ├─ [29773] BandedTwapOracle::price(0xCA8aAceEC5Db1e91B9Ed3a344bA026c4a2B3ebF6) [staticcall]
+    │   │   ├─ [288] 0xCA8aAceEC5Db1e91B9Ed3a344bA026c4a2B3ebF6::decimals() [staticcall]
+    │   │   │   └─ ← [Return] 18
+    │   │   ├─ [11359] 0xc076FB478b77633736738579c7f48D2539604a50::observe([60, 0]) [staticcall]
+    │   │   │   └─ ← [Return] [-1099583261698 [-1.099e12], -1099585657258 [-1.099e12]], [4214119953978981446443861 [4.214e24], 4214126272646103330844818 [4.214e24]]
+    │   │   └─ ← [Return] 54184797669941652495 [5.418e19]
+    │   ├─ emit Deposited(token: 0xCA8aAceEC5Db1e91B9Ed3a344bA026c4a2B3ebF6, amount: 100000000000000000 [1e17])
+    │   └─ ← [Return]
+    ├─ [32273] BandedTwapOracle::price(0xCA8aAceEC5Db1e91B9Ed3a344bA026c4a2B3ebF6) [staticcall]
+    │   ├─ [288] 0xCA8aAceEC5Db1e91B9Ed3a344bA026c4a2B3ebF6::decimals() [staticcall]
+    │   │   └─ ← [Return] 18
+    │   ├─ [11359] 0xc076FB478b77633736738579c7f48D2539604a50::observe([60, 0]) [staticcall]
+    │   │   └─ ← [Return] [-1099583261698 [-1.099e12], -1099585657258 [-1.099e12]], [4214119953978981446443861 [4.214e24], 4214126272646103330844818 [4.214e24]]
+    │   └─ ← [Return] 54184797669941652495 [5.418e19]
+    ├─ [926] AegisVault::executionHash(0xca8aaceec5db1e91b9ed3a344ba026c4a2b3ebf6000bb898b6173a8b7dfc52ce8bc88f1184a918a1ccaa4f, 10000000000000000 [1e16], 536429496932422358 [5.364e17], 1793474286 [1.793e9]) [staticcall]
+    │   └─ ← [Return] 0x184a00ed2475056be5d96957c5c54adb8720e346688aaac221caac33ccbc1edf
+    ├─ [0] VM::prank(0x0000000000000000000000000000000000000B0b)
+    │   └─ ← [Return]
+    ├─ [160758] DecisionLog::commit(0x11f95c26c66e1f44dc1a7cb57bc2784a314013cfe1614522b673e13242243bbc, 0x184a00ed2475056be5d96957c5c54adb8720e346688aaac221caac33ccbc1edf)
+    │   ├─ emit Committed(id: 1, committer: 0x0000000000000000000000000000000000000B0b, decisionHash: 0x11f95c26c66e1f44dc1a7cb57bc2784a314013cfe1614522b673e13242243bbc, executionHash: 0x184a00ed2475056be5d96957c5c54adb8720e346688aaac221caac33ccbc1edf, timestamp: 1793474256 [1.793e9])
+    │   └─ ← [Return] 1
+    ├─ [0] VM::roll(35143801 [3.514e7])
+    │   └─ ← [Return]
+    ├─ [0] VM::prank(0x0000000000000000000000000000000000000B0b)
+    │   └─ ← [Return]
+    ├─ [452479] AegisVault::executeSwap(0xca8aaceec5db1e91b9ed3a344ba026c4a2b3ebf6000bb898b6173a8b7dfc52ce8bc88f1184a918a1ccaa4f, 10000000000000000 [1e16], 536429496932422358 [5.364e17], 1793474286 [1.793e9])
+    │   ├─ [384] BandedTwapOracle::factory() [staticcall]
+    │   │   └─ ← [Return] 0x2dC2c21D1049F786C535bF9d45F999dB5474f3A0
+    │   ├─ [2666] 0x2dC2c21D1049F786C535bF9d45F999dB5474f3A0::getPool(0xCA8aAceEC5Db1e91B9Ed3a344bA026c4a2B3ebF6, 0x98B6173A8B7DFc52ce8bc88f1184a918A1CCaa4F, 3000) [staticcall]
+    │   │   └─ ← [Return] 0xc076FB478b77633736738579c7f48D2539604a50
+    │   ├─ [48065] AegisVault::nav() [staticcall]
+    │   │   ├─ [2508] 0x98B6173A8B7DFc52ce8bc88f1184a918A1CCaa4F::balanceOf(AegisVault: [0x5991A2dF15A8F6A256D3Ec51E99254Cd3fb576A9]) [staticcall]
+    │   │   │   └─ ← [Return] 0
+    │   │   ├─ [2585] 0xCA8aAceEC5Db1e91B9Ed3a344bA026c4a2B3ebF6::balanceOf(AegisVault: [0x5991A2dF15A8F6A256D3Ec51E99254Cd3fb576A9]) [staticcall]
+    │   │   │   └─ ← [Return] 100000000000000000 [1e17]
+    │   │   ├─ [27273] BandedTwapOracle::price(0xCA8aAceEC5Db1e91B9Ed3a344bA026c4a2B3ebF6) [staticcall]
+    │   │   │   ├─ [288] 0xCA8aAceEC5Db1e91B9Ed3a344bA026c4a2B3ebF6::decimals() [staticcall]
+    │   │   │   │   └─ ← [Return] 18
+    │   │   │   ├─ [11359] 0xc076FB478b77633736738579c7f48D2539604a50::observe([60, 0]) [staticcall]
+    │   │   │   │   └─ ← [Return] [-1099583261698 [-1.099e12], -1099585657258 [-1.099e12]], [4214119953978981446443861 [4.214e24], 4214126272646103330844818 [4.214e24]]
+    │   │   │   └─ ← [Return] 54184797669941652495 [5.418e19]
+    │   │   ├─ [1030] BandedTwapOracle::decimals(0xCA8aAceEC5Db1e91B9Ed3a344bA026c4a2B3ebF6) [staticcall]
+    │   │   │   └─ ← [Return] 18
+    │   │   └─ ← [Return] 5418479766994165249 [5.418e18]
+    │   ├─ [13273] BandedTwapOracle::price(0xCA8aAceEC5Db1e91B9Ed3a344bA026c4a2B3ebF6) [staticcall]
+    │   │   ├─ [288] 0xCA8aAceEC5Db1e91B9Ed3a344bA026c4a2B3ebF6::decimals() [staticcall]
+    │   │   │   └─ ← [Return] 18
+    │   │   ├─ [5359] 0xc076FB478b77633736738579c7f48D2539604a50::observe([60, 0]) [staticcall]
+    │   │   │   └─ ← [Return] [-1099583261698 [-1.099e12], -1099585657258 [-1.099e12]], [4214119953978981446443861 [4.214e24], 4214126272646103330844818 [4.214e24]]
+    │   │   └─ ← [Return] 54184797669941652495 [5.418e19]
+    │   ├─ [3466] BandedTwapOracle::price(0x98B6173A8B7DFc52ce8bc88f1184a918A1CCaa4F) [staticcall]
+    │   │   ├─ [2342] 0x98B6173A8B7DFc52ce8bc88f1184a918A1CCaa4F::decimals() [staticcall]
+    │   │   │   └─ ← [Return] 18
+    │   │   └─ ← [Return] 1000000000000000000 [1e18]
+    │   ├─ [1030] BandedTwapOracle::decimals(0xCA8aAceEC5Db1e91B9Ed3a344bA026c4a2B3ebF6) [staticcall]
+    │   │   └─ ← [Return] 18
+    │   ├─ [669] BandedTwapOracle::decimals(0x98B6173A8B7DFc52ce8bc88f1184a918A1CCaa4F) [staticcall]
+    │   │   └─ ← [Return] 18
+    │   ├─ [585] 0xCA8aAceEC5Db1e91B9Ed3a344bA026c4a2B3ebF6::balanceOf(AegisVault: [0x5991A2dF15A8F6A256D3Ec51E99254Cd3fb576A9]) [staticcall]
+    │   │   └─ ← [Return] 100000000000000000 [1e17]
+    │   ├─ [508] 0x98B6173A8B7DFc52ce8bc88f1184a918A1CCaa4F::balanceOf(AegisVault: [0x5991A2dF15A8F6A256D3Ec51E99254Cd3fb576A9]) [staticcall]
+    │   │   └─ ← [Return] 0
+    │   ├─ [19244] DecisionLog::consume(0x0000000000000000000000000000000000000B0b, 0x184a00ed2475056be5d96957c5c54adb8720e346688aaac221caac33ccbc1edf)
+    │   │   ├─ emit Consumed(id: 1, executionHash: 0x184a00ed2475056be5d96957c5c54adb8720e346688aaac221caac33ccbc1edf, timestamp: 1793474256 [1.793e9])
+    │   │   └─ ← [Return] 1
+    │   ├─ [24629] 0xCA8aAceEC5Db1e91B9Ed3a344bA026c4a2B3ebF6::approve(0xa6914E66690c6794244B5f66a09eAEbf66254237, 10000000000000000 [1e16])
+    │   │   ├─ emit Approval(owner: AegisVault: [0x5991A2dF15A8F6A256D3Ec51E99254Cd3fb576A9], spender: 0xa6914E66690c6794244B5f66a09eAEbf66254237, amount: 10000000000000000 [1e16])
+    │   │   └─ ← [Return] true
+    │   ├─ [79600] 0xa6914E66690c6794244B5f66a09eAEbf66254237::exactInput(ExactInputParams({ path: 0xca8aaceec5db1e91b9ed3a344ba026c4a2b3ebf6000bb898b6173a8b7dfc52ce8bc88f1184a918a1ccaa4f, recipient: 0x5991A2dF15A8F6A256D3Ec51E99254Cd3fb576A9, amountIn: 10000000000000000 [1e16], amountOutMinimum: 536429496932422358 [5.364e17] }))
+    │   │   ├─ [74165] 0xc076FB478b77633736738579c7f48D2539604a50::swap(AegisVault: [0x5991A2dF15A8F6A256D3Ec51E99254Cd3fb576A9], false, 10000000000000000 [1e16], 1461446703485210103287273052203988822378723970341 [1.461e48], 0x000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000400000000000000000000000005991a2df15a8f6a256d3ec51e99254cd3fb576a9000000000000000000000000000000000000000000000000000000000000002bca8aaceec5db1e91b9ed3a344ba026c4a2b3ebf6000bb898b6173a8b7dfc52ce8bc88f1184a918a1ccaa4f000000000000000000000000000000000000000000)
+    │   │   │   ├─ [27776] 0x98B6173A8B7DFc52ce8bc88f1184a918A1CCaa4F::transfer(AegisVault: [0x5991A2dF15A8F6A256D3Ec51E99254Cd3fb576A9], 540198323064582156 [5.401e17])
+    │   │   │   │   ├─ emit Transfer(from: 0xc076FB478b77633736738579c7f48D2539604a50, to: AegisVault: [0x5991A2dF15A8F6A256D3Ec51E99254Cd3fb576A9], amount: 540198323064582156 [5.401e17])
+    │   │   │   │   └─ ← [Return] true
+    │   │   │   ├─ [2585] 0xCA8aAceEC5Db1e91B9Ed3a344bA026c4a2B3ebF6::balanceOf(0xc076FB478b77633736738579c7f48D2539604a50) [staticcall]
+    │   │   │   │   └─ ← [Return] 469919838797986626674 [4.699e20]
+    │   │   │   ├─ [15550] 0xa6914E66690c6794244B5f66a09eAEbf66254237::uniswapV3SwapCallback(-540198323064582156 [-5.401e17], 10000000000000000 [1e16], 0x000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000400000000000000000000000005991a2df15a8f6a256d3ec51e99254cd3fb576a9000000000000000000000000000000000000000000000000000000000000002bca8aaceec5db1e91b9ed3a344ba026c4a2b3ebf6000bb898b6173a8b7dfc52ce8bc88f1184a918a1ccaa4f000000000000000000000000000000000000000000)
+    │   │   │   │   ├─ [11427] 0xCA8aAceEC5Db1e91B9Ed3a344bA026c4a2B3ebF6::transferFrom(AegisVault: [0x5991A2dF15A8F6A256D3Ec51E99254Cd3fb576A9], 0xc076FB478b77633736738579c7f48D2539604a50, 10000000000000000 [1e16])
+    │   │   │   │   │   ├─ emit Approval(owner: AegisVault: [0x5991A2dF15A8F6A256D3Ec51E99254Cd3fb576A9], spender: 0xa6914E66690c6794244B5f66a09eAEbf66254237, amount: 0)
+    │   │   │   │   │   ├─ emit Transfer(from: AegisVault: [0x5991A2dF15A8F6A256D3Ec51E99254Cd3fb576A9], to: 0xc076FB478b77633736738579c7f48D2539604a50, amount: 10000000000000000 [1e16])
+    │   │   │   │   │   └─ ← [Return] true
+    │   │   │   │   └─ ← [Stop]
+    │   │   │   ├─ [585] 0xCA8aAceEC5Db1e91B9Ed3a344bA026c4a2B3ebF6::balanceOf(0xc076FB478b77633736738579c7f48D2539604a50) [staticcall]
+    │   │   │   │   └─ ← [Return] 469929838797986626674 [4.699e20]
+    │   │   │   ├─ emit Swap(param0: 0xa6914E66690c6794244B5f66a09eAEbf66254237, param1: AegisVault: [0x5991A2dF15A8F6A256D3Ec51E99254Cd3fb576A9], param2: -540198323064582156 [-5.401e17], param3: 10000000000000000 [1e16], param4: 10763548670615587759260211780 [1.076e28], param5: 3231210257071971233662 [3.231e21], param6: -39926 [-3.992e4])
+    │   │   │   └─ ← [Return] 0xfffffffffffffffffffffffffffffffffffffffffffffffff880d47cbd794ff4000000000000000000000000000000000000000000000000002386f26fc10000
+    │   │   └─ ← [Return] 540198323064582156 [5.401e17]
+    │   ├─ [2629] 0xCA8aAceEC5Db1e91B9Ed3a344bA026c4a2B3ebF6::approve(0xa6914E66690c6794244B5f66a09eAEbf66254237, 0)
+    │   │   ├─ emit Approval(owner: AegisVault: [0x5991A2dF15A8F6A256D3Ec51E99254Cd3fb576A9], spender: 0xa6914E66690c6794244B5f66a09eAEbf66254237, amount: 0)
+    │   │   └─ ← [Return] true
+    │   ├─ [585] 0xCA8aAceEC5Db1e91B9Ed3a344bA026c4a2B3ebF6::balanceOf(AegisVault: [0x5991A2dF15A8F6A256D3Ec51E99254Cd3fb576A9]) [staticcall]
+    │   │   └─ ← [Return] 90000000000000000 [9e16]
+    │   ├─ [508] 0x98B6173A8B7DFc52ce8bc88f1184a918A1CCaa4F::balanceOf(AegisVault: [0x5991A2dF15A8F6A256D3Ec51E99254Cd3fb576A9]) [staticcall]
+    │   │   └─ ← [Return] 540198323064582156 [5.401e17]
+    │   ├─ [22440] AegisVault::nav() [staticcall]
+    │   │   ├─ [508] 0x98B6173A8B7DFc52ce8bc88f1184a918A1CCaa4F::balanceOf(AegisVault: [0x5991A2dF15A8F6A256D3Ec51E99254Cd3fb576A9]) [staticcall]
+    │   │   │   └─ ← [Return] 540198323064582156 [5.401e17]
+    │   │   ├─ [1466] BandedTwapOracle::price(0x98B6173A8B7DFc52ce8bc88f1184a918A1CCaa4F) [staticcall]
+    │   │   │   ├─ [342] 0x98B6173A8B7DFc52ce8bc88f1184a918A1CCaa4F::decimals() [staticcall]
+    │   │   │   │   └─ ← [Return] 18
+    │   │   │   └─ ← [Return] 1000000000000000000 [1e18]
+    │   │   ├─ [669] BandedTwapOracle::decimals(0x98B6173A8B7DFc52ce8bc88f1184a918A1CCaa4F) [staticcall]
+    │   │   │   └─ ← [Return] 18
+    │   │   ├─ [585] 0xCA8aAceEC5Db1e91B9Ed3a344bA026c4a2B3ebF6::balanceOf(AegisVault: [0x5991A2dF15A8F6A256D3Ec51E99254Cd3fb576A9]) [staticcall]
+    │   │   │   └─ ← [Return] 90000000000000000 [9e16]
+    │   │   ├─ [13273] BandedTwapOracle::price(0xCA8aAceEC5Db1e91B9Ed3a344bA026c4a2B3ebF6) [staticcall]
+    │   │   │   ├─ [288] 0xCA8aAceEC5Db1e91B9Ed3a344bA026c4a2B3ebF6::decimals() [staticcall]
+    │   │   │   │   └─ ← [Return] 18
+    │   │   │   ├─ [5359] 0xc076FB478b77633736738579c7f48D2539604a50::observe([60, 0]) [staticcall]
+    │   │   │   │   └─ ← [Return] [-1099583261698 [-1.099e12], -1099585657258 [-1.099e12]], [4214119953978981446443861 [4.214e24], 4214126272646103330844818 [4.214e24]]
+    │   │   │   └─ ← [Return] 54184797669941652495 [5.418e19]
+    │   │   ├─ [1030] BandedTwapOracle::decimals(0xCA8aAceEC5Db1e91B9Ed3a344bA026c4a2B3ebF6) [staticcall]
+    │   │   │   └─ ← [Return] 18
+    │   │   └─ ← [Return] 5416830113359330880 [5.416e18]
+    │   ├─ emit SwapExecuted(decisionId: 1, tokenIn: 0xCA8aAceEC5Db1e91B9Ed3a344bA026c4a2B3ebF6, tokenOut: 0x98B6173A8B7DFc52ce8bc88f1184a918A1CCaa4F, amountIn: 10000000000000000 [1e16], amountOut: 540198323064582156 [5.401e17], pathHash: 0x6215656341fe17fd4d6b9fd2b0d046946719d5f6b1a76f4b141b7127579c066c, navBefore: 5418479766994165249 [5.418e18], navAfter: 5416830113359330880 [5.416e18])
+    │   ├─ emit NavCheckpoint(day: 20757 [2.075e4], nav: 5416830113359330880 [5.416e18], dailyReference: 5418479766994165249 [5.418e18], highWater: 5418479766994165249 [5.418e18])
+    │   └─ ← [Return] 540198323064582156 [5.401e17]
+    ├─ [2508] 0x98B6173A8B7DFc52ce8bc88f1184a918A1CCaa4F::balanceOf(AegisVault: [0x5991A2dF15A8F6A256D3Ec51E99254Cd3fb576A9]) [staticcall]
+    │   └─ ← [Return] 540198323064582156 [5.401e17]
+    ├─ [2508] 0x98B6173A8B7DFc52ce8bc88f1184a918A1CCaa4F::balanceOf(0x0000000000000000000000000000000000000B0b) [staticcall]
+    │   └─ ← [Return] 0
+    ├─ [2826] 0xCA8aAceEC5Db1e91B9Ed3a344bA026c4a2B3ebF6::allowance(AegisVault: [0x5991A2dF15A8F6A256D3Ec51E99254Cd3fb576A9], 0xa6914E66690c6794244B5f66a09eAEbf66254237) [staticcall]
+    │   └─ ← [Return] 0
+    ├─ [0] VM::prank(0x0000000000000000000000000000000000000B0b)
+    │   └─ ← [Return]
+    ├─ [37991] DecisionLog::reveal(1, 0x7b226d6f6465223a226c6f63616c5f666f726b222c22726561736f6e223a22626f756e64656420737461626c65206578697420696e746567726174696f6e2070726f6f66227d)
+    │   ├─ emit Revealed(id: 1, payload: 0x7b226d6f6465223a226c6f63616c5f666f726b222c22726561736f6e223a22626f756e64656420737461626c65206578697420696e746567726174696f6e2070726f6f66227d, timestamp: 1793474256 [1.793e9])
+    │   └─ ← [Stop]
+    ├─ emit ForkProof(chainId: 133, forkBlock: 35143801 [3.514e7], amountIn: 10000000000000000 [1e16], minimumOut: 536429496932422358 [5.364e17], amountOut: 540198323064582156 [5.401e17])
+    └─ ← [Stop]
+
+Suite result: ok. 1 passed; 0 failed; 0 skipped; finished in 3.79s (2.85s CPU time)
+
+Ran 1 test suite in 6.65s (3.79s CPU time): 1 tests passed, 0 failed, 0 skipped (1 total tests)

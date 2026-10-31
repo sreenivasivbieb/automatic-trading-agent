@@ -1,0 +1,21 @@
+{
+  "observed_at": "2026-10-31T19:34:46.241870+00:00",
+  "scope": "Read-only eth_call with ephemeral code override at the verified router address; no persistent state changes or broadcasts. The probe executes PUSH0 and returns 32 zero bytes.",
+  "probe_runtime": "0x5f5f5260205ff3",
+  "results": [
+    {
+      "chain_id": 133,
+      "block": 35144312,
+      "block_hash": "0x3a5248e677e3dc809824f6e76600c2ce0b1629aed08628d480774a972f01fca9",
+      "push0_probe_return": "0x0000000000000000000000000000000000000000000000000000000000000000",
+      "success": true
+    },
+    {
+      "chain_id": 177,
+      "block": 29564073,
+      "block_hash": "0xf33ef08e285764f6db8950a1c49b93c5108750c5c6920dee6692e782e271fe36",
+      "push0_probe_return": "0x0000000000000000000000000000000000000000000000000000000000000000",
+      "success": true
+    }
+  ]
+}

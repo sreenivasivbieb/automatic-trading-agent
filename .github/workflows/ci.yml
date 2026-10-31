@@ -47,6 +47,11 @@ jobs:
           .venv/bin/ruff format --check backend scripts agent
           .venv/bin/python -m scripts.generate_code_reference --check
           .venv/bin/python -m pytest backend/tests agent/tests legacy_tests/test_regime_detection.py legacy_tests/test_backtest_engine.py legacy_tests/test_portfolio_intelligence.py -q
+      - name: Pinned local contract toolchain and Guard tests
+        run: |
+          make contracts-setup
+          make contracts-test
+          cd contracts && ../.tools/foundry/forge fmt --check src test script
       - name: Frontend formatting, strict types and production build
         run: |
           node_modules/.bin/prettier --check frontend/src frontend/vite.config.ts frontend/tsconfig.json playwright.config.ts e2e scripts/dev.mjs package.json

@@ -1,0 +1,27 @@
+No files changed, compilation skipped
+Script ran successfully.
+
+== Return ==
+vault: contract AegisVault 0xEA52e843BE23432A1a112283493dbF07802C329c
+log: contract DecisionLog 0xc2BDfba7753416FA21E20b5f3DcA54A00cFF939C
+oracle: contract BandedTwapOracle 0x504C121153Ff3534566430504C2b05Ad27c7cd6f
+
+## Setting up 1 EVM.
+
+==========================
+
+Chain 133
+
+Estimated gas price: 1.001 gwei
+
+Estimated total gas used for script: 8426897
+
+Estimated amount required: 0.008435323897 ETH
+
+==========================
+
+SIMULATION COMPLETE. To broadcast these transactions, add --broadcast and wallet configuration(s) to the previous command. See forge script --help for more.
+
+Transactions saved to: /home/vishal/D DRIVE/Automatic trading agent/contracts/broadcast/Deploy.s.sol/133/dry-run/run-latest.json
+
+Sensitive values saved to: /home/vishal/D DRIVE/Automatic trading agent/contracts/cache/Deploy.s.sol/133/dry-run/run-latest.json

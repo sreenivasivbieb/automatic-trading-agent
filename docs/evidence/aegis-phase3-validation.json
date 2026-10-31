@@ -1,0 +1,117 @@
+{
+  "observed_at": "2026-10-31T19:35:23.842625+00:00",
+  "phase": 3,
+  "status": "LOCAL_CHECKS_PASSED_PUBLIC_TESTNET_DEPLOYMENT_PENDING",
+  "owner_public_address": "pending user; deferred by user",
+  "public_transactions_sent": 0,
+  "public_contracts_deployed": false,
+  "registered_deployment_files": [],
+  "toolchain": {
+    "foundry": "1.8.7",
+    "foundry_archive_sha256": "ba470eb718e779e4b0e3f1520b5284231b1bf98e9a39de07fb8f77ed70525bcf",
+    "solidity": "0.8.24",
+    "solidity_binary_sha256": "fb03a29a517452b9f12bcf459ef37d0a543765bb3bbc911e70a87d6a37c30d5f",
+    "evm": "shanghai",
+    "optimizer_runs": 200,
+    "via_ir": true,
+    "paths": "Project-local .tools/ and .cache/; source dependencies vendored."
+  },
+  "checks": {
+    "contract_unit": {
+      "command": "make contracts-test",
+      "passed": 50,
+      "failed": 0,
+      "optional_rpc_test_skipped": 1,
+      "fuzz_properties": 3,
+      "fuzz_runs_per_property": 256,
+      "output": {
+        "path": "docs/evidence/aegis-contract-unit-output.txt",
+        "sha256": "3e16278aee995e61010a5b077356ed7385e1f421012d0d0f4664226ac9996cc7"
+      }
+    },
+    "testnet_local_fork": {
+      "command": "cd contracts && AEGIS_LIVE_ORACLE_TESTS=true ../.tools/foundry/forge test --fork-url https://testnet.hsk.xyz --no-storage-caching --match-contract LiveForkTest -vvvv",
+      "scope": "Production oracle, vault and DecisionLog deployed ONLY in local fork state. Actual HSKSwap router/pool/token bytecode, synthetic local caller and native funding. No public transaction.",
+      "passed": 1,
+      "chain_id": 133,
+      "fork_block": 35143801,
+      "token_in": "WHSK",
+      "token_out": "synthetic testnet USDT",
+      "amount_in_raw": "10000000000000000",
+      "minimum_out_raw": "536429496932422358",
+      "amount_out_raw": "540198323064582156",
+      "amount_in_decimals": 18,
+      "amount_out_decimals": 18,
+      "recipient_vault_checked": true,
+      "agent_receives_zero_output_checked": true,
+      "router_allowance_cleared_checked": true,
+      "revealed_payload_utf8": "{\"mode\":\"local_fork\",\"reason\":\"bounded stable exit integration proof\"}",
+      "committed_decision_hash": "0x11f95c26c66e1f44dc1a7cb57bc2784a314013cfe1614522b673e13242243bbc",
+      "exact_revealed_bytes_hash_matches": true,
+      "execution_hash": "0x184a00ed2475056be5d96957c5c54adb8720e346688aaac221caac33ccbc1edf",
+      "public_transaction_hash": null,
+      "output": {
+        "path": "docs/evidence/aegis-contract-fork-output.txt",
+        "sha256": "d574fece5ffaf2feff80b2e49029f454ffae55df61ece48669a54677341f39db"
+      }
+    },
+    "deployment_script": {
+      "scope": "Read-only testnet-backed forge script simulation; separate synthetic fixture owner/agent/deployer, not user ownership. No --broadcast or wallet keys. Returned addresses exist only in simulation and are not a deployment registry.",
+      "result": "SIMULATION COMPLETE",
+      "chain_id": 133,
+      "estimated_total_gas": 8426897,
+      "estimated_native_hsk": "0.008435323897",
+      "output": {
+        "path": "docs/evidence/aegis-contract-script-output.txt",
+        "sha256": "fd00eb345acf6508ca6dddae2bb99d7ecd5778e6fec06a8600cbe0ad20f6b5e6",
+        "formatting": "Trailing empty lines removed from tool stdout."
+      }
+    },
+    "python_regression": {
+      "command": ".venv/bin/python -m pytest backend/tests agent/tests legacy_tests/test_regime_detection.py legacy_tests/test_backtest_engine.py legacy_tests/test_portfolio_intelligence.py -q",
+      "passed": 214,
+      "skipped": 1,
+      "subtests_passed": 10,
+      "seconds": 6.47,
+      "warnings": "Existing LangGraph and websockets deprecations."
+    },
+    "terminal_browser_regression": {
+      "command": "npm run test:e2e",
+      "passed": 14,
+      "seconds": 51.8,
+      "scope": "Existing Krono simulation and isolated AWS UI provider contracts. Does not validate HSKSwap browser prices or an AEGIS dashboard.",
+      "teardown_fix": "Wait for in-flight route handlers before closing browser fixtures.",
+      "reference": "https://playwright.dev/docs/api/class-page#page-unroute-all"
+    },
+    "runtime_sizes_bytes": {
+      "AegisVault": 15884,
+      "BandedTwapOracle": 7162,
+      "DecisionLog": 2914
+    },
+    "source_reference_and_styles": "generate_code_reference --check, ruff check/format and forge fmt checks passed; publication scan is separately reported.",
+    "publication_scan": {
+      "command": ".venv/bin/python -m scripts.public_audit",
+      "files_checked": 456,
+      "issues": [],
+      "scope": "Selected credential patterns and private-path checks; not an external security audit."
+    }
+  },
+  "contract_source_sha256": {
+    "contracts/src/AegisVault.sol": "46aad46ed0a51259f4be24343a0247d07b692a7c7798de92dfb7abfb0454ce85",
+    "contracts/src/BandedTwapOracle.sol": "3f1716bd3a0e7b57d25bb7ce7492e2ce32be3f95cb70b5803095a6bea93468c6",
+    "contracts/src/DecisionLog.sol": "42eb6bd0c76203b9db7b26287639d16230db441ce0407b2cab842a6d4ae2f29e",
+    "contracts/src/interfaces/IDex.sol": "f166e20384d02b572ad72a79cd9e680484a98c62f197b7fd860544013c9f9506",
+    "contracts/src/libraries/TickMath.sol": "d24978bdd02802f9f48a3ff5bdc14d6a9364e6641ebc6aab9a61f0768ec4155f",
+    "contracts/script/Deploy.s.sol": "0a0605ecbe62c569ba73033301a960d09fdbef209cda086d6f3438c461bb3ded",
+    "contracts/test/Helpers.sol": "bb9e74eeb05856efdf5d0606ddfce75a5609ba19c8efe2073e1d67330e05c908",
+    "contracts/test/LiveFork.t.sol": "1b201ab6af8bb0843d83097e015590ed7fc3223e5bb5b962fcbe5adb1f72caab",
+    "contracts/test/Vault.t.sol": "8ddfe54f366df1a2d86e1dab3a1eda12347e63161c9bd7a4a0a32fd6118372c7"
+  },
+  "remaining": [
+    "Actual public owner and agent addresses plus a separate funded deployer keystore",
+    "Real testnet deployment, canonical receipts, deployment registry and explorer source verification",
+    "Autonomous HSKSwap strategies, full off-chain risk and live execution/reconciliation",
+    "NL control plane, Telegram, AEGIS dashboard and public commit/reveal verification",
+    "One-hour paper evidence run and explicit approval before mainnet deployment/trades"
+  ]
+}

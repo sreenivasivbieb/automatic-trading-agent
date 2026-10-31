@@ -1,5 +1,28 @@
 # Terminal architecture
 
+## AEGIS integration status
+
+The separate `agent/aegis/` package reads verified HSKSwap V3 state, computes routes and QuoterV2 quotes, and sends paper intents through `execution/gateway.py` into an atomic SQLite ledger. Its connector has no RPC send method. The current Krono browser UI and AWS tenant workers do not call this package. Discovery, paper methodology and contract evidence live in [DISCOVERY.md](DISCOVERY.md), [PAPER.md](PAPER.md) and [CONTRACTS.md](CONTRACTS.md).
+
+```mermaid
+flowchart LR
+    H[HashKey public RPC] --> D[Verified V3 connector]
+    D --> Q[Live quotes and block identity]
+    Q --> R[Paper risk checks]
+    R --> G[Paper execution gateway]
+    G --> S[Persistent paper SQLite ledger]
+    F[Local HashKey fork] --> V[AegisVault tests]
+    O[Banded pool TWAP oracle] --> V
+    L[Prior-block DecisionLog commitment] --> V
+    V --> X[Actual HSKSwap router bytecode on fork]
+    X --> B[Vault output balance check]
+    B --> E[Exact-byte reveal verification]
+```
+
+These are two verified paths, not a connected live trading system. Public deployment is pending the user's public owner address and a funded separate deployer. Autonomous HSKSwap strategies, full off-chain risk policy, the live signing/reconciliation gateway, Claude tools, Telegram and an AEGIS dashboard remain later phases. Stops and pause behavior are detailed in [RISK.md](RISK.md); the [threat model](../SECURITY.md) states what the contracts do and do not establish.
+
+## Existing Krono terminal
+
 For the KRONO 2.0 control plane, tenant keys, role boundaries, deployment lifecycle and current limitations, see [AWS setup and architecture](AWS_SETUP.md). The localhost terminal described below remains separate from the public Cognito API. Its SQLite store is used inside each approved isolated Python worker, with lease-fenced durable cloud checkpoints; it is not a shared tenant database.
 
 The initial local folder contained no implementation. The source framework was inspected at revision `2495276210d977dd09a5190def02755f5b96bea8`, then preserved with its license, CLI, Dash UI, prompts and tests. This terminal adds a modular monolith around that code.

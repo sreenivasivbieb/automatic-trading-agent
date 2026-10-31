@@ -9,6 +9,7 @@ BLOCKED_PARTS = {
     ".runtime",
     ".reference",
     ".cache",
+    ".tools",
     ".venv",
     ".venv-legacy",
     ".python",
@@ -37,6 +38,8 @@ def main():
         checked += 1
         if (
             BLOCKED_PARTS.intersection(path.parts)
+            or path.parts[:2]
+            in {("contracts", "broadcast"), ("contracts", "out"), ("contracts", "cache")}
             or path.name == ".env"
             or path.suffix in {".sqlite", ".sqlite3", ".db", ".key", ".pem"}
         ):

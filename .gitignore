@@ -39,6 +39,9 @@ Thumbs.db
 .reference/
 .cache/
 .tools/
+contracts/out/
+contracts/cache/
+contracts/broadcast/
 .runtime/
 .python/
 artifacts/
