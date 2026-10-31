@@ -2,24 +2,33 @@
 
 ## AEGIS integration status
 
-The separate `agent/aegis/` package reads verified HSKSwap V3 state, computes routes and QuoterV2 quotes, and sends paper intents through `execution/gateway.py` into an atomic SQLite ledger. Its connector has no RPC send method. The current Krono browser UI and AWS tenant workers do not call this package. Discovery, paper methodology and contract evidence live in [DISCOVERY.md](DISCOVERY.md), [PAPER.md](PAPER.md) and [CONTRACTS.md](CONTRACTS.md).
+The React `/#/aegis` workspace connects to the actual AEGIS paper ledger through the existing authenticated FastAPI boundary. A dedicated worker thread owns synchronous RPC and SQLite. Read-only browser polling cannot create fills. The monitor, deterministic mean-reversion/closed-route signals, software risk policy, gateway, ledger and bounded natural-language tools share one state. See [the connected flow guide](AEGIS_FLOWS.md).
 
 ```mermaid
-flowchart LR
-    H[HashKey public RPC] --> D[Verified V3 connector]
-    D --> Q[Live quotes and block identity]
-    Q --> R[Paper risk checks]
-    R --> G[Paper execution gateway]
-    G --> S[Persistent paper SQLite ledger]
-    F[Local HashKey fork] --> V[AegisVault tests]
-    O[Banded pool TWAP oracle] --> V
-    L[Prior-block DecisionLog commitment] --> V
-    V --> X[Actual HSKSwap router bytecode on fork]
-    X --> B[Vault output balance check]
-    B --> E[Exact-byte reveal verification]
+flowchart TD
+    UI[AEGIS dashboard and chat] --> API[Session CSRF or bearer API]
+    TG[Authorized private Telegram chat] --> API
+    API --> S[Single-writer paper service]
+    C[Optional Claude bounded tools] --> S
+    S --> M[Verified monitor and deterministic signals]
+    RPC[HashKey mainnet read-only RPC] --> M
+    M --> G[Risk checks and execution gateway]
+    G --> DB[Atomic paper ledger and observations]
+    DB --> API
+    SG[Separate explicitly configured hot-key gateway] --> L[Prior-block decision commitment]
+    L --> V[AegisVault and owner-banded TWAP]
+    K[Independent safety keeper] --> V
+    V --> X[Fixed HSKSwap router with vault recipient]
+    X --> R[Canonical receipt and balance reconciliation]
+    R --> RE[Exact-byte reveal]
+    W[Owner device wallet] --> V
 ```
 
-These are two verified paths, not a connected live trading system. Public deployment is pending the user's public owner address and a funded separate deployer. Autonomous HSKSwap strategies, full off-chain risk policy, the live signing/reconciliation gateway, Claude tools, Telegram and an AEGIS dashboard remain later phases. Stops and pause behavior are detailed in [RISK.md](RISK.md); the [threat model](../SECURITY.md) states what the contracts do and do not establish.
+The separate signing gateway has executed real signed commit/swap/reveal transactions against actual router bytecode on a loopback HashKey fork. It requires a verified deployment registry, a non-owner hot key and explicit mainnet acknowledgement. Durable intents, nonce journals, replacement/cancellation tracking and receipt reconciliation prevent automatic resubmission after uncertainty. Public deployment and public execution remain unvalidated because the user's owner address and funded accounts are pending.
+
+The owner panel prepares fixed-method unsigned operations; the owner's EVM wallet signs on their device. It defaults to testnet, refuses the wrong account or chain, and waits for matching confirmed receipts between steps. A read-only verifier checks exact revealed bytes and canonical receipts before displaying a public badge. No public badge is currently available. Paper decisions remain local and are never relabeled as public commitments.
+
+Claude and Telegram adapters are implemented behind explicit configuration. Their transport/tool boundaries have fixture tests; actual provider invocation and Telegram delivery are pending credentials. The AWS tenant worker continues to use the original simulation Engine; it does not run AEGIS or accept trading keys. See [risk semantics](RISK.md), [connections](CONNECTIONS.md) and [security](../SECURITY.md).
 
 ## Existing Krono terminal
 

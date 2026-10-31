@@ -1,0 +1,2720 @@
+{
+  "status": "PASSED",
+  "mode": "paper",
+  "started_at": "2026-10-31T21:39:02.405202+00:00",
+  "scope": "Live mainnet data, virtual funds, modeled fees; zero public transactions.",
+  "source_sha256": {
+    "agent/aegis/__init__.py": "f392cfafaf4c5c3d29699503eccbf17917c902239d6a840a274011434c47e6f6",
+    "agent/aegis/connectors/__init__.py": "e3068f9985df6bcec0c6b06c4a7a1e4404cd2bdedfa061ebbe9035095f48d25e",
+    "agent/aegis/connectors/base.py": "974336b8fc2a95b5595c5a29286034a195398c5dcb6e5edb6899392f8ee098bb",
+    "agent/aegis/connectors/hskswap_v3.py": "96fd9680cd9d83d16f03c727479f527027b00e25d75758f1c77e097460c2843b",
+    "agent/aegis/connectors/mock.py": "eb7166426fd0811d444b736b8de7e455ce5d0d37d16f3ba0da3044450ee9fcd0",
+    "agent/aegis/connectors/paper.py": "3997f0a3be0d7d5dcb18e2446f0f77a0c010e60f24872d696d7f364dc678e975",
+    "agent/aegis/connectors/rpc.py": "62111d4bb49a275a9d2e3fcc7a632b648459d6d1665ba6a20ba73c62fcf8b9c3",
+    "agent/aegis/data.py": "7858e03842db4bee862337f80753ca41717ff75f6c2a08010736eada0f4e79e8",
+    "agent/aegis/deploy.py": "cfab32e4145bf4bf861748f4c045026502b6c56a992188d5077f2137a5c3a050",
+    "agent/aegis/discovery.py": "ac9e9204eb07d4b5b10a59804c4822dcd3082b3fcd481be35cba9a19c4868b42",
+    "agent/aegis/execution/__init__.py": "9df288c714f93759470102142747e03d2ca7badc057d3499ae8f7b66a90fbb4f",
+    "agent/aegis/execution/gateway.py": "53e4fef52114df32f3e2135663003c18f1de00e814a1277431671792cadb8afa",
+    "agent/aegis/nl/__init__.py": "b10ca08d7802e389690deb38ca584818a1b711bb61b462232e96c582901bff21",
+    "agent/aegis/nl/tools.py": "2256a909a63d78f77f33e757ff26503a9166091010d5a99fcb20ec7be127db87",
+    "agent/aegis/paper_demo.py": "49a47d02aac29e0252b54e107b40f2a303af2e649109cb1aac463ad4a7348934",
+    "agent/aegis/prices.py": "1480bf840a6ab2b319169db5ee1b23c117c853c9ce69b4781815a775a9fe6f99",
+    "agent/aegis/risk/__init__.py": "44ac88b2d844759ddddfb501920956b4cb7ac79c325a58804f9256323568a323",
+    "agent/aegis/risk/engine.py": "6392a8b15ed4ed5b28de19173c7cfb56ce56a884b0194035bf425b971989c8ea",
+    "agent/aegis/risk/policy.py": "1f7271d476e51fdb951ec3110631790015f83ee6974a280a20873003a7bb82bb",
+    "agent/aegis/runtime.py": "68daec6ed8f73497d942f4d8a4f7f6e4da6a73f1c2b7dfceba6a44b091ccf7a0",
+    "agent/aegis/service.py": "0a30018abc6c132ea7c2cf0780f7fa5e0674e472570458bac612a56245fb1149",
+    "agent/aegis/store/__init__.py": "93fb35cb827456e053fa8cb2a35d16fdc293120f2827cd8ec968c40eadff326f",
+    "agent/aegis/store/db.py": "fec904aa98c2272a3bc504762d37b087ea630b8274472d6d4933fef4e7c85dc9",
+    "agent/aegis/strategy/__init__.py": "d1fd5dc5047f64d251dcbaeb7fc80eaa63ff910ae7282ff8ec43828aeac7753d",
+    "agent/aegis/strategy/arbitrage.py": "1dc17dcf38dbaef9d25d345304b56960d3297c983054b23abfd0ac3d0b97a292",
+    "agent/aegis/strategy/mean_reversion.py": "d9e0f5a84c82dfba5de45428df82ef38f95318e7a0a57b0298f2845ecaea7299",
+    "agent/aegis/strategy/signals.py": "0ef1e86091a13cf4287ae6cb2f7e3030028eae6230f533128c42fdc5e41560fb",
+    "agent/aegis/verify_decision.py": "7951543bd17a9827d3fa801167c44edfa6a62c4827d017d1e5743c2e503cd63d"
+  },
+  "steps": [
+    "Live-quote paper round trip recorded with modeled costs",
+    "Authenticated API reads the same two-fill ledger and three verified live pairs",
+    "Chat preferences persist, out-of-range/injection requests refused, paper automation explicitly enabled",
+    "Restart preserves funding, fills, preferences and last valuation; entries recover paused"
+  ],
+  "public_transactions_sent": 0,
+  "local_url": "http://127.0.0.1:55723",
+  "roundtrip": {
+    "run_id": "http-connection-proof",
+    "mode": "paper",
+    "data_source": "HSKSwap mainnet QuoterV2",
+    "buy": {
+      "id": "0077fd01-5094-4103-9d2a-e053b3afa0f9",
+      "mode": "paper",
+      "receipt": "paper:0077fd01-5094-4103-9d2a-e053b3afa0f9",
+      "transaction_hash": null,
+      "created_at": 1793482755,
+      "chain_id": 177,
+      "quote": {
+        "id": "8d6f116c-8498-4307-9a08-34e73435e5e5",
+        "route": {
+          "tokens": [
+            {
+              "asset_id": "USDT",
+              "chain_id": 177,
+              "address": "0xf1b50ed67a9e2cc94ad3c477779e2d4cbfff9029",
+              "symbol": "USDT",
+              "decimals": 6
+            },
+            {
+              "asset_id": "WHSK",
+              "chain_id": 177,
+              "address": "0xB210D2120d57b758EE163cFfb43e73728c471Cf1",
+              "symbol": "WHSK",
+              "decimals": 18
+            }
+          ],
+          "pools": [
+            {
+              "chain_id": 177,
+              "address": "0x4ff515761864e7838b0adb8b5b2b8b7a068905dc",
+              "token0": {
+                "asset_id": "WHSK",
+                "chain_id": 177,
+                "address": "0xB210D2120d57b758EE163cFfb43e73728c471Cf1",
+                "symbol": "WHSK",
+                "decimals": 18
+              },
+              "token1": {
+                "asset_id": "USDT",
+                "chain_id": 177,
+                "address": "0xf1b50ed67a9e2cc94ad3c477779e2d4cbfff9029",
+                "symbol": "USDT",
+                "decimals": 6
+              },
+              "fee_pips": 3000
+            }
+          ]
+        },
+        "amount_in_raw": 1000000,
+        "amount_out_raw": 11405601624996979315,
+        "reference_out_raw": "11439947528442281321.0521557057481625343960052152625954510549270840222609366368",
+        "fee_multiplier": "0.997",
+        "lp_fee_input_raw_estimate": 3000,
+        "price_impact_bps": "0.0228491238649475722386565338032868136379972884935288404881316880587671624920619",
+        "gas_estimate": 73959,
+        "states": [
+          {
+            "pool": {
+              "chain_id": 177,
+              "address": "0x4ff515761864e7838b0adb8b5b2b8b7a068905dc",
+              "token0": {
+                "asset_id": "WHSK",
+                "chain_id": 177,
+                "address": "0xB210D2120d57b758EE163cFfb43e73728c471Cf1",
+                "symbol": "WHSK",
+                "decimals": 18
+              },
+              "token1": {
+                "asset_id": "USDT",
+                "chain_id": 177,
+                "address": "0xf1b50ed67a9e2cc94ad3c477779e2d4cbfff9029",
+                "symbol": "USDT",
+                "decimals": 6
+              },
+              "fee_pips": 3000
+            },
+            "block_number": 29567802,
+            "block_hash": "0xc545db788488482407a9cf4403aae2b5c62a4f09c9eb046737513860ca4059e4",
+            "block_timestamp": 1793482739,
+            "sqrt_price_x96": 23424351023060863073728,
+            "liquidity_raw": 1475831005908433993,
+            "balance0_raw": 4992121294964652552406304,
+            "balance1_raw": 436358414215,
+            "mid_token1_per_token0": "0.0874129883475230279077675872745674112775306377870331818475386262316179812328909",
+            "unlocked": true
+          }
+        ],
+        "block_number": 29567802,
+        "block_hash": "0xc545db788488482407a9cf4403aae2b5c62a4f09c9eb046737513860ca4059e4",
+        "block_timestamp": 1793482739,
+        "created_at": 1793482755,
+        "expires_at": 1793482775,
+        "data_source": "hskswap_v3",
+        "fee_note": "LP fees are already included in amount_out; the input fee estimate is informational."
+      },
+      "amount_out_filled_raw": "11394196023371982335",
+      "modeled_slippage_out_raw": "11405601624996980",
+      "modeled_network_fee_usdt": "0.01",
+      "lp_fee_input_raw_estimate": "3000",
+      "lp_fee_charged_again": false,
+      "realized_pnl_usdt": "0",
+      "fee_methodology": "Quoter output already includes LP fees. Additional slippage reduces output; configurable network cost is deducted from virtual USDT cash."
+    },
+    "sell": {
+      "id": "318cf59b-91db-48a2-8edc-08d0242deef2",
+      "mode": "paper",
+      "receipt": "paper:318cf59b-91db-48a2-8edc-08d0242deef2",
+      "transaction_hash": null,
+      "created_at": 1793482755,
+      "chain_id": 177,
+      "quote": {
+        "id": "85c1a0c5-3c2b-4877-a68b-f3748576a045",
+        "route": {
+          "tokens": [
+            {
+              "asset_id": "WHSK",
+              "chain_id": 177,
+              "address": "0xB210D2120d57b758EE163cFfb43e73728c471Cf1",
+              "symbol": "WHSK",
+              "decimals": 18
+            },
+            {
+              "asset_id": "USDT",
+              "chain_id": 177,
+              "address": "0xf1b50ed67a9e2cc94ad3c477779e2d4cbfff9029",
+              "symbol": "USDT",
+              "decimals": 6
+            }
+          ],
+          "pools": [
+            {
+              "chain_id": 177,
+              "address": "0x4ff515761864e7838b0adb8b5b2b8b7a068905dc",
+              "token0": {
+                "asset_id": "WHSK",
+                "chain_id": 177,
+                "address": "0xB210D2120d57b758EE163cFfb43e73728c471Cf1",
+                "symbol": "WHSK",
+                "decimals": 18
+              },
+              "token1": {
+                "asset_id": "USDT",
+                "chain_id": 177,
+                "address": "0xf1b50ed67a9e2cc94ad3c477779e2d4cbfff9029",
+                "symbol": "USDT",
+                "decimals": 6
+              },
+              "fee_pips": 3000
+            }
+          ]
+        },
+        "amount_in_raw": 11394196023371982335,
+        "amount_out_raw": 993010,
+        "reference_out_raw": "996000.724220408314002442861119582958375554814095588181254320243053312110807424",
+        "fee_multiplier": "0.997",
+        "lp_fee_input_raw_estimate": 34182588070115947,
+        "price_impact_bps": "0.0274120128237206617960181288586655806359535410372256103764920987266783317147415",
+        "gas_estimate": 74185,
+        "states": [
+          {
+            "pool": {
+              "chain_id": 177,
+              "address": "0x4ff515761864e7838b0adb8b5b2b8b7a068905dc",
+              "token0": {
+                "asset_id": "WHSK",
+                "chain_id": 177,
+                "address": "0xB210D2120d57b758EE163cFfb43e73728c471Cf1",
+                "symbol": "WHSK",
+                "decimals": 18
+              },
+              "token1": {
+                "asset_id": "USDT",
+                "chain_id": 177,
+                "address": "0xf1b50ed67a9e2cc94ad3c477779e2d4cbfff9029",
+                "symbol": "USDT",
+                "decimals": 6
+              },
+              "fee_pips": 3000
+            },
+            "block_number": 29567802,
+            "block_hash": "0xc545db788488482407a9cf4403aae2b5c62a4f09c9eb046737513860ca4059e4",
+            "block_timestamp": 1793482739,
+            "sqrt_price_x96": 23424351023060863073728,
+            "liquidity_raw": 1475831005908433993,
+            "balance0_raw": 4992121294964652552406304,
+            "balance1_raw": 436358414215,
+            "mid_token1_per_token0": "0.0874129883475230279077675872745674112775306377870331818475386262316179812328909",
+            "unlocked": true
+          }
+        ],
+        "block_number": 29567802,
+        "block_hash": "0xc545db788488482407a9cf4403aae2b5c62a4f09c9eb046737513860ca4059e4",
+        "block_timestamp": 1793482739,
+        "created_at": 1793482755,
+        "expires_at": 1793482775,
+        "data_source": "hskswap_v3",
+        "fee_note": "LP fees are already included in amount_out; the input fee estimate is informational."
+      },
+      "amount_out_filled_raw": "992016",
+      "modeled_slippage_out_raw": "994",
+      "modeled_network_fee_usdt": "0.01",
+      "lp_fee_input_raw_estimate": "34182588070115947",
+      "lp_fee_charged_again": false,
+      "realized_pnl_usdt": "-0.027984",
+      "fee_methodology": "Quoter output already includes LP fees. Additional slippage reduces output; configurable network cost is deducted from virtual USDT cash."
+    },
+    "pnl": {
+      "mode": "paper",
+      "initial_cash_usdt": "100",
+      "nav_usdt": "99.972016",
+      "net_pnl_usdt": "-0.027984",
+      "realized_pnl_usdt": "-0.027984",
+      "unrealized_pnl_usdt": "0",
+      "fills": 2,
+      "valuation_assumption": "USDT is the accounting numeraire; no independent USD peg is asserted."
+    },
+    "methodology": {
+      "extra_slippage_bps": 10,
+      "network_fee_usdt": "0.01",
+      "disclosure": "LP fees included by QuoterV2; additional slippage is modeled; network fee is a configurable USDT expense model, not measured chain gas."
+    },
+    "purpose": "Operational validation round trip, not an alpha or sustained-profitability run.",
+    "transactions_sent": 0,
+    "on_chain_decision_log": "Not deployed; Phase 2 decisions are local SQLite records."
+  },
+  "initial_http_state": {
+    "mode": "paper",
+    "chain_id": 177,
+    "running": false,
+    "paused": true,
+    "emergency": false,
+    "unwind_pending": false,
+    "started_at": 1793482756,
+    "uptime_seconds": 22,
+    "tick_count": 1,
+    "last_tick_at": 1793482767,
+    "data_status": "LIVE",
+    "data_source": "hskswap_v3",
+    "last_error": null,
+    "block_number": 29567814,
+    "block_hash": "0x8a1b829d1a657cb59e0ebfce8339bde5af907248a4ef625771bf45c7881bc870",
+    "block_timestamp": 1793482763,
+    "markets": {
+      "WHSK": {
+        "asset": "WHSK",
+        "price": "0.0874129883475230279077675872745674112775306377870331818475386262316179812328909",
+        "pool": "0x4ff515761864e7838b0adb8b5b2b8b7a068905dc",
+        "liquidity_raw": "1475831005908433993",
+        "fee_pips": 3000
+      },
+      "WETH": {
+        "asset": "WETH",
+        "price": "2235.70736892011252951284492963271832758238570506555472712434217933300094284990",
+        "pool": "0xb92b79ed6b370d5cfee2e14b1d0983c258304c16",
+        "liquidity_raw": "1012957283335421",
+        "fee_pips": 3000
+      },
+      "WBTC": {
+        "asset": "WBTC",
+        "price": "76841.0816387862598625436260645548547247679786437287611873004683955879297659122",
+        "pool": "0xd9ea2ce468957ba49ccc38c4758ed6ecd561449a",
+        "liquidity_raw": "1823343427",
+        "fee_pips": 3000
+      }
+    },
+    "pnl": {
+      "mode": "paper",
+      "initial_cash_usdt": "100",
+      "nav_usdt": "99.972016",
+      "net_pnl_usdt": "-0.027984",
+      "realized_pnl_usdt": "-0.027984",
+      "unrealized_pnl_usdt": "0",
+      "fills": 2,
+      "valuation_assumption": "USDT is the accounting numeraire; no independent USD peg is asserted."
+    },
+    "last_known_pnl": {
+      "mode": "paper",
+      "initial_cash_usdt": "100",
+      "nav_usdt": "99.972016",
+      "net_pnl_usdt": "-0.027984",
+      "realized_pnl_usdt": "-0.027984",
+      "unrealized_pnl_usdt": "0",
+      "fills": 2,
+      "valuation_assumption": "USDT is the accounting numeraire; no independent USD peg is asserted."
+    },
+    "positions": [],
+    "valuation_fresh": true,
+    "signals": [
+      {
+        "id": "73faa213-4d21-4070-995a-cfacde964660",
+        "type": "mean_reversion",
+        "asset": "WHSK",
+        "action": "skip",
+        "expected_edge_bps": "0",
+        "confidence": "0",
+        "reason": "Warming up: need at least 20 distinct, fresh block observations",
+        "inputs_snapshot": {
+          "samples": 1
+        }
+      },
+      {
+        "id": "86587ae9-18c5-4adf-860e-891af22286a7",
+        "type": "mean_reversion",
+        "asset": "WETH",
+        "action": "skip",
+        "expected_edge_bps": "0",
+        "confidence": "0",
+        "reason": "Warming up: need at least 20 distinct, fresh block observations",
+        "inputs_snapshot": {
+          "samples": 1
+        }
+      },
+      {
+        "id": "b45e577d-7996-4c32-a148-2d2aabf6154b",
+        "type": "mean_reversion",
+        "asset": "WBTC",
+        "action": "skip",
+        "expected_edge_bps": "0",
+        "confidence": "0",
+        "reason": "Warming up: need at least 20 distinct, fresh block observations",
+        "inputs_snapshot": {
+          "samples": 1
+        }
+      }
+    ],
+    "params": {
+      "position_size_pct": "5",
+      "max_trades_per_hour": 6,
+      "risk_level": "balanced",
+      "target_assets": [
+        "WHSK",
+        "WETH",
+        "WBTC"
+      ],
+      "stop_loss_pct": "5",
+      "take_profit_pct": "10",
+      "trailing_stop_pct": null,
+      "max_holding_seconds": 3600,
+      "tick_seconds": 30
+    },
+    "params_version": 1,
+    "caps": {
+      "max_position_size_pct": "10",
+      "max_trades_per_hour": 6,
+      "max_trades_per_day": 20,
+      "max_token_exposure_pct": "30",
+      "max_positions": 3,
+      "daily_loss_limit_pct": "2",
+      "max_drawdown_pct": "10",
+      "cooldown_seconds": 30,
+      "max_stop_loss_pct": "10",
+      "max_take_profit_pct": "15",
+      "max_holding_seconds": 3600,
+      "source": "Reviewed Guard constructor defaults; no public deployment is registered yet"
+    },
+    "risk": {
+      "day": 20757,
+      "day_nav": "99.972016",
+      "high_water": "99.972016",
+      "daily_loss_pct": "0",
+      "drawdown_pct": "0",
+      "max_drawdown_pct": "0"
+    },
+    "trades_this_hour": 2,
+    "trades_today": 2,
+    "fills": [
+      {
+        "id": "318cf59b-91db-48a2-8edc-08d0242deef2",
+        "mode": "paper",
+        "receipt": "paper:318cf59b-91db-48a2-8edc-08d0242deef2",
+        "transaction_hash": null,
+        "created_at": 1793482755,
+        "chain_id": 177,
+        "quote": {
+          "id": "85c1a0c5-3c2b-4877-a68b-f3748576a045",
+          "route": {
+            "tokens": [
+              {
+                "asset_id": "WHSK",
+                "chain_id": 177,
+                "address": "0xB210D2120d57b758EE163cFfb43e73728c471Cf1",
+                "symbol": "WHSK",
+                "decimals": 18
+              },
+              {
+                "asset_id": "USDT",
+                "chain_id": 177,
+                "address": "0xf1b50ed67a9e2cc94ad3c477779e2d4cbfff9029",
+                "symbol": "USDT",
+                "decimals": 6
+              }
+            ],
+            "pools": [
+              {
+                "chain_id": 177,
+                "address": "0x4ff515761864e7838b0adb8b5b2b8b7a068905dc",
+                "token0": {
+                  "asset_id": "WHSK",
+                  "chain_id": 177,
+                  "address": "0xB210D2120d57b758EE163cFfb43e73728c471Cf1",
+                  "symbol": "WHSK",
+                  "decimals": 18
+                },
+                "token1": {
+                  "asset_id": "USDT",
+                  "chain_id": 177,
+                  "address": "0xf1b50ed67a9e2cc94ad3c477779e2d4cbfff9029",
+                  "symbol": "USDT",
+                  "decimals": 6
+                },
+                "fee_pips": 3000
+              }
+            ]
+          },
+          "amount_in_raw": 11394196023371982335,
+          "amount_out_raw": 993010,
+          "reference_out_raw": "996000.724220408314002442861119582958375554814095588181254320243053312110807424",
+          "fee_multiplier": "0.997",
+          "lp_fee_input_raw_estimate": 34182588070115947,
+          "price_impact_bps": "0.0274120128237206617960181288586655806359535410372256103764920987266783317147415",
+          "gas_estimate": 74185,
+          "states": [
+            {
+              "pool": {
+                "chain_id": 177,
+                "address": "0x4ff515761864e7838b0adb8b5b2b8b7a068905dc",
+                "token0": {
+                  "asset_id": "WHSK",
+                  "chain_id": 177,
+                  "address": "0xB210D2120d57b758EE163cFfb43e73728c471Cf1",
+                  "symbol": "WHSK",
+                  "decimals": 18
+                },
+                "token1": {
+                  "asset_id": "USDT",
+                  "chain_id": 177,
+                  "address": "0xf1b50ed67a9e2cc94ad3c477779e2d4cbfff9029",
+                  "symbol": "USDT",
+                  "decimals": 6
+                },
+                "fee_pips": 3000
+              },
+              "block_number": 29567802,
+              "block_hash": "0xc545db788488482407a9cf4403aae2b5c62a4f09c9eb046737513860ca4059e4",
+              "block_timestamp": 1793482739,
+              "sqrt_price_x96": 23424351023060863073728,
+              "liquidity_raw": 1475831005908433993,
+              "balance0_raw": 4992121294964652552406304,
+              "balance1_raw": 436358414215,
+              "mid_token1_per_token0": "0.0874129883475230279077675872745674112775306377870331818475386262316179812328909",
+              "unlocked": true
+            }
+          ],
+          "block_number": 29567802,
+          "block_hash": "0xc545db788488482407a9cf4403aae2b5c62a4f09c9eb046737513860ca4059e4",
+          "block_timestamp": 1793482739,
+          "created_at": 1793482755,
+          "expires_at": 1793482775,
+          "data_source": "hskswap_v3",
+          "fee_note": "LP fees are already included in amount_out; the input fee estimate is informational."
+        },
+        "amount_out_filled_raw": "992016",
+        "modeled_slippage_out_raw": "994",
+        "modeled_network_fee_usdt": "0.01",
+        "lp_fee_input_raw_estimate": "34182588070115947",
+        "lp_fee_charged_again": false,
+        "realized_pnl_usdt": "-0.027984",
+        "fee_methodology": "Quoter output already includes LP fees. Additional slippage reduces output; configurable network cost is deducted from virtual USDT cash."
+      },
+      {
+        "id": "0077fd01-5094-4103-9d2a-e053b3afa0f9",
+        "mode": "paper",
+        "receipt": "paper:0077fd01-5094-4103-9d2a-e053b3afa0f9",
+        "transaction_hash": null,
+        "created_at": 1793482755,
+        "chain_id": 177,
+        "quote": {
+          "id": "8d6f116c-8498-4307-9a08-34e73435e5e5",
+          "route": {
+            "tokens": [
+              {
+                "asset_id": "USDT",
+                "chain_id": 177,
+                "address": "0xf1b50ed67a9e2cc94ad3c477779e2d4cbfff9029",
+                "symbol": "USDT",
+                "decimals": 6
+              },
+              {
+                "asset_id": "WHSK",
+                "chain_id": 177,
+                "address": "0xB210D2120d57b758EE163cFfb43e73728c471Cf1",
+                "symbol": "WHSK",
+                "decimals": 18
+              }
+            ],
+            "pools": [
+              {
+                "chain_id": 177,
+                "address": "0x4ff515761864e7838b0adb8b5b2b8b7a068905dc",
+                "token0": {
+                  "asset_id": "WHSK",
+                  "chain_id": 177,
+                  "address": "0xB210D2120d57b758EE163cFfb43e73728c471Cf1",
+                  "symbol": "WHSK",
+                  "decimals": 18
+                },
+                "token1": {
+                  "asset_id": "USDT",
+                  "chain_id": 177,
+                  "address": "0xf1b50ed67a9e2cc94ad3c477779e2d4cbfff9029",
+                  "symbol": "USDT",
+                  "decimals": 6
+                },
+                "fee_pips": 3000
+              }
+            ]
+          },
+          "amount_in_raw": 1000000,
+          "amount_out_raw": 11405601624996979315,
+          "reference_out_raw": "11439947528442281321.0521557057481625343960052152625954510549270840222609366368",
+          "fee_multiplier": "0.997",
+          "lp_fee_input_raw_estimate": 3000,
+          "price_impact_bps": "0.0228491238649475722386565338032868136379972884935288404881316880587671624920619",
+          "gas_estimate": 73959,
+          "states": [
+            {
+              "pool": {
+                "chain_id": 177,
+                "address": "0x4ff515761864e7838b0adb8b5b2b8b7a068905dc",
+                "token0": {
+                  "asset_id": "WHSK",
+                  "chain_id": 177,
+                  "address": "0xB210D2120d57b758EE163cFfb43e73728c471Cf1",
+                  "symbol": "WHSK",
+                  "decimals": 18
+                },
+                "token1": {
+                  "asset_id": "USDT",
+                  "chain_id": 177,
+                  "address": "0xf1b50ed67a9e2cc94ad3c477779e2d4cbfff9029",
+                  "symbol": "USDT",
+                  "decimals": 6
+                },
+                "fee_pips": 3000
+              },
+              "block_number": 29567802,
+              "block_hash": "0xc545db788488482407a9cf4403aae2b5c62a4f09c9eb046737513860ca4059e4",
+              "block_timestamp": 1793482739,
+              "sqrt_price_x96": 23424351023060863073728,
+              "liquidity_raw": 1475831005908433993,
+              "balance0_raw": 4992121294964652552406304,
+              "balance1_raw": 436358414215,
+              "mid_token1_per_token0": "0.0874129883475230279077675872745674112775306377870331818475386262316179812328909",
+              "unlocked": true
+            }
+          ],
+          "block_number": 29567802,
+          "block_hash": "0xc545db788488482407a9cf4403aae2b5c62a4f09c9eb046737513860ca4059e4",
+          "block_timestamp": 1793482739,
+          "created_at": 1793482755,
+          "expires_at": 1793482775,
+          "data_source": "hskswap_v3",
+          "fee_note": "LP fees are already included in amount_out; the input fee estimate is informational."
+        },
+        "amount_out_filled_raw": "11394196023371982335",
+        "modeled_slippage_out_raw": "11405601624996980",
+        "modeled_network_fee_usdt": "0.01",
+        "lp_fee_input_raw_estimate": "3000",
+        "lp_fee_charged_again": false,
+        "realized_pnl_usdt": "0",
+        "fee_methodology": "Quoter output already includes LP fees. Additional slippage reduces output; configurable network cost is deducted from virtual USDT cash."
+      }
+    ],
+    "decisions": [
+      {
+        "id": "28a8595e-86e2-4fa5-be8a-abf7147ed6af",
+        "created_at": 1793482767,
+        "status": "arbitrage_scan",
+        "payload": {
+          "reason": "No verified closed route",
+          "verified_cycles": 0
+        },
+        "verified_on_chain": false,
+        "commit_tx": null,
+        "reveal_tx": null
+      },
+      {
+        "id": "07191ce4-56af-45c7-9d78-34968a27dd7c",
+        "created_at": 1793482767,
+        "status": "signal_skipped",
+        "payload": {
+          "reason": "Entries paused",
+          "signal": {
+            "action": "skip",
+            "asset": "WBTC",
+            "confidence": "0",
+            "expected_edge_bps": "0",
+            "id": "b45e577d-7996-4c32-a148-2d2aabf6154b",
+            "inputs_snapshot": {
+              "samples": 1
+            },
+            "reason": "Warming up: need at least 20 distinct, fresh block observations",
+            "type": "mean_reversion"
+          }
+        },
+        "verified_on_chain": false,
+        "commit_tx": null,
+        "reveal_tx": null
+      },
+      {
+        "id": "e5d8734a-a875-408c-8540-4f299201829d",
+        "created_at": 1793482767,
+        "status": "signal_skipped",
+        "payload": {
+          "reason": "Entries paused",
+          "signal": {
+            "action": "skip",
+            "asset": "WETH",
+            "confidence": "0",
+            "expected_edge_bps": "0",
+            "id": "86587ae9-18c5-4adf-860e-891af22286a7",
+            "inputs_snapshot": {
+              "samples": 1
+            },
+            "reason": "Warming up: need at least 20 distinct, fresh block observations",
+            "type": "mean_reversion"
+          }
+        },
+        "verified_on_chain": false,
+        "commit_tx": null,
+        "reveal_tx": null
+      },
+      {
+        "id": "60682da7-9986-4cb3-999e-e94dea841fb5",
+        "created_at": 1793482767,
+        "status": "signal_skipped",
+        "payload": {
+          "reason": "Entries paused",
+          "signal": {
+            "action": "skip",
+            "asset": "WHSK",
+            "confidence": "0",
+            "expected_edge_bps": "0",
+            "id": "73faa213-4d21-4070-995a-cfacde964660",
+            "inputs_snapshot": {
+              "samples": 1
+            },
+            "reason": "Warming up: need at least 20 distinct, fresh block observations",
+            "type": "mean_reversion"
+          }
+        },
+        "verified_on_chain": false,
+        "commit_tx": null,
+        "reveal_tx": null
+      },
+      {
+        "id": "f8511981-0cc0-40d9-ba43-7a9a88d97cbc",
+        "created_at": 1793482756,
+        "status": "recovered_paused",
+        "payload": {
+          "mode": "paper",
+          "reason": "Process started; entries require explicit resume"
+        },
+        "verified_on_chain": false,
+        "commit_tx": null,
+        "reveal_tx": null
+      },
+      {
+        "id": "43e03527-3ecb-43ce-856a-8a291fda99f3",
+        "created_at": 1793482755,
+        "status": "paper_filled",
+        "payload": {
+          "fill_id": "318cf59b-91db-48a2-8edc-08d0242deef2",
+          "quote_id": "85c1a0c5-3c2b-4877-a68b-f3748576a045"
+        },
+        "verified_on_chain": false,
+        "commit_tx": null,
+        "reveal_tx": null
+      },
+      {
+        "id": "fa46a64d-7153-49d4-a7ff-be8bcbf8c158",
+        "created_at": 1793482755,
+        "status": "paper_filled",
+        "payload": {
+          "fill_id": "0077fd01-5094-4103-9d2a-e053b3afa0f9",
+          "quote_id": "8d6f116c-8498-4307-9a08-34e73435e5e5"
+        },
+        "verified_on_chain": false,
+        "commit_tx": null,
+        "reveal_tx": null
+      }
+    ],
+    "equity_curve": [
+      {
+        "at": 1793482767,
+        "fills": 2,
+        "initial_cash_usdt": "100",
+        "mode": "paper",
+        "nav_usdt": "99.972016",
+        "net_pnl_usdt": "-0.027984",
+        "realized_pnl_usdt": "-0.027984",
+        "unrealized_pnl_usdt": "0",
+        "valuation_assumption": "USDT is the accounting numeraire; no independent USD peg is asserted."
+      }
+    ],
+    "costs": {
+      "extra_slippage_bps": 10,
+      "network_fee_usdt": "0.01",
+      "disclosure": "LP fees included by QuoterV2; additional slippage is modeled; network fee is a configurable USDT expense model, not measured chain gas."
+    },
+    "live_enabled": false,
+    "public_deployment": null,
+    "disclosure": "PAPER \u00b7 live HSKSwap quotes, virtual funds and modeled costs. Decisions are local; no public on-chain verification is claimed."
+  },
+  "elapsed_seconds": 3591.5,
+  "http_polls": 360,
+  "observed_ticks": 88,
+  "latest_data_status": "LIVE",
+  "latest_error": null,
+  "last_observed_block": 29569592,
+  "fills": 2,
+  "pre_restart": {
+    "available": true,
+    "mode": "paper",
+    "chain_id": 177,
+    "running": true,
+    "paused": true,
+    "emergency": false,
+    "unwind_pending": false,
+    "started_at": 1793482756,
+    "uptime_seconds": 3622,
+    "tick_count": 90,
+    "last_tick_at": 1793486364,
+    "data_status": "LIVE",
+    "data_source": "hskswap_v3",
+    "last_error": null,
+    "block_number": 29569612,
+    "block_hash": "0x38765afd021bff68c9125cb9f66b02f59ebba90d9ef874d679cfb4865e64bc37",
+    "block_timestamp": 1793486359,
+    "markets": {
+      "WHSK": {
+        "asset": "WHSK",
+        "price": "0.0874129883475230279077675872745674112775306377870331818475386262316179812328909",
+        "pool": "0x4ff515761864e7838b0adb8b5b2b8b7a068905dc",
+        "liquidity_raw": "1475831005908433993",
+        "fee_pips": 3000
+      },
+      "WETH": {
+        "asset": "WETH",
+        "price": "2235.61893983280024806907807179540709915651566823052131510790150351083815404830",
+        "pool": "0xb92b79ed6b370d5cfee2e14b1d0983c258304c16",
+        "liquidity_raw": "1012957283335421",
+        "fee_pips": 3000
+      },
+      "WBTC": {
+        "asset": "WBTC",
+        "price": "76841.0816387862598625436260645548547247679786437287611873004683955879297659122",
+        "pool": "0xd9ea2ce468957ba49ccc38c4758ed6ecd561449a",
+        "liquidity_raw": "1823343427",
+        "fee_pips": 3000
+      }
+    },
+    "pnl": {
+      "mode": "paper",
+      "initial_cash_usdt": "100",
+      "nav_usdt": "99.972016",
+      "net_pnl_usdt": "-0.027984",
+      "realized_pnl_usdt": "-0.027984",
+      "unrealized_pnl_usdt": "0",
+      "fills": 2,
+      "valuation_assumption": "USDT is the accounting numeraire; no independent USD peg is asserted."
+    },
+    "last_known_pnl": {
+      "mode": "paper",
+      "initial_cash_usdt": "100",
+      "nav_usdt": "99.972016",
+      "net_pnl_usdt": "-0.027984",
+      "realized_pnl_usdt": "-0.027984",
+      "unrealized_pnl_usdt": "0",
+      "fills": 2,
+      "valuation_assumption": "USDT is the accounting numeraire; no independent USD peg is asserted."
+    },
+    "positions": [],
+    "valuation_fresh": true,
+    "signals": [
+      {
+        "id": "ca989622-daa1-40f0-b091-1d3d8e13fc27",
+        "type": "mean_reversion",
+        "asset": "WHSK",
+        "action": "skip",
+        "expected_edge_bps": "-146.68532788882307491595114640000000000000000000300",
+        "confidence": "0",
+        "reason": "No cost-adjusted mean-reversion entry",
+        "inputs_snapshot": {
+          "samples": 60,
+          "mean": "0.087412988347523027907767587274567411277530637787007",
+          "price": "0.0874129883475230279077675872745674112775306377870331818475386262316179812328909",
+          "z_score": "0.99999999999999999999999999999999999999999999999989",
+          "modeled_round_trip_cost_bps": "146.6853278888230749159511464"
+        }
+      }
+    ],
+    "params": {
+      "position_size_pct": "3",
+      "max_trades_per_hour": 3,
+      "risk_level": "conservative",
+      "target_assets": [
+        "WHSK"
+      ],
+      "stop_loss_pct": "3",
+      "take_profit_pct": "10",
+      "trailing_stop_pct": null,
+      "max_holding_seconds": 3600,
+      "tick_seconds": 30
+    },
+    "params_version": 3,
+    "caps": {
+      "max_position_size_pct": "10",
+      "max_trades_per_hour": 6,
+      "max_trades_per_day": 20,
+      "max_token_exposure_pct": "30",
+      "max_positions": 3,
+      "daily_loss_limit_pct": "2",
+      "max_drawdown_pct": "10",
+      "cooldown_seconds": 30,
+      "max_stop_loss_pct": "10",
+      "max_take_profit_pct": "15",
+      "max_holding_seconds": 3600,
+      "source": "Reviewed Guard constructor defaults; no public deployment is registered yet"
+    },
+    "risk": {
+      "day": 20757,
+      "day_nav": "99.972016",
+      "high_water": "99.972016",
+      "daily_loss_pct": "0",
+      "drawdown_pct": "0",
+      "max_drawdown_pct": "0"
+    },
+    "trades_this_hour": 0,
+    "trades_today": 2,
+    "fills": [
+      {
+        "id": "318cf59b-91db-48a2-8edc-08d0242deef2",
+        "mode": "paper",
+        "receipt": "paper:318cf59b-91db-48a2-8edc-08d0242deef2",
+        "transaction_hash": null,
+        "created_at": 1793482755,
+        "chain_id": 177,
+        "quote": {
+          "id": "85c1a0c5-3c2b-4877-a68b-f3748576a045",
+          "route": {
+            "tokens": [
+              {
+                "asset_id": "WHSK",
+                "chain_id": 177,
+                "address": "0xB210D2120d57b758EE163cFfb43e73728c471Cf1",
+                "symbol": "WHSK",
+                "decimals": 18
+              },
+              {
+                "asset_id": "USDT",
+                "chain_id": 177,
+                "address": "0xf1b50ed67a9e2cc94ad3c477779e2d4cbfff9029",
+                "symbol": "USDT",
+                "decimals": 6
+              }
+            ],
+            "pools": [
+              {
+                "chain_id": 177,
+                "address": "0x4ff515761864e7838b0adb8b5b2b8b7a068905dc",
+                "token0": {
+                  "asset_id": "WHSK",
+                  "chain_id": 177,
+                  "address": "0xB210D2120d57b758EE163cFfb43e73728c471Cf1",
+                  "symbol": "WHSK",
+                  "decimals": 18
+                },
+                "token1": {
+                  "asset_id": "USDT",
+                  "chain_id": 177,
+                  "address": "0xf1b50ed67a9e2cc94ad3c477779e2d4cbfff9029",
+                  "symbol": "USDT",
+                  "decimals": 6
+                },
+                "fee_pips": 3000
+              }
+            ]
+          },
+          "amount_in_raw": 11394196023371982335,
+          "amount_out_raw": 993010,
+          "reference_out_raw": "996000.724220408314002442861119582958375554814095588181254320243053312110807424",
+          "fee_multiplier": "0.997",
+          "lp_fee_input_raw_estimate": 34182588070115947,
+          "price_impact_bps": "0.0274120128237206617960181288586655806359535410372256103764920987266783317147415",
+          "gas_estimate": 74185,
+          "states": [
+            {
+              "pool": {
+                "chain_id": 177,
+                "address": "0x4ff515761864e7838b0adb8b5b2b8b7a068905dc",
+                "token0": {
+                  "asset_id": "WHSK",
+                  "chain_id": 177,
+                  "address": "0xB210D2120d57b758EE163cFfb43e73728c471Cf1",
+                  "symbol": "WHSK",
+                  "decimals": 18
+                },
+                "token1": {
+                  "asset_id": "USDT",
+                  "chain_id": 177,
+                  "address": "0xf1b50ed67a9e2cc94ad3c477779e2d4cbfff9029",
+                  "symbol": "USDT",
+                  "decimals": 6
+                },
+                "fee_pips": 3000
+              },
+              "block_number": 29567802,
+              "block_hash": "0xc545db788488482407a9cf4403aae2b5c62a4f09c9eb046737513860ca4059e4",
+              "block_timestamp": 1793482739,
+              "sqrt_price_x96": 23424351023060863073728,
+              "liquidity_raw": 1475831005908433993,
+              "balance0_raw": 4992121294964652552406304,
+              "balance1_raw": 436358414215,
+              "mid_token1_per_token0": "0.0874129883475230279077675872745674112775306377870331818475386262316179812328909",
+              "unlocked": true
+            }
+          ],
+          "block_number": 29567802,
+          "block_hash": "0xc545db788488482407a9cf4403aae2b5c62a4f09c9eb046737513860ca4059e4",
+          "block_timestamp": 1793482739,
+          "created_at": 1793482755,
+          "expires_at": 1793482775,
+          "data_source": "hskswap_v3",
+          "fee_note": "LP fees are already included in amount_out; the input fee estimate is informational."
+        },
+        "amount_out_filled_raw": "992016",
+        "modeled_slippage_out_raw": "994",
+        "modeled_network_fee_usdt": "0.01",
+        "lp_fee_input_raw_estimate": "34182588070115947",
+        "lp_fee_charged_again": false,
+        "realized_pnl_usdt": "-0.027984",
+        "fee_methodology": "Quoter output already includes LP fees. Additional slippage reduces output; configurable network cost is deducted from virtual USDT cash."
+      },
+      {
+        "id": "0077fd01-5094-4103-9d2a-e053b3afa0f9",
+        "mode": "paper",
+        "receipt": "paper:0077fd01-5094-4103-9d2a-e053b3afa0f9",
+        "transaction_hash": null,
+        "created_at": 1793482755,
+        "chain_id": 177,
+        "quote": {
+          "id": "8d6f116c-8498-4307-9a08-34e73435e5e5",
+          "route": {
+            "tokens": [
+              {
+                "asset_id": "USDT",
+                "chain_id": 177,
+                "address": "0xf1b50ed67a9e2cc94ad3c477779e2d4cbfff9029",
+                "symbol": "USDT",
+                "decimals": 6
+              },
+              {
+                "asset_id": "WHSK",
+                "chain_id": 177,
+                "address": "0xB210D2120d57b758EE163cFfb43e73728c471Cf1",
+                "symbol": "WHSK",
+                "decimals": 18
+              }
+            ],
+            "pools": [
+              {
+                "chain_id": 177,
+                "address": "0x4ff515761864e7838b0adb8b5b2b8b7a068905dc",
+                "token0": {
+                  "asset_id": "WHSK",
+                  "chain_id": 177,
+                  "address": "0xB210D2120d57b758EE163cFfb43e73728c471Cf1",
+                  "symbol": "WHSK",
+                  "decimals": 18
+                },
+                "token1": {
+                  "asset_id": "USDT",
+                  "chain_id": 177,
+                  "address": "0xf1b50ed67a9e2cc94ad3c477779e2d4cbfff9029",
+                  "symbol": "USDT",
+                  "decimals": 6
+                },
+                "fee_pips": 3000
+              }
+            ]
+          },
+          "amount_in_raw": 1000000,
+          "amount_out_raw": 11405601624996979315,
+          "reference_out_raw": "11439947528442281321.0521557057481625343960052152625954510549270840222609366368",
+          "fee_multiplier": "0.997",
+          "lp_fee_input_raw_estimate": 3000,
+          "price_impact_bps": "0.0228491238649475722386565338032868136379972884935288404881316880587671624920619",
+          "gas_estimate": 73959,
+          "states": [
+            {
+              "pool": {
+                "chain_id": 177,
+                "address": "0x4ff515761864e7838b0adb8b5b2b8b7a068905dc",
+                "token0": {
+                  "asset_id": "WHSK",
+                  "chain_id": 177,
+                  "address": "0xB210D2120d57b758EE163cFfb43e73728c471Cf1",
+                  "symbol": "WHSK",
+                  "decimals": 18
+                },
+                "token1": {
+                  "asset_id": "USDT",
+                  "chain_id": 177,
+                  "address": "0xf1b50ed67a9e2cc94ad3c477779e2d4cbfff9029",
+                  "symbol": "USDT",
+                  "decimals": 6
+                },
+                "fee_pips": 3000
+              },
+              "block_number": 29567802,
+              "block_hash": "0xc545db788488482407a9cf4403aae2b5c62a4f09c9eb046737513860ca4059e4",
+              "block_timestamp": 1793482739,
+              "sqrt_price_x96": 23424351023060863073728,
+              "liquidity_raw": 1475831005908433993,
+              "balance0_raw": 4992121294964652552406304,
+              "balance1_raw": 436358414215,
+              "mid_token1_per_token0": "0.0874129883475230279077675872745674112775306377870331818475386262316179812328909",
+              "unlocked": true
+            }
+          ],
+          "block_number": 29567802,
+          "block_hash": "0xc545db788488482407a9cf4403aae2b5c62a4f09c9eb046737513860ca4059e4",
+          "block_timestamp": 1793482739,
+          "created_at": 1793482755,
+          "expires_at": 1793482775,
+          "data_source": "hskswap_v3",
+          "fee_note": "LP fees are already included in amount_out; the input fee estimate is informational."
+        },
+        "amount_out_filled_raw": "11394196023371982335",
+        "modeled_slippage_out_raw": "11405601624996980",
+        "modeled_network_fee_usdt": "0.01",
+        "lp_fee_input_raw_estimate": "3000",
+        "lp_fee_charged_again": false,
+        "realized_pnl_usdt": "0",
+        "fee_methodology": "Quoter output already includes LP fees. Additional slippage reduces output; configurable network cost is deducted from virtual USDT cash."
+      }
+    ],
+    "decisions": [
+      {
+        "id": "53dc3908-e925-41f9-8e0d-6a5bd62032dc",
+        "created_at": 1793486378,
+        "status": "control_changed",
+        "payload": {
+          "action": "pause",
+          "mode": "paper",
+          "paused": true
+        },
+        "verified_on_chain": false,
+        "commit_tx": null,
+        "reveal_tx": null
+      },
+      {
+        "id": "a872cc3d-b199-40f7-87b2-22165e90c83d",
+        "created_at": 1793486364,
+        "status": "arbitrage_scan",
+        "payload": {
+          "reason": "No verified closed route",
+          "verified_cycles": 0
+        },
+        "verified_on_chain": false,
+        "commit_tx": null,
+        "reveal_tx": null
+      },
+      {
+        "id": "321a0823-a1db-4596-bc8b-1a163e161441",
+        "created_at": 1793486364,
+        "status": "signal_skipped",
+        "payload": {
+          "reason": "No cost-adjusted mean-reversion entry",
+          "signal": {
+            "action": "skip",
+            "asset": "WHSK",
+            "confidence": "0",
+            "expected_edge_bps": "-146.68532788882307491595114640000000000000000000300",
+            "id": "ca989622-daa1-40f0-b091-1d3d8e13fc27",
+            "inputs_snapshot": {
+              "mean": "0.087412988347523027907767587274567411277530637787007",
+              "modeled_round_trip_cost_bps": "146.6853278888230749159511464",
+              "price": "0.0874129883475230279077675872745674112775306377870331818475386262316179812328909",
+              "samples": 60,
+              "z_score": "0.99999999999999999999999999999999999999999999999989"
+            },
+            "reason": "No cost-adjusted mean-reversion entry",
+            "type": "mean_reversion"
+          }
+        },
+        "verified_on_chain": false,
+        "commit_tx": null,
+        "reveal_tx": null
+      },
+      {
+        "id": "c0119b34-b2e9-41e2-b442-039bceefc831",
+        "created_at": 1793486323,
+        "status": "arbitrage_scan",
+        "payload": {
+          "reason": "No verified closed route",
+          "verified_cycles": 0
+        },
+        "verified_on_chain": false,
+        "commit_tx": null,
+        "reveal_tx": null
+      },
+      {
+        "id": "fd74fbb3-74f1-41d9-8776-047cd352cccd",
+        "created_at": 1793486323,
+        "status": "signal_skipped",
+        "payload": {
+          "reason": "No cost-adjusted mean-reversion entry",
+          "signal": {
+            "action": "skip",
+            "asset": "WHSK",
+            "confidence": "0",
+            "expected_edge_bps": "-146.68532788882307491595114640000000000000000000300",
+            "id": "d3fd7c43-e4a3-4b61-b09f-30a1f23507cd",
+            "inputs_snapshot": {
+              "mean": "0.087412988347523027907767587274567411277530637787007",
+              "modeled_round_trip_cost_bps": "146.6853278888230749159511464",
+              "price": "0.0874129883475230279077675872745674112775306377870331818475386262316179812328909",
+              "samples": 60,
+              "z_score": "0.99999999999999999999999999999999999999999999999989"
+            },
+            "reason": "No cost-adjusted mean-reversion entry",
+            "type": "mean_reversion"
+          }
+        },
+        "verified_on_chain": false,
+        "commit_tx": null,
+        "reveal_tx": null
+      },
+      {
+        "id": "09c22030-0676-413f-96e3-dc1768d18301",
+        "created_at": 1793486282,
+        "status": "arbitrage_scan",
+        "payload": {
+          "reason": "No verified closed route",
+          "verified_cycles": 0
+        },
+        "verified_on_chain": false,
+        "commit_tx": null,
+        "reveal_tx": null
+      },
+      {
+        "id": "5c6d5547-f35d-444f-ab1f-84cc81843f50",
+        "created_at": 1793486282,
+        "status": "signal_skipped",
+        "payload": {
+          "reason": "No cost-adjusted mean-reversion entry",
+          "signal": {
+            "action": "skip",
+            "asset": "WHSK",
+            "confidence": "0",
+            "expected_edge_bps": "-146.68532788882307491595114640000000000000000000300",
+            "id": "0d66cc0e-07d5-4ac4-be68-947286d308e1",
+            "inputs_snapshot": {
+              "mean": "0.087412988347523027907767587274567411277530637787007",
+              "modeled_round_trip_cost_bps": "146.6853278888230749159511464",
+              "price": "0.0874129883475230279077675872745674112775306377870331818475386262316179812328909",
+              "samples": 60,
+              "z_score": "0.99999999999999999999999999999999999999999999999989"
+            },
+            "reason": "No cost-adjusted mean-reversion entry",
+            "type": "mean_reversion"
+          }
+        },
+        "verified_on_chain": false,
+        "commit_tx": null,
+        "reveal_tx": null
+      },
+      {
+        "id": "4d3cc729-c0ce-4257-8609-8b3e9cc8ac7d",
+        "created_at": 1793486242,
+        "status": "arbitrage_scan",
+        "payload": {
+          "reason": "No verified closed route",
+          "verified_cycles": 0
+        },
+        "verified_on_chain": false,
+        "commit_tx": null,
+        "reveal_tx": null
+      },
+      {
+        "id": "1f02c4f4-e085-4572-a485-bec98a393341",
+        "created_at": 1793486241,
+        "status": "signal_skipped",
+        "payload": {
+          "reason": "No cost-adjusted mean-reversion entry",
+          "signal": {
+            "action": "skip",
+            "asset": "WHSK",
+            "confidence": "0",
+            "expected_edge_bps": "-146.68532788882307491595114640000000000000000000300",
+            "id": "1a9aa43c-62bf-4c78-a6a7-c3fe024d867e",
+            "inputs_snapshot": {
+              "mean": "0.087412988347523027907767587274567411277530637787007",
+              "modeled_round_trip_cost_bps": "146.6853278888230749159511464",
+              "price": "0.0874129883475230279077675872745674112775306377870331818475386262316179812328909",
+              "samples": 60,
+              "z_score": "0.99999999999999999999999999999999999999999999999989"
+            },
+            "reason": "No cost-adjusted mean-reversion entry",
+            "type": "mean_reversion"
+          }
+        },
+        "verified_on_chain": false,
+        "commit_tx": null,
+        "reveal_tx": null
+      },
+      {
+        "id": "56fed794-9636-42e0-b481-242d7f893432",
+        "created_at": 1793486200,
+        "status": "arbitrage_scan",
+        "payload": {
+          "reason": "No verified closed route",
+          "verified_cycles": 0
+        },
+        "verified_on_chain": false,
+        "commit_tx": null,
+        "reveal_tx": null
+      },
+      {
+        "id": "c769b68b-9710-4289-9471-25cf011b1c5e",
+        "created_at": 1793486200,
+        "status": "signal_skipped",
+        "payload": {
+          "reason": "No cost-adjusted mean-reversion entry",
+          "signal": {
+            "action": "skip",
+            "asset": "WHSK",
+            "confidence": "0",
+            "expected_edge_bps": "-146.68532788882307491595114640000000000000000000300",
+            "id": "5c60b6b7-b4a5-4818-82c3-4433ad04caa5",
+            "inputs_snapshot": {
+              "mean": "0.087412988347523027907767587274567411277530637787007",
+              "modeled_round_trip_cost_bps": "146.6853278888230749159511464",
+              "price": "0.0874129883475230279077675872745674112775306377870331818475386262316179812328909",
+              "samples": 60,
+              "z_score": "0.99999999999999999999999999999999999999999999999989"
+            },
+            "reason": "No cost-adjusted mean-reversion entry",
+            "type": "mean_reversion"
+          }
+        },
+        "verified_on_chain": false,
+        "commit_tx": null,
+        "reveal_tx": null
+      },
+      {
+        "id": "8a5567f6-2b24-4b28-8fa4-6b7fe00fc96f",
+        "created_at": 1793486159,
+        "status": "arbitrage_scan",
+        "payload": {
+          "reason": "No verified closed route",
+          "verified_cycles": 0
+        },
+        "verified_on_chain": false,
+        "commit_tx": null,
+        "reveal_tx": null
+      },
+      {
+        "id": "daaed999-ebd3-49a2-aabf-580616940cc1",
+        "created_at": 1793486159,
+        "status": "signal_skipped",
+        "payload": {
+          "reason": "No cost-adjusted mean-reversion entry",
+          "signal": {
+            "action": "skip",
+            "asset": "WHSK",
+            "confidence": "0",
+            "expected_edge_bps": "-146.68532788882307491595114640000000000000000000300",
+            "id": "ec47b71a-5a6e-48c6-900d-02a82dcdacec",
+            "inputs_snapshot": {
+              "mean": "0.087412988347523027907767587274567411277530637787007",
+              "modeled_round_trip_cost_bps": "146.6853278888230749159511464",
+              "price": "0.0874129883475230279077675872745674112775306377870331818475386262316179812328909",
+              "samples": 60,
+              "z_score": "0.99999999999999999999999999999999999999999999999989"
+            },
+            "reason": "No cost-adjusted mean-reversion entry",
+            "type": "mean_reversion"
+          }
+        },
+        "verified_on_chain": false,
+        "commit_tx": null,
+        "reveal_tx": null
+      },
+      {
+        "id": "22bf9954-7f38-47f8-9379-fe421698a4d9",
+        "created_at": 1793486119,
+        "status": "arbitrage_scan",
+        "payload": {
+          "reason": "No verified closed route",
+          "verified_cycles": 0
+        },
+        "verified_on_chain": false,
+        "commit_tx": null,
+        "reveal_tx": null
+      },
+      {
+        "id": "b50ee9c7-a045-4ed1-a376-238812492382",
+        "created_at": 1793486119,
+        "status": "signal_skipped",
+        "payload": {
+          "reason": "No cost-adjusted mean-reversion entry",
+          "signal": {
+            "action": "skip",
+            "asset": "WHSK",
+            "confidence": "0",
+            "expected_edge_bps": "-146.68532788882307491595114640000000000000000000300",
+            "id": "9adcadc2-8f36-43f2-b24e-ccf1af0d7a96",
+            "inputs_snapshot": {
+              "mean": "0.087412988347523027907767587274567411277530637787007",
+              "modeled_round_trip_cost_bps": "146.6853278888230749159511464",
+              "price": "0.0874129883475230279077675872745674112775306377870331818475386262316179812328909",
+              "samples": 60,
+              "z_score": "0.99999999999999999999999999999999999999999999999989"
+            },
+            "reason": "No cost-adjusted mean-reversion entry",
+            "type": "mean_reversion"
+          }
+        },
+        "verified_on_chain": false,
+        "commit_tx": null,
+        "reveal_tx": null
+      },
+      {
+        "id": "d72000e7-4833-4418-85c4-509535f08845",
+        "created_at": 1793486077,
+        "status": "arbitrage_scan",
+        "payload": {
+          "reason": "No verified closed route",
+          "verified_cycles": 0
+        },
+        "verified_on_chain": false,
+        "commit_tx": null,
+        "reveal_tx": null
+      },
+      {
+        "id": "c7d2c7e4-b303-4238-9ef4-2220ab09baa5",
+        "created_at": 1793486077,
+        "status": "signal_skipped",
+        "payload": {
+          "reason": "No cost-adjusted mean-reversion entry",
+          "signal": {
+            "action": "skip",
+            "asset": "WHSK",
+            "confidence": "0",
+            "expected_edge_bps": "-146.68532788882307491595114640000000000000000000300",
+            "id": "e74b6203-a2c4-4f00-857e-ddd3f11911a6",
+            "inputs_snapshot": {
+              "mean": "0.087412988347523027907767587274567411277530637787007",
+              "modeled_round_trip_cost_bps": "146.6853278888230749159511464",
+              "price": "0.0874129883475230279077675872745674112775306377870331818475386262316179812328909",
+              "samples": 60,
+              "z_score": "0.99999999999999999999999999999999999999999999999989"
+            },
+            "reason": "No cost-adjusted mean-reversion entry",
+            "type": "mean_reversion"
+          }
+        },
+        "verified_on_chain": false,
+        "commit_tx": null,
+        "reveal_tx": null
+      },
+      {
+        "id": "ebf52434-105e-4ab2-8d70-4e8fb8095d13",
+        "created_at": 1793486036,
+        "status": "arbitrage_scan",
+        "payload": {
+          "reason": "No verified closed route",
+          "verified_cycles": 0
+        },
+        "verified_on_chain": false,
+        "commit_tx": null,
+        "reveal_tx": null
+      },
+      {
+        "id": "8e0c0fc1-1ce1-45b4-aa48-b0442513c3a7",
+        "created_at": 1793486036,
+        "status": "signal_skipped",
+        "payload": {
+          "reason": "No cost-adjusted mean-reversion entry",
+          "signal": {
+            "action": "skip",
+            "asset": "WHSK",
+            "confidence": "0",
+            "expected_edge_bps": "-146.68532788882307491595114640000000000000000000300",
+            "id": "0ce1e1b9-977b-4713-9561-b97ba1bc438f",
+            "inputs_snapshot": {
+              "mean": "0.087412988347523027907767587274567411277530637787007",
+              "modeled_round_trip_cost_bps": "146.6853278888230749159511464",
+              "price": "0.0874129883475230279077675872745674112775306377870331818475386262316179812328909",
+              "samples": 60,
+              "z_score": "0.99999999999999999999999999999999999999999999999989"
+            },
+            "reason": "No cost-adjusted mean-reversion entry",
+            "type": "mean_reversion"
+          }
+        },
+        "verified_on_chain": false,
+        "commit_tx": null,
+        "reveal_tx": null
+      },
+      {
+        "id": "b03b1867-f182-47b7-ae38-4e81fa3ff14f",
+        "created_at": 1793485995,
+        "status": "arbitrage_scan",
+        "payload": {
+          "reason": "No verified closed route",
+          "verified_cycles": 0
+        },
+        "verified_on_chain": false,
+        "commit_tx": null,
+        "reveal_tx": null
+      },
+      {
+        "id": "656b1ea4-fd93-4b0c-999f-ebdcef1b5094",
+        "created_at": 1793485995,
+        "status": "signal_skipped",
+        "payload": {
+          "reason": "No cost-adjusted mean-reversion entry",
+          "signal": {
+            "action": "skip",
+            "asset": "WHSK",
+            "confidence": "0",
+            "expected_edge_bps": "-146.68532788882307491595114640000000000000000000300",
+            "id": "2dd14e8b-423c-4073-b726-26450833ac99",
+            "inputs_snapshot": {
+              "mean": "0.087412988347523027907767587274567411277530637787007",
+              "modeled_round_trip_cost_bps": "146.6853278888230749159511464",
+              "price": "0.0874129883475230279077675872745674112775306377870331818475386262316179812328909",
+              "samples": 60,
+              "z_score": "0.99999999999999999999999999999999999999999999999989"
+            },
+            "reason": "No cost-adjusted mean-reversion entry",
+            "type": "mean_reversion"
+          }
+        },
+        "verified_on_chain": false,
+        "commit_tx": null,
+        "reveal_tx": null
+      },
+      {
+        "id": "3716cfae-8a52-42e5-bcc0-dcdaaa230fc0",
+        "created_at": 1793485954,
+        "status": "arbitrage_scan",
+        "payload": {
+          "reason": "No verified closed route",
+          "verified_cycles": 0
+        },
+        "verified_on_chain": false,
+        "commit_tx": null,
+        "reveal_tx": null
+      },
+      {
+        "id": "9cdb777a-ea6b-45da-a32e-c604239d8d73",
+        "created_at": 1793485954,
+        "status": "signal_skipped",
+        "payload": {
+          "reason": "No cost-adjusted mean-reversion entry",
+          "signal": {
+            "action": "skip",
+            "asset": "WHSK",
+            "confidence": "0",
+            "expected_edge_bps": "-146.68532788882307491595114640000000000000000000300",
+            "id": "6023cc7d-ca7b-49dc-b65d-5e2ece2708f0",
+            "inputs_snapshot": {
+              "mean": "0.087412988347523027907767587274567411277530637787007",
+              "modeled_round_trip_cost_bps": "146.6853278888230749159511464",
+              "price": "0.0874129883475230279077675872745674112775306377870331818475386262316179812328909",
+              "samples": 60,
+              "z_score": "0.99999999999999999999999999999999999999999999999989"
+            },
+            "reason": "No cost-adjusted mean-reversion entry",
+            "type": "mean_reversion"
+          }
+        },
+        "verified_on_chain": false,
+        "commit_tx": null,
+        "reveal_tx": null
+      },
+      {
+        "id": "398191e9-63cb-470b-8385-83ed44cc6190",
+        "created_at": 1793485913,
+        "status": "data_unavailable",
+        "payload": {
+          "action": "no new fill",
+          "reason": "No verified RPC response for eth_getBlockByNumber: transport_or_invalid_response, transport_or_invalid_response, transport_or_invalid_response, transport_or_invalid_response"
+        },
+        "verified_on_chain": false,
+        "commit_tx": null,
+        "reveal_tx": null
+      },
+      {
+        "id": "0af38c1e-237b-458d-b4c0-8900e83eb7e3",
+        "created_at": 1793485883,
+        "status": "data_unavailable",
+        "payload": {
+          "action": "no new fill",
+          "reason": "No verified RPC response for eth_getBlockByNumber: transport_or_invalid_response, transport_or_invalid_response, transport_or_invalid_response, transport_or_invalid_response"
+        },
+        "verified_on_chain": false,
+        "commit_tx": null,
+        "reveal_tx": null
+      },
+      {
+        "id": "3dfc5d8b-1c2e-4d17-b601-6394b5f6820d",
+        "created_at": 1793485854,
+        "status": "data_unavailable",
+        "payload": {
+          "action": "no new fill",
+          "reason": "No verified RPC response for eth_getBlockByNumber: transport_or_invalid_response, transport_or_invalid_response, transport_or_invalid_response, transport_or_invalid_response"
+        },
+        "verified_on_chain": false,
+        "commit_tx": null,
+        "reveal_tx": null
+      },
+      {
+        "id": "39d22e01-c70b-4291-b479-41260fca4d36",
+        "created_at": 1793485823,
+        "status": "data_unavailable",
+        "payload": {
+          "action": "no new fill",
+          "reason": "No verified RPC response for eth_getBlockByNumber: transport_or_invalid_response, transport_or_invalid_response, transport_or_invalid_response, transport_or_invalid_response"
+        },
+        "verified_on_chain": false,
+        "commit_tx": null,
+        "reveal_tx": null
+      },
+      {
+        "id": "b1043519-bbf6-4d87-ab88-4454cb657841",
+        "created_at": 1793485794,
+        "status": "data_unavailable",
+        "payload": {
+          "action": "no new fill",
+          "reason": "No verified RPC response for eth_getBlockByNumber: transport_or_invalid_response, transport_or_invalid_response, transport_or_invalid_response, transport_or_invalid_response"
+        },
+        "verified_on_chain": false,
+        "commit_tx": null,
+        "reveal_tx": null
+      },
+      {
+        "id": "49bfa58f-7779-4dd8-b831-242bb7594945",
+        "created_at": 1793485764,
+        "status": "data_unavailable",
+        "payload": {
+          "action": "no new fill",
+          "reason": "No verified RPC response for eth_getBlockByNumber: transport_or_invalid_response, transport_or_invalid_response, transport_or_invalid_response, transport_or_invalid_response"
+        },
+        "verified_on_chain": false,
+        "commit_tx": null,
+        "reveal_tx": null
+      },
+      {
+        "id": "1f4ce87e-2fdd-4d07-8306-d611635022af",
+        "created_at": 1793485733,
+        "status": "data_unavailable",
+        "payload": {
+          "action": "no new fill",
+          "reason": "No verified RPC response for eth_getBlockByNumber: transport_or_invalid_response, transport_or_invalid_response, transport_or_invalid_response, transport_or_invalid_response"
+        },
+        "verified_on_chain": false,
+        "commit_tx": null,
+        "reveal_tx": null
+      },
+      {
+        "id": "f5752454-aaa6-4e41-879c-f43f45f03dae",
+        "created_at": 1793485706,
+        "status": "data_unavailable",
+        "payload": {
+          "action": "no new fill",
+          "reason": "No verified RPC response for eth_call: transport_or_invalid_response, transport_or_invalid_response, transport_or_invalid_response, transport_or_invalid_response"
+        },
+        "verified_on_chain": false,
+        "commit_tx": null,
+        "reveal_tx": null
+      },
+      {
+        "id": "fc6d9602-3394-4f73-ad21-8f8793549cea",
+        "created_at": 1793485703,
+        "status": "arbitrage_scan",
+        "payload": {
+          "reason": "No verified closed route",
+          "verified_cycles": 0
+        },
+        "verified_on_chain": false,
+        "commit_tx": null,
+        "reveal_tx": null
+      },
+      {
+        "id": "ea4add7e-1293-4485-a52d-80aac7365d7b",
+        "created_at": 1793485703,
+        "status": "signal_skipped",
+        "payload": {
+          "reason": "No cost-adjusted mean-reversion entry",
+          "signal": {
+            "action": "skip",
+            "asset": "WHSK",
+            "confidence": "0",
+            "expected_edge_bps": "-146.68532788882307491595114640000000000000000000300",
+            "id": "45913543-b828-4e63-8756-d577f5a5de5e",
+            "inputs_snapshot": {
+              "mean": "0.087412988347523027907767587274567411277530637787007",
+              "modeled_round_trip_cost_bps": "146.6853278888230749159511464",
+              "price": "0.0874129883475230279077675872745674112775306377870331818475386262316179812328909",
+              "samples": 60,
+              "z_score": "0.99999999999999999999999999999999999999999999999989"
+            },
+            "reason": "No cost-adjusted mean-reversion entry",
+            "type": "mean_reversion"
+          }
+        },
+        "verified_on_chain": false,
+        "commit_tx": null,
+        "reveal_tx": null
+      },
+      {
+        "id": "1ebc47c5-722c-435b-9adc-458fd90a66bc",
+        "created_at": 1793485657,
+        "status": "arbitrage_scan",
+        "payload": {
+          "reason": "No verified closed route",
+          "verified_cycles": 0
+        },
+        "verified_on_chain": false,
+        "commit_tx": null,
+        "reveal_tx": null
+      },
+      {
+        "id": "75441657-c29b-43bf-95fc-b10a4358c2c0",
+        "created_at": 1793485657,
+        "status": "signal_skipped",
+        "payload": {
+          "reason": "No cost-adjusted mean-reversion entry",
+          "signal": {
+            "action": "skip",
+            "asset": "WHSK",
+            "confidence": "0",
+            "expected_edge_bps": "-146.68532788882307491595114640000000000000000000300",
+            "id": "b4b1eb8f-e8cc-4dd0-ad32-a2d76886417d",
+            "inputs_snapshot": {
+              "mean": "0.087412988347523027907767587274567411277530637787007",
+              "modeled_round_trip_cost_bps": "146.6853278888230749159511464",
+              "price": "0.0874129883475230279077675872745674112775306377870331818475386262316179812328909",
+              "samples": 60,
+              "z_score": "0.99999999999999999999999999999999999999999999999989"
+            },
+            "reason": "No cost-adjusted mean-reversion entry",
+            "type": "mean_reversion"
+          }
+        },
+        "verified_on_chain": false,
+        "commit_tx": null,
+        "reveal_tx": null
+      },
+      {
+        "id": "fac1716b-a385-49af-b8ad-d4cb5ec6328f",
+        "created_at": 1793485609,
+        "status": "arbitrage_scan",
+        "payload": {
+          "reason": "No verified closed route",
+          "verified_cycles": 0
+        },
+        "verified_on_chain": false,
+        "commit_tx": null,
+        "reveal_tx": null
+      },
+      {
+        "id": "7884f7b7-51d0-485a-acb0-8fc1f39e555c",
+        "created_at": 1793485609,
+        "status": "signal_skipped",
+        "payload": {
+          "reason": "No cost-adjusted mean-reversion entry",
+          "signal": {
+            "action": "skip",
+            "asset": "WHSK",
+            "confidence": "0",
+            "expected_edge_bps": "-146.68532788882307491595114640000000000000000000300",
+            "id": "5f173b90-6112-48c3-bc53-1d702ee00513",
+            "inputs_snapshot": {
+              "mean": "0.087412988347523027907767587274567411277530637787007",
+              "modeled_round_trip_cost_bps": "146.6853278888230749159511464",
+              "price": "0.0874129883475230279077675872745674112775306377870331818475386262316179812328909",
+              "samples": 60,
+              "z_score": "0.99999999999999999999999999999999999999999999999989"
+            },
+            "reason": "No cost-adjusted mean-reversion entry",
+            "type": "mean_reversion"
+          }
+        },
+        "verified_on_chain": false,
+        "commit_tx": null,
+        "reveal_tx": null
+      },
+      {
+        "id": "c5697f1a-0827-4a61-b208-ba3721287855",
+        "created_at": 1793485565,
+        "status": "arbitrage_scan",
+        "payload": {
+          "reason": "No verified closed route",
+          "verified_cycles": 0
+        },
+        "verified_on_chain": false,
+        "commit_tx": null,
+        "reveal_tx": null
+      },
+      {
+        "id": "fe147dd2-c3da-47d7-8b88-2bae1359bef6",
+        "created_at": 1793485565,
+        "status": "signal_skipped",
+        "payload": {
+          "reason": "No cost-adjusted mean-reversion entry",
+          "signal": {
+            "action": "skip",
+            "asset": "WHSK",
+            "confidence": "0",
+            "expected_edge_bps": "-146.68532788882307491595114640000000000000000000300",
+            "id": "40b1b226-442c-4995-beca-401f2c7588a8",
+            "inputs_snapshot": {
+              "mean": "0.087412988347523027907767587274567411277530637787007",
+              "modeled_round_trip_cost_bps": "146.6853278888230749159511464",
+              "price": "0.0874129883475230279077675872745674112775306377870331818475386262316179812328909",
+              "samples": 60,
+              "z_score": "0.99999999999999999999999999999999999999999999999989"
+            },
+            "reason": "No cost-adjusted mean-reversion entry",
+            "type": "mean_reversion"
+          }
+        },
+        "verified_on_chain": false,
+        "commit_tx": null,
+        "reveal_tx": null
+      },
+      {
+        "id": "b7304429-e227-460c-b6ca-bc9f0cd8bd71",
+        "created_at": 1793485524,
+        "status": "arbitrage_scan",
+        "payload": {
+          "reason": "No verified closed route",
+          "verified_cycles": 0
+        },
+        "verified_on_chain": false,
+        "commit_tx": null,
+        "reveal_tx": null
+      }
+    ],
+    "equity_curve": [
+      {
+        "at": 1793482767,
+        "fills": 2,
+        "initial_cash_usdt": "100",
+        "mode": "paper",
+        "nav_usdt": "99.972016",
+        "net_pnl_usdt": "-0.027984",
+        "realized_pnl_usdt": "-0.027984",
+        "unrealized_pnl_usdt": "0",
+        "valuation_assumption": "USDT is the accounting numeraire; no independent USD peg is asserted."
+      },
+      {
+        "at": 1793482808,
+        "fills": 2,
+        "initial_cash_usdt": "100",
+        "mode": "paper",
+        "nav_usdt": "99.972016",
+        "net_pnl_usdt": "-0.027984",
+        "realized_pnl_usdt": "-0.027984",
+        "unrealized_pnl_usdt": "0",
+        "valuation_assumption": "USDT is the accounting numeraire; no independent USD peg is asserted."
+      },
+      {
+        "at": 1793482849,
+        "fills": 2,
+        "initial_cash_usdt": "100",
+        "mode": "paper",
+        "nav_usdt": "99.972016",
+        "net_pnl_usdt": "-0.027984",
+        "realized_pnl_usdt": "-0.027984",
+        "unrealized_pnl_usdt": "0",
+        "valuation_assumption": "USDT is the accounting numeraire; no independent USD peg is asserted."
+      },
+      {
+        "at": 1793482890,
+        "fills": 2,
+        "initial_cash_usdt": "100",
+        "mode": "paper",
+        "nav_usdt": "99.972016",
+        "net_pnl_usdt": "-0.027984",
+        "realized_pnl_usdt": "-0.027984",
+        "unrealized_pnl_usdt": "0",
+        "valuation_assumption": "USDT is the accounting numeraire; no independent USD peg is asserted."
+      },
+      {
+        "at": 1793482931,
+        "fills": 2,
+        "initial_cash_usdt": "100",
+        "mode": "paper",
+        "nav_usdt": "99.972016",
+        "net_pnl_usdt": "-0.027984",
+        "realized_pnl_usdt": "-0.027984",
+        "unrealized_pnl_usdt": "0",
+        "valuation_assumption": "USDT is the accounting numeraire; no independent USD peg is asserted."
+      },
+      {
+        "at": 1793482972,
+        "fills": 2,
+        "initial_cash_usdt": "100",
+        "mode": "paper",
+        "nav_usdt": "99.972016",
+        "net_pnl_usdt": "-0.027984",
+        "realized_pnl_usdt": "-0.027984",
+        "unrealized_pnl_usdt": "0",
+        "valuation_assumption": "USDT is the accounting numeraire; no independent USD peg is asserted."
+      },
+      {
+        "at": 1793483013,
+        "fills": 2,
+        "initial_cash_usdt": "100",
+        "mode": "paper",
+        "nav_usdt": "99.972016",
+        "net_pnl_usdt": "-0.027984",
+        "realized_pnl_usdt": "-0.027984",
+        "unrealized_pnl_usdt": "0",
+        "valuation_assumption": "USDT is the accounting numeraire; no independent USD peg is asserted."
+      },
+      {
+        "at": 1793483054,
+        "fills": 2,
+        "initial_cash_usdt": "100",
+        "mode": "paper",
+        "nav_usdt": "99.972016",
+        "net_pnl_usdt": "-0.027984",
+        "realized_pnl_usdt": "-0.027984",
+        "unrealized_pnl_usdt": "0",
+        "valuation_assumption": "USDT is the accounting numeraire; no independent USD peg is asserted."
+      },
+      {
+        "at": 1793483095,
+        "fills": 2,
+        "initial_cash_usdt": "100",
+        "mode": "paper",
+        "nav_usdt": "99.972016",
+        "net_pnl_usdt": "-0.027984",
+        "realized_pnl_usdt": "-0.027984",
+        "unrealized_pnl_usdt": "0",
+        "valuation_assumption": "USDT is the accounting numeraire; no independent USD peg is asserted."
+      },
+      {
+        "at": 1793483136,
+        "fills": 2,
+        "initial_cash_usdt": "100",
+        "mode": "paper",
+        "nav_usdt": "99.972016",
+        "net_pnl_usdt": "-0.027984",
+        "realized_pnl_usdt": "-0.027984",
+        "unrealized_pnl_usdt": "0",
+        "valuation_assumption": "USDT is the accounting numeraire; no independent USD peg is asserted."
+      },
+      {
+        "at": 1793483177,
+        "fills": 2,
+        "initial_cash_usdt": "100",
+        "mode": "paper",
+        "nav_usdt": "99.972016",
+        "net_pnl_usdt": "-0.027984",
+        "realized_pnl_usdt": "-0.027984",
+        "unrealized_pnl_usdt": "0",
+        "valuation_assumption": "USDT is the accounting numeraire; no independent USD peg is asserted."
+      },
+      {
+        "at": 1793483218,
+        "fills": 2,
+        "initial_cash_usdt": "100",
+        "mode": "paper",
+        "nav_usdt": "99.972016",
+        "net_pnl_usdt": "-0.027984",
+        "realized_pnl_usdt": "-0.027984",
+        "unrealized_pnl_usdt": "0",
+        "valuation_assumption": "USDT is the accounting numeraire; no independent USD peg is asserted."
+      },
+      {
+        "at": 1793483259,
+        "fills": 2,
+        "initial_cash_usdt": "100",
+        "mode": "paper",
+        "nav_usdt": "99.972016",
+        "net_pnl_usdt": "-0.027984",
+        "realized_pnl_usdt": "-0.027984",
+        "unrealized_pnl_usdt": "0",
+        "valuation_assumption": "USDT is the accounting numeraire; no independent USD peg is asserted."
+      },
+      {
+        "at": 1793483300,
+        "fills": 2,
+        "initial_cash_usdt": "100",
+        "mode": "paper",
+        "nav_usdt": "99.972016",
+        "net_pnl_usdt": "-0.027984",
+        "realized_pnl_usdt": "-0.027984",
+        "unrealized_pnl_usdt": "0",
+        "valuation_assumption": "USDT is the accounting numeraire; no independent USD peg is asserted."
+      },
+      {
+        "at": 1793483341,
+        "fills": 2,
+        "initial_cash_usdt": "100",
+        "mode": "paper",
+        "nav_usdt": "99.972016",
+        "net_pnl_usdt": "-0.027984",
+        "realized_pnl_usdt": "-0.027984",
+        "unrealized_pnl_usdt": "0",
+        "valuation_assumption": "USDT is the accounting numeraire; no independent USD peg is asserted."
+      },
+      {
+        "at": 1793483382,
+        "fills": 2,
+        "initial_cash_usdt": "100",
+        "mode": "paper",
+        "nav_usdt": "99.972016",
+        "net_pnl_usdt": "-0.027984",
+        "realized_pnl_usdt": "-0.027984",
+        "unrealized_pnl_usdt": "0",
+        "valuation_assumption": "USDT is the accounting numeraire; no independent USD peg is asserted."
+      },
+      {
+        "at": 1793483423,
+        "fills": 2,
+        "initial_cash_usdt": "100",
+        "mode": "paper",
+        "nav_usdt": "99.972016",
+        "net_pnl_usdt": "-0.027984",
+        "realized_pnl_usdt": "-0.027984",
+        "unrealized_pnl_usdt": "0",
+        "valuation_assumption": "USDT is the accounting numeraire; no independent USD peg is asserted."
+      },
+      {
+        "at": 1793483464,
+        "fills": 2,
+        "initial_cash_usdt": "100",
+        "mode": "paper",
+        "nav_usdt": "99.972016",
+        "net_pnl_usdt": "-0.027984",
+        "realized_pnl_usdt": "-0.027984",
+        "unrealized_pnl_usdt": "0",
+        "valuation_assumption": "USDT is the accounting numeraire; no independent USD peg is asserted."
+      },
+      {
+        "at": 1793483505,
+        "fills": 2,
+        "initial_cash_usdt": "100",
+        "mode": "paper",
+        "nav_usdt": "99.972016",
+        "net_pnl_usdt": "-0.027984",
+        "realized_pnl_usdt": "-0.027984",
+        "unrealized_pnl_usdt": "0",
+        "valuation_assumption": "USDT is the accounting numeraire; no independent USD peg is asserted."
+      },
+      {
+        "at": 1793483545,
+        "fills": 2,
+        "initial_cash_usdt": "100",
+        "mode": "paper",
+        "nav_usdt": "99.972016",
+        "net_pnl_usdt": "-0.027984",
+        "realized_pnl_usdt": "-0.027984",
+        "unrealized_pnl_usdt": "0",
+        "valuation_assumption": "USDT is the accounting numeraire; no independent USD peg is asserted."
+      },
+      {
+        "at": 1793483586,
+        "fills": 2,
+        "initial_cash_usdt": "100",
+        "mode": "paper",
+        "nav_usdt": "99.972016",
+        "net_pnl_usdt": "-0.027984",
+        "realized_pnl_usdt": "-0.027984",
+        "unrealized_pnl_usdt": "0",
+        "valuation_assumption": "USDT is the accounting numeraire; no independent USD peg is asserted."
+      },
+      {
+        "at": 1793483627,
+        "fills": 2,
+        "initial_cash_usdt": "100",
+        "mode": "paper",
+        "nav_usdt": "99.972016",
+        "net_pnl_usdt": "-0.027984",
+        "realized_pnl_usdt": "-0.027984",
+        "unrealized_pnl_usdt": "0",
+        "valuation_assumption": "USDT is the accounting numeraire; no independent USD peg is asserted."
+      },
+      {
+        "at": 1793483668,
+        "fills": 2,
+        "initial_cash_usdt": "100",
+        "mode": "paper",
+        "nav_usdt": "99.972016",
+        "net_pnl_usdt": "-0.027984",
+        "realized_pnl_usdt": "-0.027984",
+        "unrealized_pnl_usdt": "0",
+        "valuation_assumption": "USDT is the accounting numeraire; no independent USD peg is asserted."
+      },
+      {
+        "at": 1793483709,
+        "fills": 2,
+        "initial_cash_usdt": "100",
+        "mode": "paper",
+        "nav_usdt": "99.972016",
+        "net_pnl_usdt": "-0.027984",
+        "realized_pnl_usdt": "-0.027984",
+        "unrealized_pnl_usdt": "0",
+        "valuation_assumption": "USDT is the accounting numeraire; no independent USD peg is asserted."
+      },
+      {
+        "at": 1793483754,
+        "fills": 2,
+        "initial_cash_usdt": "100",
+        "mode": "paper",
+        "nav_usdt": "99.972016",
+        "net_pnl_usdt": "-0.027984",
+        "realized_pnl_usdt": "-0.027984",
+        "unrealized_pnl_usdt": "0",
+        "valuation_assumption": "USDT is the accounting numeraire; no independent USD peg is asserted."
+      },
+      {
+        "at": 1793483795,
+        "fills": 2,
+        "initial_cash_usdt": "100",
+        "mode": "paper",
+        "nav_usdt": "99.972016",
+        "net_pnl_usdt": "-0.027984",
+        "realized_pnl_usdt": "-0.027984",
+        "unrealized_pnl_usdt": "0",
+        "valuation_assumption": "USDT is the accounting numeraire; no independent USD peg is asserted."
+      },
+      {
+        "at": 1793483836,
+        "fills": 2,
+        "initial_cash_usdt": "100",
+        "mode": "paper",
+        "nav_usdt": "99.972016",
+        "net_pnl_usdt": "-0.027984",
+        "realized_pnl_usdt": "-0.027984",
+        "unrealized_pnl_usdt": "0",
+        "valuation_assumption": "USDT is the accounting numeraire; no independent USD peg is asserted."
+      },
+      {
+        "at": 1793483877,
+        "fills": 2,
+        "initial_cash_usdt": "100",
+        "mode": "paper",
+        "nav_usdt": "99.972016",
+        "net_pnl_usdt": "-0.027984",
+        "realized_pnl_usdt": "-0.027984",
+        "unrealized_pnl_usdt": "0",
+        "valuation_assumption": "USDT is the accounting numeraire; no independent USD peg is asserted."
+      },
+      {
+        "at": 1793483919,
+        "fills": 2,
+        "initial_cash_usdt": "100",
+        "mode": "paper",
+        "nav_usdt": "99.972016",
+        "net_pnl_usdt": "-0.027984",
+        "realized_pnl_usdt": "-0.027984",
+        "unrealized_pnl_usdt": "0",
+        "valuation_assumption": "USDT is the accounting numeraire; no independent USD peg is asserted."
+      },
+      {
+        "at": 1793483960,
+        "fills": 2,
+        "initial_cash_usdt": "100",
+        "mode": "paper",
+        "nav_usdt": "99.972016",
+        "net_pnl_usdt": "-0.027984",
+        "realized_pnl_usdt": "-0.027984",
+        "unrealized_pnl_usdt": "0",
+        "valuation_assumption": "USDT is the accounting numeraire; no independent USD peg is asserted."
+      },
+      {
+        "at": 1793484002,
+        "fills": 2,
+        "initial_cash_usdt": "100",
+        "mode": "paper",
+        "nav_usdt": "99.972016",
+        "net_pnl_usdt": "-0.027984",
+        "realized_pnl_usdt": "-0.027984",
+        "unrealized_pnl_usdt": "0",
+        "valuation_assumption": "USDT is the accounting numeraire; no independent USD peg is asserted."
+      },
+      {
+        "at": 1793484043,
+        "fills": 2,
+        "initial_cash_usdt": "100",
+        "mode": "paper",
+        "nav_usdt": "99.972016",
+        "net_pnl_usdt": "-0.027984",
+        "realized_pnl_usdt": "-0.027984",
+        "unrealized_pnl_usdt": "0",
+        "valuation_assumption": "USDT is the accounting numeraire; no independent USD peg is asserted."
+      },
+      {
+        "at": 1793484083,
+        "fills": 2,
+        "initial_cash_usdt": "100",
+        "mode": "paper",
+        "nav_usdt": "99.972016",
+        "net_pnl_usdt": "-0.027984",
+        "realized_pnl_usdt": "-0.027984",
+        "unrealized_pnl_usdt": "0",
+        "valuation_assumption": "USDT is the accounting numeraire; no independent USD peg is asserted."
+      },
+      {
+        "at": 1793484124,
+        "fills": 2,
+        "initial_cash_usdt": "100",
+        "mode": "paper",
+        "nav_usdt": "99.972016",
+        "net_pnl_usdt": "-0.027984",
+        "realized_pnl_usdt": "-0.027984",
+        "unrealized_pnl_usdt": "0",
+        "valuation_assumption": "USDT is the accounting numeraire; no independent USD peg is asserted."
+      },
+      {
+        "at": 1793484165,
+        "fills": 2,
+        "initial_cash_usdt": "100",
+        "mode": "paper",
+        "nav_usdt": "99.972016",
+        "net_pnl_usdt": "-0.027984",
+        "realized_pnl_usdt": "-0.027984",
+        "unrealized_pnl_usdt": "0",
+        "valuation_assumption": "USDT is the accounting numeraire; no independent USD peg is asserted."
+      },
+      {
+        "at": 1793484206,
+        "fills": 2,
+        "initial_cash_usdt": "100",
+        "mode": "paper",
+        "nav_usdt": "99.972016",
+        "net_pnl_usdt": "-0.027984",
+        "realized_pnl_usdt": "-0.027984",
+        "unrealized_pnl_usdt": "0",
+        "valuation_assumption": "USDT is the accounting numeraire; no independent USD peg is asserted."
+      },
+      {
+        "at": 1793484247,
+        "fills": 2,
+        "initial_cash_usdt": "100",
+        "mode": "paper",
+        "nav_usdt": "99.972016",
+        "net_pnl_usdt": "-0.027984",
+        "realized_pnl_usdt": "-0.027984",
+        "unrealized_pnl_usdt": "0",
+        "valuation_assumption": "USDT is the accounting numeraire; no independent USD peg is asserted."
+      },
+      {
+        "at": 1793484288,
+        "fills": 2,
+        "initial_cash_usdt": "100",
+        "mode": "paper",
+        "nav_usdt": "99.972016",
+        "net_pnl_usdt": "-0.027984",
+        "realized_pnl_usdt": "-0.027984",
+        "unrealized_pnl_usdt": "0",
+        "valuation_assumption": "USDT is the accounting numeraire; no independent USD peg is asserted."
+      },
+      {
+        "at": 1793484328,
+        "fills": 2,
+        "initial_cash_usdt": "100",
+        "mode": "paper",
+        "nav_usdt": "99.972016",
+        "net_pnl_usdt": "-0.027984",
+        "realized_pnl_usdt": "-0.027984",
+        "unrealized_pnl_usdt": "0",
+        "valuation_assumption": "USDT is the accounting numeraire; no independent USD peg is asserted."
+      },
+      {
+        "at": 1793484369,
+        "fills": 2,
+        "initial_cash_usdt": "100",
+        "mode": "paper",
+        "nav_usdt": "99.972016",
+        "net_pnl_usdt": "-0.027984",
+        "realized_pnl_usdt": "-0.027984",
+        "unrealized_pnl_usdt": "0",
+        "valuation_assumption": "USDT is the accounting numeraire; no independent USD peg is asserted."
+      },
+      {
+        "at": 1793484410,
+        "fills": 2,
+        "initial_cash_usdt": "100",
+        "mode": "paper",
+        "nav_usdt": "99.972016",
+        "net_pnl_usdt": "-0.027984",
+        "realized_pnl_usdt": "-0.027984",
+        "unrealized_pnl_usdt": "0",
+        "valuation_assumption": "USDT is the accounting numeraire; no independent USD peg is asserted."
+      },
+      {
+        "at": 1793484451,
+        "fills": 2,
+        "initial_cash_usdt": "100",
+        "mode": "paper",
+        "nav_usdt": "99.972016",
+        "net_pnl_usdt": "-0.027984",
+        "realized_pnl_usdt": "-0.027984",
+        "unrealized_pnl_usdt": "0",
+        "valuation_assumption": "USDT is the accounting numeraire; no independent USD peg is asserted."
+      },
+      {
+        "at": 1793484492,
+        "fills": 2,
+        "initial_cash_usdt": "100",
+        "mode": "paper",
+        "nav_usdt": "99.972016",
+        "net_pnl_usdt": "-0.027984",
+        "realized_pnl_usdt": "-0.027984",
+        "unrealized_pnl_usdt": "0",
+        "valuation_assumption": "USDT is the accounting numeraire; no independent USD peg is asserted."
+      },
+      {
+        "at": 1793484532,
+        "fills": 2,
+        "initial_cash_usdt": "100",
+        "mode": "paper",
+        "nav_usdt": "99.972016",
+        "net_pnl_usdt": "-0.027984",
+        "realized_pnl_usdt": "-0.027984",
+        "unrealized_pnl_usdt": "0",
+        "valuation_assumption": "USDT is the accounting numeraire; no independent USD peg is asserted."
+      },
+      {
+        "at": 1793484573,
+        "fills": 2,
+        "initial_cash_usdt": "100",
+        "mode": "paper",
+        "nav_usdt": "99.972016",
+        "net_pnl_usdt": "-0.027984",
+        "realized_pnl_usdt": "-0.027984",
+        "unrealized_pnl_usdt": "0",
+        "valuation_assumption": "USDT is the accounting numeraire; no independent USD peg is asserted."
+      },
+      {
+        "at": 1793484617,
+        "fills": 2,
+        "initial_cash_usdt": "100",
+        "mode": "paper",
+        "nav_usdt": "99.972016",
+        "net_pnl_usdt": "-0.027984",
+        "realized_pnl_usdt": "-0.027984",
+        "unrealized_pnl_usdt": "0",
+        "valuation_assumption": "USDT is the accounting numeraire; no independent USD peg is asserted."
+      },
+      {
+        "at": 1793484658,
+        "fills": 2,
+        "initial_cash_usdt": "100",
+        "mode": "paper",
+        "nav_usdt": "99.972016",
+        "net_pnl_usdt": "-0.027984",
+        "realized_pnl_usdt": "-0.027984",
+        "unrealized_pnl_usdt": "0",
+        "valuation_assumption": "USDT is the accounting numeraire; no independent USD peg is asserted."
+      },
+      {
+        "at": 1793484699,
+        "fills": 2,
+        "initial_cash_usdt": "100",
+        "mode": "paper",
+        "nav_usdt": "99.972016",
+        "net_pnl_usdt": "-0.027984",
+        "realized_pnl_usdt": "-0.027984",
+        "unrealized_pnl_usdt": "0",
+        "valuation_assumption": "USDT is the accounting numeraire; no independent USD peg is asserted."
+      },
+      {
+        "at": 1793484740,
+        "fills": 2,
+        "initial_cash_usdt": "100",
+        "mode": "paper",
+        "nav_usdt": "99.972016",
+        "net_pnl_usdt": "-0.027984",
+        "realized_pnl_usdt": "-0.027984",
+        "unrealized_pnl_usdt": "0",
+        "valuation_assumption": "USDT is the accounting numeraire; no independent USD peg is asserted."
+      },
+      {
+        "at": 1793484781,
+        "fills": 2,
+        "initial_cash_usdt": "100",
+        "mode": "paper",
+        "nav_usdt": "99.972016",
+        "net_pnl_usdt": "-0.027984",
+        "realized_pnl_usdt": "-0.027984",
+        "unrealized_pnl_usdt": "0",
+        "valuation_assumption": "USDT is the accounting numeraire; no independent USD peg is asserted."
+      },
+      {
+        "at": 1793484823,
+        "fills": 2,
+        "initial_cash_usdt": "100",
+        "mode": "paper",
+        "nav_usdt": "99.972016",
+        "net_pnl_usdt": "-0.027984",
+        "realized_pnl_usdt": "-0.027984",
+        "unrealized_pnl_usdt": "0",
+        "valuation_assumption": "USDT is the accounting numeraire; no independent USD peg is asserted."
+      },
+      {
+        "at": 1793484863,
+        "fills": 2,
+        "initial_cash_usdt": "100",
+        "mode": "paper",
+        "nav_usdt": "99.972016",
+        "net_pnl_usdt": "-0.027984",
+        "realized_pnl_usdt": "-0.027984",
+        "unrealized_pnl_usdt": "0",
+        "valuation_assumption": "USDT is the accounting numeraire; no independent USD peg is asserted."
+      },
+      {
+        "at": 1793484904,
+        "fills": 2,
+        "initial_cash_usdt": "100",
+        "mode": "paper",
+        "nav_usdt": "99.972016",
+        "net_pnl_usdt": "-0.027984",
+        "realized_pnl_usdt": "-0.027984",
+        "unrealized_pnl_usdt": "0",
+        "valuation_assumption": "USDT is the accounting numeraire; no independent USD peg is asserted."
+      },
+      {
+        "at": 1793484944,
+        "fills": 2,
+        "initial_cash_usdt": "100",
+        "mode": "paper",
+        "nav_usdt": "99.972016",
+        "net_pnl_usdt": "-0.027984",
+        "realized_pnl_usdt": "-0.027984",
+        "unrealized_pnl_usdt": "0",
+        "valuation_assumption": "USDT is the accounting numeraire; no independent USD peg is asserted."
+      },
+      {
+        "at": 1793484985,
+        "fills": 2,
+        "initial_cash_usdt": "100",
+        "mode": "paper",
+        "nav_usdt": "99.972016",
+        "net_pnl_usdt": "-0.027984",
+        "realized_pnl_usdt": "-0.027984",
+        "unrealized_pnl_usdt": "0",
+        "valuation_assumption": "USDT is the accounting numeraire; no independent USD peg is asserted."
+      },
+      {
+        "at": 1793485026,
+        "fills": 2,
+        "initial_cash_usdt": "100",
+        "mode": "paper",
+        "nav_usdt": "99.972016",
+        "net_pnl_usdt": "-0.027984",
+        "realized_pnl_usdt": "-0.027984",
+        "unrealized_pnl_usdt": "0",
+        "valuation_assumption": "USDT is the accounting numeraire; no independent USD peg is asserted."
+      },
+      {
+        "at": 1793485067,
+        "fills": 2,
+        "initial_cash_usdt": "100",
+        "mode": "paper",
+        "nav_usdt": "99.972016",
+        "net_pnl_usdt": "-0.027984",
+        "realized_pnl_usdt": "-0.027984",
+        "unrealized_pnl_usdt": "0",
+        "valuation_assumption": "USDT is the accounting numeraire; no independent USD peg is asserted."
+      },
+      {
+        "at": 1793485108,
+        "fills": 2,
+        "initial_cash_usdt": "100",
+        "mode": "paper",
+        "nav_usdt": "99.972016",
+        "net_pnl_usdt": "-0.027984",
+        "realized_pnl_usdt": "-0.027984",
+        "unrealized_pnl_usdt": "0",
+        "valuation_assumption": "USDT is the accounting numeraire; no independent USD peg is asserted."
+      },
+      {
+        "at": 1793485149,
+        "fills": 2,
+        "initial_cash_usdt": "100",
+        "mode": "paper",
+        "nav_usdt": "99.972016",
+        "net_pnl_usdt": "-0.027984",
+        "realized_pnl_usdt": "-0.027984",
+        "unrealized_pnl_usdt": "0",
+        "valuation_assumption": "USDT is the accounting numeraire; no independent USD peg is asserted."
+      },
+      {
+        "at": 1793485190,
+        "fills": 2,
+        "initial_cash_usdt": "100",
+        "mode": "paper",
+        "nav_usdt": "99.972016",
+        "net_pnl_usdt": "-0.027984",
+        "realized_pnl_usdt": "-0.027984",
+        "unrealized_pnl_usdt": "0",
+        "valuation_assumption": "USDT is the accounting numeraire; no independent USD peg is asserted."
+      },
+      {
+        "at": 1793485233,
+        "fills": 2,
+        "initial_cash_usdt": "100",
+        "mode": "paper",
+        "nav_usdt": "99.972016",
+        "net_pnl_usdt": "-0.027984",
+        "realized_pnl_usdt": "-0.027984",
+        "unrealized_pnl_usdt": "0",
+        "valuation_assumption": "USDT is the accounting numeraire; no independent USD peg is asserted."
+      },
+      {
+        "at": 1793485276,
+        "fills": 2,
+        "initial_cash_usdt": "100",
+        "mode": "paper",
+        "nav_usdt": "99.972016",
+        "net_pnl_usdt": "-0.027984",
+        "realized_pnl_usdt": "-0.027984",
+        "unrealized_pnl_usdt": "0",
+        "valuation_assumption": "USDT is the accounting numeraire; no independent USD peg is asserted."
+      },
+      {
+        "at": 1793485319,
+        "fills": 2,
+        "initial_cash_usdt": "100",
+        "mode": "paper",
+        "nav_usdt": "99.972016",
+        "net_pnl_usdt": "-0.027984",
+        "realized_pnl_usdt": "-0.027984",
+        "unrealized_pnl_usdt": "0",
+        "valuation_assumption": "USDT is the accounting numeraire; no independent USD peg is asserted."
+      },
+      {
+        "at": 1793485360,
+        "fills": 2,
+        "initial_cash_usdt": "100",
+        "mode": "paper",
+        "nav_usdt": "99.972016",
+        "net_pnl_usdt": "-0.027984",
+        "realized_pnl_usdt": "-0.027984",
+        "unrealized_pnl_usdt": "0",
+        "valuation_assumption": "USDT is the accounting numeraire; no independent USD peg is asserted."
+      },
+      {
+        "at": 1793485401,
+        "fills": 2,
+        "initial_cash_usdt": "100",
+        "mode": "paper",
+        "nav_usdt": "99.972016",
+        "net_pnl_usdt": "-0.027984",
+        "realized_pnl_usdt": "-0.027984",
+        "unrealized_pnl_usdt": "0",
+        "valuation_assumption": "USDT is the accounting numeraire; no independent USD peg is asserted."
+      },
+      {
+        "at": 1793485442,
+        "fills": 2,
+        "initial_cash_usdt": "100",
+        "mode": "paper",
+        "nav_usdt": "99.972016",
+        "net_pnl_usdt": "-0.027984",
+        "realized_pnl_usdt": "-0.027984",
+        "unrealized_pnl_usdt": "0",
+        "valuation_assumption": "USDT is the accounting numeraire; no independent USD peg is asserted."
+      },
+      {
+        "at": 1793485483,
+        "fills": 2,
+        "initial_cash_usdt": "100",
+        "mode": "paper",
+        "nav_usdt": "99.972016",
+        "net_pnl_usdt": "-0.027984",
+        "realized_pnl_usdt": "-0.027984",
+        "unrealized_pnl_usdt": "0",
+        "valuation_assumption": "USDT is the accounting numeraire; no independent USD peg is asserted."
+      },
+      {
+        "at": 1793485524,
+        "fills": 2,
+        "initial_cash_usdt": "100",
+        "mode": "paper",
+        "nav_usdt": "99.972016",
+        "net_pnl_usdt": "-0.027984",
+        "realized_pnl_usdt": "-0.027984",
+        "unrealized_pnl_usdt": "0",
+        "valuation_assumption": "USDT is the accounting numeraire; no independent USD peg is asserted."
+      },
+      {
+        "at": 1793485565,
+        "fills": 2,
+        "initial_cash_usdt": "100",
+        "mode": "paper",
+        "nav_usdt": "99.972016",
+        "net_pnl_usdt": "-0.027984",
+        "realized_pnl_usdt": "-0.027984",
+        "unrealized_pnl_usdt": "0",
+        "valuation_assumption": "USDT is the accounting numeraire; no independent USD peg is asserted."
+      },
+      {
+        "at": 1793485609,
+        "fills": 2,
+        "initial_cash_usdt": "100",
+        "mode": "paper",
+        "nav_usdt": "99.972016",
+        "net_pnl_usdt": "-0.027984",
+        "realized_pnl_usdt": "-0.027984",
+        "unrealized_pnl_usdt": "0",
+        "valuation_assumption": "USDT is the accounting numeraire; no independent USD peg is asserted."
+      },
+      {
+        "at": 1793485657,
+        "fills": 2,
+        "initial_cash_usdt": "100",
+        "mode": "paper",
+        "nav_usdt": "99.972016",
+        "net_pnl_usdt": "-0.027984",
+        "realized_pnl_usdt": "-0.027984",
+        "unrealized_pnl_usdt": "0",
+        "valuation_assumption": "USDT is the accounting numeraire; no independent USD peg is asserted."
+      },
+      {
+        "at": 1793485954,
+        "fills": 2,
+        "initial_cash_usdt": "100",
+        "mode": "paper",
+        "nav_usdt": "99.972016",
+        "net_pnl_usdt": "-0.027984",
+        "realized_pnl_usdt": "-0.027984",
+        "unrealized_pnl_usdt": "0",
+        "valuation_assumption": "USDT is the accounting numeraire; no independent USD peg is asserted."
+      },
+      {
+        "at": 1793485995,
+        "fills": 2,
+        "initial_cash_usdt": "100",
+        "mode": "paper",
+        "nav_usdt": "99.972016",
+        "net_pnl_usdt": "-0.027984",
+        "realized_pnl_usdt": "-0.027984",
+        "unrealized_pnl_usdt": "0",
+        "valuation_assumption": "USDT is the accounting numeraire; no independent USD peg is asserted."
+      },
+      {
+        "at": 1793486036,
+        "fills": 2,
+        "initial_cash_usdt": "100",
+        "mode": "paper",
+        "nav_usdt": "99.972016",
+        "net_pnl_usdt": "-0.027984",
+        "realized_pnl_usdt": "-0.027984",
+        "unrealized_pnl_usdt": "0",
+        "valuation_assumption": "USDT is the accounting numeraire; no independent USD peg is asserted."
+      },
+      {
+        "at": 1793486077,
+        "fills": 2,
+        "initial_cash_usdt": "100",
+        "mode": "paper",
+        "nav_usdt": "99.972016",
+        "net_pnl_usdt": "-0.027984",
+        "realized_pnl_usdt": "-0.027984",
+        "unrealized_pnl_usdt": "0",
+        "valuation_assumption": "USDT is the accounting numeraire; no independent USD peg is asserted."
+      },
+      {
+        "at": 1793486119,
+        "fills": 2,
+        "initial_cash_usdt": "100",
+        "mode": "paper",
+        "nav_usdt": "99.972016",
+        "net_pnl_usdt": "-0.027984",
+        "realized_pnl_usdt": "-0.027984",
+        "unrealized_pnl_usdt": "0",
+        "valuation_assumption": "USDT is the accounting numeraire; no independent USD peg is asserted."
+      },
+      {
+        "at": 1793486159,
+        "fills": 2,
+        "initial_cash_usdt": "100",
+        "mode": "paper",
+        "nav_usdt": "99.972016",
+        "net_pnl_usdt": "-0.027984",
+        "realized_pnl_usdt": "-0.027984",
+        "unrealized_pnl_usdt": "0",
+        "valuation_assumption": "USDT is the accounting numeraire; no independent USD peg is asserted."
+      },
+      {
+        "at": 1793486200,
+        "fills": 2,
+        "initial_cash_usdt": "100",
+        "mode": "paper",
+        "nav_usdt": "99.972016",
+        "net_pnl_usdt": "-0.027984",
+        "realized_pnl_usdt": "-0.027984",
+        "unrealized_pnl_usdt": "0",
+        "valuation_assumption": "USDT is the accounting numeraire; no independent USD peg is asserted."
+      },
+      {
+        "at": 1793486241,
+        "fills": 2,
+        "initial_cash_usdt": "100",
+        "mode": "paper",
+        "nav_usdt": "99.972016",
+        "net_pnl_usdt": "-0.027984",
+        "realized_pnl_usdt": "-0.027984",
+        "unrealized_pnl_usdt": "0",
+        "valuation_assumption": "USDT is the accounting numeraire; no independent USD peg is asserted."
+      },
+      {
+        "at": 1793486282,
+        "fills": 2,
+        "initial_cash_usdt": "100",
+        "mode": "paper",
+        "nav_usdt": "99.972016",
+        "net_pnl_usdt": "-0.027984",
+        "realized_pnl_usdt": "-0.027984",
+        "unrealized_pnl_usdt": "0",
+        "valuation_assumption": "USDT is the accounting numeraire; no independent USD peg is asserted."
+      },
+      {
+        "at": 1793486323,
+        "fills": 2,
+        "initial_cash_usdt": "100",
+        "mode": "paper",
+        "nav_usdt": "99.972016",
+        "net_pnl_usdt": "-0.027984",
+        "realized_pnl_usdt": "-0.027984",
+        "unrealized_pnl_usdt": "0",
+        "valuation_assumption": "USDT is the accounting numeraire; no independent USD peg is asserted."
+      },
+      {
+        "at": 1793486364,
+        "fills": 2,
+        "initial_cash_usdt": "100",
+        "mode": "paper",
+        "nav_usdt": "99.972016",
+        "net_pnl_usdt": "-0.027984",
+        "realized_pnl_usdt": "-0.027984",
+        "unrealized_pnl_usdt": "0",
+        "valuation_assumption": "USDT is the accounting numeraire; no independent USD peg is asserted."
+      }
+    ],
+    "costs": {
+      "extra_slippage_bps": 10,
+      "network_fee_usdt": "0.01",
+      "disclosure": "LP fees included by QuoterV2; additional slippage is modeled; network fee is a configurable USDT expense model, not measured chain gas."
+    },
+    "live_enabled": false,
+    "public_deployment": null,
+    "disclosure": "PAPER \u00b7 live HSKSwap quotes, virtual funds and modeled costs. Decisions are local; no public on-chain verification is claimed.",
+    "refresh_in_progress": false
+  },
+  "completed_at": "2026-10-31T22:39:39.545343+00:00",
+  "unattended_seconds": 3601.42
+}

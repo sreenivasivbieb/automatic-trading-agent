@@ -1,6 +1,6 @@
 # Connected AEGIS paper flow
 
-AEGIS is available inside the existing Krono React application at `/#/aegis`. This page reads an authenticated FastAPI service backed by the actual AEGIS ledger and connector. It uses live mainnet pool data and virtual balances; it cannot sign or submit public transactions. Existing Krono simulation and AWS tenant agents remain separate runtimes and ledgers.
+AEGIS is available inside the existing Krono React application at `/#/aegis`. This page reads an authenticated FastAPI service backed by the actual AEGIS ledger and connector. Its strategy uses live mainnet pool data and virtual balances and cannot sign public swaps. The separate owner panel prepares reviewed transactions for signing in the device wallet after a verified deployment is registered. Existing Krono simulation and AWS tenant agents remain separate runtimes and ledgers.
 
 ## Start and inspect
 
@@ -30,7 +30,7 @@ flowchart TD
 
 SQLite and synchronous RPC calls run on one dedicated thread. Browser polling reads cached state and cannot create a trade. A gateway rechecks original intent, quote/block freshness, liquidity, price impact, balance, portfolio sizing and control flags. Fills use durable idempotency keys. LP fees are embedded in Quoter output, extra modeled slippage reduces received tokens, and the modeled network expense is deducted once from virtual USDT.
 
-The position size default is 5% with a reviewed 10% ceiling; the off-chain portfolio exposure cap is conservatively 30% in total. Other gates include three positions, six fills per UTC hour, twenty per UTC day and a 30-second entry cooldown. Stop-loss, take-profit, trailing and holding-time exits run before new entries. Daily loss of 2% or observed drawdown of 10% latches entry pause and requests a stable unwind. These software rules complement rather than replace the contract controls used by future live execution.
+The position size default is 5% with a reviewed 10% ceiling; the off-chain portfolio exposure cap is conservatively 30% in total. Other gates include three positions, six fills per UTC hour, twenty per UTC day and a 30-second entry cooldown. Stop-loss, take-profit, trailing and holding-time exits run before new entries. Daily loss of 2% or observed drawdown of 10% latches entry pause and requests a stable unwind. These software rules complement the Guard enforced by the separate signing gateway. Signed gateway execution is checked on a local fork; public funded execution remains pending.
 
 ## Controls and failure behavior
 
@@ -41,17 +41,21 @@ The position size default is 5% with a reviewed 10% ceiling; the off-chain portf
 - RPC errors preserve the ledger and expose unavailable valuation. Stale marks are never shown as current NAV. They do not trigger an estimated-price fallback fill.
 - Strategy preferences are schema-validated and versioned. Out-of-range, unsupported and prompt-injection requests cannot loosen caps or access keys.
 
-The local natural-language control plane is an explicitly labeled deterministic router, with typed tools for status, positions, P&L, recent decisions, preferences, pause/resume, confirmed close and trade explanation. It does not claim that a model was invoked. Raw messages stay in browser memory; typed control changes and tool events are recorded. Public commit/reveal badges remain unavailable until real deployed contracts and receipts are registered.
+The local natural-language control plane defaults to an explicitly labeled deterministic router, with typed tools for status, positions, P&L, recent decisions, preferences, pause/resume, confirmed close and trade explanation. Without credentials it does not claim a model was invoked. Optional Claude tool calling uses the same validated tools, bounded turns and schema limits; it cannot receive or submit a close confirmation. A separately configured Telegram bridge accepts only the owner's private chat and sender. Typed changes/tool events are recorded; raw messages are not persisted in the ledger. Configured model/Telegram requests transmit the selected message/state to those providers. Real provider use/delivery remain pending credentials. Public commit/reveal badges require registered real deployments and canonical reveal receipts; none exist yet.
 
 ## HTTP boundary
 
-| Method | Route | Behavior |
-| --- | --- | --- |
-| GET | `/api/aegis/state` | Cached mode, freshness, positions, P&L, policy, fills and local decisions |
-| POST | `/api/aegis/check` | One verified market observation and eligible strategy/stop evaluation |
-| PUT | `/api/aegis/settings` | Validated patch with `expected_version` |
-| POST | `/api/aegis/control` | Explicit paper controls and close confirmation |
-| POST | `/api/aegis/chat` | Shared validated language tools |
+| Method | Route                      | Behavior                                                                  |
+| ------ | -------------------------- | ------------------------------------------------------------------------- |
+| GET    | `/api/aegis/state`         | Cached mode, freshness, positions, P&L, policy, fills and local decisions |
+| POST   | `/api/aegis/check`         | One verified market observation and eligible strategy/stop evaluation     |
+| PUT    | `/api/aegis/settings`      | Validated patch with `expected_version`                                   |
+| POST   | `/api/aegis/control`       | Explicit paper controls and close confirmation                            |
+| POST   | `/api/aegis/chat`          | Shared validated language tools                                           |
+| GET    | `/api/aegis/vault`         | Chain-specific public deployment metadata                                 |
+| POST   | `/api/aegis/vault/prepare` | Allowlisted unsigned owner operations, never server signing               |
+| POST   | `/api/aegis/vault/receipt` | Match approved operation and canonical confirmed receipt                  |
+| POST   | `/api/aegis/verify`        | Exact-byte public reveal and commitment verifier                          |
 
 All routes use the existing session/CSRF or bearer boundary. The terminal-wide emergency stop also latches AEGIS. Browser-test connector injection is restricted to an explicit isolated test application; normal startup never selects fixtures for AEGIS.
 
@@ -62,3 +66,23 @@ All routes use the existing session/CSRF or bearer boundary. The terminal-wide e
 `python -m scripts.verify_aegis_flow --i-understand-paper --duration-seconds 3600` runs a separate real-mainnet-data HTTP check and one-hour unattended paper observation. It records a forced round trip separately from strategy performance, checks the shared ledger and language bounds, then verifies restart recovery. Evidence and screenshots are produced under ignored `artifacts/`; an in-progress run is not a passed acceptance result.
 
 The user-supplied `kavach-main/` folder is retained as an ignored local reference and excluded from deployment contexts. No owner key is required for this paper flow. Actual public deployment, funding and external model/Telegram delivery still require their respective configuration and evidence.
+
+## Reference integration and demonstration
+
+[Connection instructions](CONNECTIONS.md) cover verified networks, owner-device signing, registration and optional provider/Telegram configuration. [Kavach comparison](KAVACH_COMPARISON.md) records the useful separation of engine/vault/independent keeper and the boundaries not imported. The [three-minute demo script](DEMO_SCRIPT.md) and [one-page pitch](WHY_AEGIS.md) distinguish paper, fixture, local-fork and public evidence.
+
+## Recorded acceptance checkpoint
+
+[Current validation](evidence/aegis-connected-validation.json) records 256 Python checks (plus ten subtests), 57 contract checks and 18 browser workflows. The mainnet-data PAPER service ran unattended for 3,601 seconds, observed 88 ticks and recovered its ledger/preferences after restart with entries paused. Eight durable data-unavailable events blocked new fills; zero process crashes does not imply uninterrupted RPC availability. The two forced accounting fills preceded strategy observation and netted −0.027984 virtual USDT.
+
+The one-hour report retains its starting source hashes. Its paper runtime, policy, strategy, gateway and ledger stayed unchanged during the run; transport, optional control adapters and shutdown handling were extended and checked separately. The final entire tree is not claimed to have run unchanged for an hour. A separate shorter final-code HTTP smoke ended stale after an RPC outage without fallback fills; a later independent fresh-price check recovered. See the evidence for both results.
+
+| Phase              | Current acceptance boundary                                                                                                  |
+| ------------------ | ---------------------------------------------------------------------------------------------------------------------------- |
+| Discovery/data     | Verified source/RPC data; external HSKSwap visual matching waived and unverified                                             |
+| Connector/paper    | Real live-quote round trip, decimal/fee accounting, restart and atomic-cycle fixture checks pass                             |
+| Contracts          | Unit and real-router local fork checks pass; public deployment still pending owner/funding                                   |
+| Strategy/risk      | Connected paper loop, replayed stop, risk refusal, emergency and sustained-run checks pass                                   |
+| Language/Telegram  | Bounded tools and credential-gated adapters implemented/tested with transport fixtures; real model/Telegram delivery pending |
+| Dashboard/verifier | Desktop/mobile API flows and refusal of missing public proofs pass; real public verification badge pending deployment        |
+| Public proof       | No public AEGIS transaction has been sent; funded testnet proof and mainnet approval remain outstanding                      |

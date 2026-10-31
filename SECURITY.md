@@ -1,6 +1,6 @@
 # Security and trust boundaries
 
-AEGIS is an experimental hackathon implementation. Local contract tests and a HashKey testnet fork integration pass; no public AEGIS deployment or independent contract audit has been completed. The existing Krono terminal still executes in simulation. See [contract evidence](docs/evidence/aegis-phase3-validation.json) and the terminal's separate [security notes](docs/SECURITY_AND_LIMITS.md).
+AEGIS is an experimental hackathon implementation. Local contract tests and a HashKey testnet fork integration pass; no public AEGIS deployment or independent contract audit has been completed. The original Krono workspaces execute in simulation; the connected AEGIS workspace uses live data with virtual PAPER balances. See [contract evidence](docs/evidence/aegis-phase3-validation.json) and the terminal's separate [security notes](docs/SECURITY_AND_LIMITS.md).
 
 ## Accounts and authority
 
@@ -14,7 +14,7 @@ Limits can only tighten after construction. Owner oracle updates, token allowlis
 
 A stolen hot key or hostile prompt cannot invoke an owner-only operation, change the router or recipient, update oracle anchors, or loosen contract caps. Every executed trade must consume an earlier-block commitment bound to chain, vault, route, amount, minimum output and deadline. Reentrant router execution, zero-input router balance mode, fee-on-transfer balance mismatches and residual router approvals are covered by local tests.
 
-An attacker can still choose losing permitted trades, spend the agent's own gas balance, stop monitoring, withhold reveals or disrupt availability. Limits bound permitted actions under the configured valuation assumptions; they do not guarantee capital preservation. A commitment establishes ordering and byte integrity, not truthful reasoning or profitable intent. Owner withdrawals are always the recovery mechanism.
+An attacker can still choose losing permitted trades, spend the agent's own gas balance, stop monitoring, withhold reveals or disrupt availability. Limits bound permitted actions under the configured valuation assumptions; they do not guarantee capital preservation. A commitment establishes ordering and byte integrity, not truthful reasoning or profitable intent. Owner withdrawals are always the recovery mechanism. A separately funded keeper can close only contract-triggered positions into settlement, with a prior-block commitment and unchanged recipient. Its gas is paid externally and it receives no vault reward. A compromised keeper can waste its own gas or accelerate an already eligible exit within the same limits; it cannot enter a position or withdraw.
 
 ## Market and dependency trust
 
@@ -26,6 +26,10 @@ OpenZeppelin 5.0.2 sources and an adapted Uniswap TickMath subset are vendored w
 
 ## Operational status
 
-Paper fills use live quotes, virtual funds and modeled costs. The live Python signer, nonce recovery, automatic stop execution, on-chain decision writer, Telegram integration and AEGIS dashboard remain future phases. No server endpoint currently enables an AEGIS live swap. Never treat a local fork address, `paper:` receipt or successful `eth_call` as a public transaction.
+The connected paper loop, automatic software stop attempts, dashboard and bounded language tools are implemented. Optional Claude tool calling and the private-chat Telegram adapter have transport-fixture tests; no actual provider call or Telegram delivery is claimed without configured credentials. The language model receives bounded tools and observed state, never wallet keys or owner-transaction tools. Close confirmation is withheld from the model. Prompt-injection tests demonstrate selected refusals; they are not a general proof that every prompt attack is impossible.
+
+The separate live signer/gateway and independent keeper are implemented. Signed commit/swap/reveal, receipt reconciliation and idempotent replay pass against a local HashKey fork; public execution remains pending real deployment and funded accounts. Journal files are private and process-locked. A submission timeout or restart never authorizes another nonce. Explicit same-nonce replacement and cancellation preserve all attempt hashes. Fee estimates are bounded, not guarantees.
+
+The owner wallet panel performs real signing only in the user's EVM wallet after a registered deployment, matching owner/chain and explicit review. Mainnet requires a separate acknowledgement. Its backend prepares allowlisted unsigned operations and verifies matching receipts; it never receives an owner key. Browser wallet transport is tested with a labeled fixture, not a funded Trust Wallet session. The web strategy cannot switch to live trading. Never treat a local fork address, `paper:` receipt or successful `eth_call` as a public transaction.
 
 Keep `.env`, `.runtime/`, `.tools/`, `.cache/`, keystores and Foundry broadcast artifacts private. Do not place wallet credentials in frontend variables, chat, logs, Git issues or committed files. The publication scanner covers selected credential patterns and private paths; it is not a complete secret detector. Review any report before publishing it, and report vulnerabilities without including credentials or exploit attempts against funded wallets.

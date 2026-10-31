@@ -16,15 +16,15 @@ AEGIS_LIVE_TESTS=1 .venv/bin/python -m pytest agent/tests/test_connectors_paper.
 
 [The saved round-trip report](evidence/aegis-phase2-roundtrip.json) contains both complete quotes, pool states, timestamps, block numbers/hashes, paper receipts, fees, and net P&L. Observed result:
 
-| Measure | Result |
-| --- | ---: |
-| Initial virtual cash | 100 USDT |
-| Validation input | 1 USDT |
-| Final NAV | 99.972016 USDT |
-| Realized net P&L | -0.027984 USDT |
-| Remaining WHSK from this round trip | 0 |
-| Paper fills | 2 |
-| Signed/broadcast transactions | 0 |
+| Measure                             |         Result |
+| ----------------------------------- | -------------: |
+| Initial virtual cash                |       100 USDT |
+| Validation input                    |         1 USDT |
+| Final NAV                           | 99.972016 USDT |
+| Realized net P&L                    | -0.027984 USDT |
+| Remaining WHSK from this round trip |              0 |
+| Paper fills                         |              2 |
+| Signed/broadcast transactions       |              0 |
 
 Replaying the two intents after reopening the same database returned the original receipts and still **two fills**. The loss is expected for this forced round trip: it pays costs without targeting an opportunity. It does not measure sustained strategy performance.
 
@@ -69,4 +69,4 @@ Phase 2 acceptance is a real quote-backed round trip with fees stored in SQLite,
 
 Current preflight enforces quote/block freshness, registered/allowed assets, minimum pool value, active liquidity, price impact, user minimum output and an atomic per-trade NAV cap. It binds connector and simulation results to the original requested trade. Dust USDC.e routes are filtered. The current mainnet allowlist does not establish a liquid triangular arbitrage cycle.
 
-Autonomous position stops, frequency/exposure/drawdown controls, deployed Guard enforcement, decision commit/reveal, Telegram and the AEGIS dashboard are later-phase acceptance work. Local SQLite decisions are not on-chain proof. The user requested proceeding without browser/screenshot comparison; rendered UI matching remains unverified.
+This document retains Phase 2 quote/ledger methodology. The autonomous paper loop, software stops/caps, dashboard, bounded tools and optional Telegram/Claude adapters are now implemented; see [connected flows](AEGIS_FLOWS.md). The separate signed gateway is checked on a local fork. Public deployment and real provider/Telegram delivery remain pending. Local SQLite decisions are not on-chain proof. External HSKSwap UI price matching remains unverified; AEGIS dashboard desktop/mobile interactions are tested.

@@ -1,0 +1,23 @@
+# AEGIS: three-minute demonstration
+
+Prepare `make setup && make demo`, open `http://127.0.0.1:5173/#/aegis`, refresh real pool data and keep the evidence report nearby. The default demonstration uses PAPER, live mainnet reads, virtual funds and modeled costs. Do not present local fork hashes as public transactions. Do not force strategy entries by changing real prices.
+
+| Time      | Action                                                                              | Explanation                                                                                                                                                                                                       |
+| --------- | ----------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 0:00–0:25 | Show mode, block and WHSK/WETH/WBTC pool links                                      | AEGIS monitors actual HSKSwap V3 state, with typed routes, verified contracts and failure guards.                                                                                                                 |
+| 0:25–0:55 | Start paper automation; expand a skip/risk decision                                 | Deterministic signals account for fees/costs. Trading is conditional; skipping unprofitable setups is expected.                                                                                                   |
+| 0:55–1:25 | Ask “How am I doing today?”, “Be more conservative”, then request position size 30% | Show the parameter diff and bounded rejection. State whether the deterministic router or configured Claude was invoked.                                                                                           |
+| 1:25–1:55 | Show positions/P&L or recorded forced round-trip evidence                           | The operational round trip ended 100 → 99.972016 virtual USDT after modeled costs. It proves accounting, not alpha. Use the explicit replay test output to demonstrate a stop if no actual paper position exists. |
+| 1:55–2:25 | Press PANIC, inspect pause/unwind status and the owner panel                        | Entries halt; exits need fresh quotes and risk checks. Owner keys stay on the device. Funding stays disabled without a verified deployment.                                                                       |
+| 2:25–3:00 | Show contract/fork evidence and public verifier boundary                            | Agent cannot withdraw or redirect proceeds. Earlier-block commitments bind actions; independent keeper exits still pay only the vault. Current fork proofs are local; public deployment is pending.               |
+
+When real testnet deployment and funds are available, replace the final evidence view with actual recorded deployment and commit/swap/reveal explorer links. Use the public verifier to obtain a badge only after the real reveal is confirmed. Record the actual wallet/network and whether a distinct keeper account sent the exit. For Telegram, show authorized private-chat controls only after actual delivery has been tested.
+
+## Pitch outline
+
+1. Problem: automation must combine opportunity detection with bounded authority and human control.
+2. Solution: one autonomous monitor/signal/risk/execution loop with explicit costs and mode.
+3. Safety proof: owner-only recovery, fixed recipient/router, tighten-only caps and an independent safety exit with no caller payout.
+4. Evidence: exact pre-trade byte commitment, canonical transaction reconciliation and separate paper/fork/public result labels.
+5. Human control: bounded conversation, versioned preference diffs, confirmed close and latched panic.
+6. Next validation: public funded testnet proof, credential-backed Claude/Telegram delivery and longer cost-inclusive strategy evaluation. No guaranteed return is claimed.

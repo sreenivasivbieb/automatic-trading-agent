@@ -1,0 +1,1472 @@
+{
+  "status": "PASSED",
+  "mode": "paper",
+  "started_at": "2026-10-31T22:26:59.058259+00:00",
+  "scope": "Live mainnet data, virtual funds, modeled fees; zero public transactions.",
+  "source_sha256": {
+    "agent/aegis/__init__.py": "f392cfafaf4c5c3d29699503eccbf17917c902239d6a840a274011434c47e6f6",
+    "agent/aegis/connectors/__init__.py": "e3068f9985df6bcec0c6b06c4a7a1e4404cd2bdedfa061ebbe9035095f48d25e",
+    "agent/aegis/connectors/base.py": "974336b8fc2a95b5595c5a29286034a195398c5dcb6e5edb6899392f8ee098bb",
+    "agent/aegis/connectors/hskswap_v3.py": "96fd9680cd9d83d16f03c727479f527027b00e25d75758f1c77e097460c2843b",
+    "agent/aegis/connectors/mock.py": "eb7166426fd0811d444b736b8de7e455ce5d0d37d16f3ba0da3044450ee9fcd0",
+    "agent/aegis/connectors/paper.py": "3997f0a3be0d7d5dcb18e2446f0f77a0c010e60f24872d696d7f364dc678e975",
+    "agent/aegis/connectors/rpc.py": "1f5f8dc9838fd81fa77d5b3f282f6a27f6d84abcfbdc97acfb5989326972735c",
+    "agent/aegis/data.py": "7858e03842db4bee862337f80753ca41717ff75f6c2a08010736eada0f4e79e8",
+    "agent/aegis/deploy.py": "cfab32e4145bf4bf861748f4c045026502b6c56a992188d5077f2137a5c3a050",
+    "agent/aegis/discovery.py": "ac9e9204eb07d4b5b10a59804c4822dcd3082b3fcd481be35cba9a19c4868b42",
+    "agent/aegis/execution/__init__.py": "9df288c714f93759470102142747e03d2ca7badc057d3499ae8f7b66a90fbb4f",
+    "agent/aegis/execution/decision_log_client.py": "8cccafed0f8805cd8cbf0f1ec17bac746404c787a28f09d3df0e8abceb12ac20",
+    "agent/aegis/execution/fees.py": "159b0f74cc962d835001418f694896412480cca6ad02de8204a3a9a8053cb973",
+    "agent/aegis/execution/gateway.py": "53e4fef52114df32f3e2135663003c18f1de00e814a1277431671792cadb8afa",
+    "agent/aegis/execution/live.py": "ff3158aa1bd9d46b5c2a7d0832320a9effcb0e78e67939b258aa4080a9f61ccc",
+    "agent/aegis/execution/vault_client.py": "0342318a761f4541316b4bfd5d5ed4383108b389ab989b53ab6d35ae2004e7e5",
+    "agent/aegis/keeper.py": "9c29d0d193e1ed0012f5011c691b2245d3431aaee21cced74a8d00f77e967678",
+    "agent/aegis/nl/__init__.py": "b10ca08d7802e389690deb38ca584818a1b711bb61b462232e96c582901bff21",
+    "agent/aegis/nl/agent.py": "b2efecf1a9702a7dd14d49ac618373d88570e4e3ffeb443a67ced8173e44fc0e",
+    "agent/aegis/nl/telegram_bot.py": "aae8204ee27a8d99fb589534fc225b56817f44da521749f5176dda4a732deeb0",
+    "agent/aegis/nl/tools.py": "81b0daa3705daec62360f477512a9dcbea6d6772b916f0c9f8d73c6eef6e0561",
+    "agent/aegis/owner.py": "3b5cdfed107e2a7b5c6ff62c6742e776f724856293abe7d317a2a53c613998d0",
+    "agent/aegis/paper_demo.py": "49a47d02aac29e0252b54e107b40f2a303af2e649109cb1aac463ad4a7348934",
+    "agent/aegis/prices.py": "1480bf840a6ab2b319169db5ee1b23c117c853c9ce69b4781815a775a9fe6f99",
+    "agent/aegis/risk/__init__.py": "44ac88b2d844759ddddfb501920956b4cb7ac79c325a58804f9256323568a323",
+    "agent/aegis/risk/engine.py": "6392a8b15ed4ed5b28de19173c7cfb56ce56a884b0194035bf425b971989c8ea",
+    "agent/aegis/risk/policy.py": "1f7271d476e51fdb951ec3110631790015f83ee6974a280a20873003a7bb82bb",
+    "agent/aegis/runtime.py": "68daec6ed8f73497d942f4d8a4f7f6e4da6a73f1c2b7dfceba6a44b091ccf7a0",
+    "agent/aegis/service.py": "52866d7f045ec5f14060a9425b0c225860d8f2d0e94be2fb167893ff9f2bd573",
+    "agent/aegis/store/__init__.py": "93fb35cb827456e053fa8cb2a35d16fdc293120f2827cd8ec968c40eadff326f",
+    "agent/aegis/store/db.py": "fec904aa98c2272a3bc504762d37b087ea630b8274472d6d4933fef4e7c85dc9",
+    "agent/aegis/strategy/__init__.py": "d1fd5dc5047f64d251dcbaeb7fc80eaa63ff910ae7282ff8ec43828aeac7753d",
+    "agent/aegis/strategy/arbitrage.py": "1dc17dcf38dbaef9d25d345304b56960d3297c983054b23abfd0ac3d0b97a292",
+    "agent/aegis/strategy/mean_reversion.py": "d9e0f5a84c82dfba5de45428df82ef38f95318e7a0a57b0298f2845ecaea7299",
+    "agent/aegis/strategy/signals.py": "0ef1e86091a13cf4287ae6cb2f7e3030028eae6230f533128c42fdc5e41560fb",
+    "agent/aegis/transactions.py": "45cfbcf6383a1f8cbba33b665e337d6b2c8649fad871d35261475e5659b1c272",
+    "agent/aegis/verify_decision.py": "7951543bd17a9827d3fa801167c44edfa6a62c4827d017d1e5743c2e503cd63d"
+  },
+  "steps": [
+    "Live-quote paper round trip recorded with modeled costs",
+    "Authenticated API reads the same two-fill ledger and three verified live pairs",
+    "Owner metadata preserves chain-specific decimals; missing public deployment refuses a verification badge",
+    "Chat preferences persist, out-of-range/injection requests refused, paper automation explicitly enabled",
+    "Restart preserves funding, fills, preferences and last valuation; entries recover paused"
+  ],
+  "public_transactions_sent": 0,
+  "local_url": "http://127.0.0.1:56419",
+  "roundtrip": {
+    "run_id": "http-connection-proof",
+    "mode": "paper",
+    "data_source": "HSKSwap mainnet QuoterV2",
+    "buy": {
+      "id": "7cd49cc2-dfbc-4970-ad14-a37cf6e3fc85",
+      "mode": "paper",
+      "receipt": "paper:7cd49cc2-dfbc-4970-ad14-a37cf6e3fc85",
+      "transaction_hash": null,
+      "created_at": 1793485632,
+      "chain_id": 177,
+      "quote": {
+        "id": "26af1f06-44ce-4972-9bc4-c13f86205024",
+        "route": {
+          "tokens": [
+            {
+              "asset_id": "USDT",
+              "chain_id": 177,
+              "address": "0xf1b50ed67a9e2cc94ad3c477779e2d4cbfff9029",
+              "symbol": "USDT",
+              "decimals": 6
+            },
+            {
+              "asset_id": "WHSK",
+              "chain_id": 177,
+              "address": "0xB210D2120d57b758EE163cFfb43e73728c471Cf1",
+              "symbol": "WHSK",
+              "decimals": 18
+            }
+          ],
+          "pools": [
+            {
+              "chain_id": 177,
+              "address": "0x4ff515761864e7838b0adb8b5b2b8b7a068905dc",
+              "token0": {
+                "asset_id": "WHSK",
+                "chain_id": 177,
+                "address": "0xB210D2120d57b758EE163cFfb43e73728c471Cf1",
+                "symbol": "WHSK",
+                "decimals": 18
+              },
+              "token1": {
+                "asset_id": "USDT",
+                "chain_id": 177,
+                "address": "0xf1b50ed67a9e2cc94ad3c477779e2d4cbfff9029",
+                "symbol": "USDT",
+                "decimals": 6
+              },
+              "fee_pips": 3000
+            }
+          ]
+        },
+        "amount_in_raw": 1000000,
+        "amount_out_raw": 11405601624996979315,
+        "reference_out_raw": "11439947528442281321.0521557057481625343960052152625954510549270840222609366368",
+        "fee_multiplier": "0.997",
+        "lp_fee_input_raw_estimate": 3000,
+        "price_impact_bps": "0.0228491238649475722386565338032868136379972884935288404881316880587671624920619",
+        "gas_estimate": 73959,
+        "states": [
+          {
+            "pool": {
+              "chain_id": 177,
+              "address": "0x4ff515761864e7838b0adb8b5b2b8b7a068905dc",
+              "token0": {
+                "asset_id": "WHSK",
+                "chain_id": 177,
+                "address": "0xB210D2120d57b758EE163cFfb43e73728c471Cf1",
+                "symbol": "WHSK",
+                "decimals": 18
+              },
+              "token1": {
+                "asset_id": "USDT",
+                "chain_id": 177,
+                "address": "0xf1b50ed67a9e2cc94ad3c477779e2d4cbfff9029",
+                "symbol": "USDT",
+                "decimals": 6
+              },
+              "fee_pips": 3000
+            },
+            "block_number": 29569240,
+            "block_hash": "0xeb9b61474ca9cf09b8b0195751b2fb1108d3d4a4500b00b1f5f99241053d3140",
+            "block_timestamp": 1793485615,
+            "sqrt_price_x96": 23424351023060863073728,
+            "liquidity_raw": 1475831005908433993,
+            "balance0_raw": 4992121294964652552406304,
+            "balance1_raw": 436358414215,
+            "mid_token1_per_token0": "0.0874129883475230279077675872745674112775306377870331818475386262316179812328909",
+            "unlocked": true
+          }
+        ],
+        "block_number": 29569240,
+        "block_hash": "0xeb9b61474ca9cf09b8b0195751b2fb1108d3d4a4500b00b1f5f99241053d3140",
+        "block_timestamp": 1793485615,
+        "created_at": 1793485632,
+        "expires_at": 1793485652,
+        "data_source": "hskswap_v3",
+        "fee_note": "LP fees are already included in amount_out; the input fee estimate is informational."
+      },
+      "amount_out_filled_raw": "11394196023371982335",
+      "modeled_slippage_out_raw": "11405601624996980",
+      "modeled_network_fee_usdt": "0.01",
+      "lp_fee_input_raw_estimate": "3000",
+      "lp_fee_charged_again": false,
+      "realized_pnl_usdt": "0",
+      "fee_methodology": "Quoter output already includes LP fees. Additional slippage reduces output; configurable network cost is deducted from virtual USDT cash."
+    },
+    "sell": {
+      "id": "b57e2e67-e7af-4761-a7da-0c61480ac5bb",
+      "mode": "paper",
+      "receipt": "paper:b57e2e67-e7af-4761-a7da-0c61480ac5bb",
+      "transaction_hash": null,
+      "created_at": 1793485633,
+      "chain_id": 177,
+      "quote": {
+        "id": "0788c2fa-4360-4d99-8de2-0cf3c815b521",
+        "route": {
+          "tokens": [
+            {
+              "asset_id": "WHSK",
+              "chain_id": 177,
+              "address": "0xB210D2120d57b758EE163cFfb43e73728c471Cf1",
+              "symbol": "WHSK",
+              "decimals": 18
+            },
+            {
+              "asset_id": "USDT",
+              "chain_id": 177,
+              "address": "0xf1b50ed67a9e2cc94ad3c477779e2d4cbfff9029",
+              "symbol": "USDT",
+              "decimals": 6
+            }
+          ],
+          "pools": [
+            {
+              "chain_id": 177,
+              "address": "0x4ff515761864e7838b0adb8b5b2b8b7a068905dc",
+              "token0": {
+                "asset_id": "WHSK",
+                "chain_id": 177,
+                "address": "0xB210D2120d57b758EE163cFfb43e73728c471Cf1",
+                "symbol": "WHSK",
+                "decimals": 18
+              },
+              "token1": {
+                "asset_id": "USDT",
+                "chain_id": 177,
+                "address": "0xf1b50ed67a9e2cc94ad3c477779e2d4cbfff9029",
+                "symbol": "USDT",
+                "decimals": 6
+              },
+              "fee_pips": 3000
+            }
+          ]
+        },
+        "amount_in_raw": 11394196023371982335,
+        "amount_out_raw": 993010,
+        "reference_out_raw": "996000.724220408314002442861119582958375554814095588181254320243053312110807424",
+        "fee_multiplier": "0.997",
+        "lp_fee_input_raw_estimate": 34182588070115947,
+        "price_impact_bps": "0.0274120128237206617960181288586655806359535410372256103764920987266783317147415",
+        "gas_estimate": 74185,
+        "states": [
+          {
+            "pool": {
+              "chain_id": 177,
+              "address": "0x4ff515761864e7838b0adb8b5b2b8b7a068905dc",
+              "token0": {
+                "asset_id": "WHSK",
+                "chain_id": 177,
+                "address": "0xB210D2120d57b758EE163cFfb43e73728c471Cf1",
+                "symbol": "WHSK",
+                "decimals": 18
+              },
+              "token1": {
+                "asset_id": "USDT",
+                "chain_id": 177,
+                "address": "0xf1b50ed67a9e2cc94ad3c477779e2d4cbfff9029",
+                "symbol": "USDT",
+                "decimals": 6
+              },
+              "fee_pips": 3000
+            },
+            "block_number": 29569240,
+            "block_hash": "0xeb9b61474ca9cf09b8b0195751b2fb1108d3d4a4500b00b1f5f99241053d3140",
+            "block_timestamp": 1793485615,
+            "sqrt_price_x96": 23424351023060863073728,
+            "liquidity_raw": 1475831005908433993,
+            "balance0_raw": 4992121294964652552406304,
+            "balance1_raw": 436358414215,
+            "mid_token1_per_token0": "0.0874129883475230279077675872745674112775306377870331818475386262316179812328909",
+            "unlocked": true
+          }
+        ],
+        "block_number": 29569240,
+        "block_hash": "0xeb9b61474ca9cf09b8b0195751b2fb1108d3d4a4500b00b1f5f99241053d3140",
+        "block_timestamp": 1793485615,
+        "created_at": 1793485633,
+        "expires_at": 1793485653,
+        "data_source": "hskswap_v3",
+        "fee_note": "LP fees are already included in amount_out; the input fee estimate is informational."
+      },
+      "amount_out_filled_raw": "992016",
+      "modeled_slippage_out_raw": "994",
+      "modeled_network_fee_usdt": "0.01",
+      "lp_fee_input_raw_estimate": "34182588070115947",
+      "lp_fee_charged_again": false,
+      "realized_pnl_usdt": "-0.027984",
+      "fee_methodology": "Quoter output already includes LP fees. Additional slippage reduces output; configurable network cost is deducted from virtual USDT cash."
+    },
+    "pnl": {
+      "mode": "paper",
+      "initial_cash_usdt": "100",
+      "nav_usdt": "99.972016",
+      "net_pnl_usdt": "-0.027984",
+      "realized_pnl_usdt": "-0.027984",
+      "unrealized_pnl_usdt": "0",
+      "fills": 2,
+      "valuation_assumption": "USDT is the accounting numeraire; no independent USD peg is asserted."
+    },
+    "methodology": {
+      "extra_slippage_bps": 10,
+      "network_fee_usdt": "0.01",
+      "disclosure": "LP fees included by QuoterV2; additional slippage is modeled; network fee is a configurable USDT expense model, not measured chain gas."
+    },
+    "purpose": "Operational validation round trip, not an alpha or sustained-profitability run.",
+    "transactions_sent": 0,
+    "on_chain_decision_log": "Not deployed; Phase 2 decisions are local SQLite records."
+  },
+  "initial_http_state": {
+    "mode": "paper",
+    "chain_id": 177,
+    "running": false,
+    "paused": true,
+    "emergency": false,
+    "unwind_pending": false,
+    "started_at": 1793485634,
+    "uptime_seconds": 34,
+    "tick_count": 1,
+    "last_tick_at": 1793485648,
+    "data_status": "LIVE",
+    "data_source": "hskswap_v3",
+    "last_error": null,
+    "block_number": 29569255,
+    "block_hash": "0xa4c4d0306c52b7eec0379a845edaa084f33b42e92aaefb20ccee392e066b7845",
+    "block_timestamp": 1793485645,
+    "markets": {
+      "WHSK": {
+        "asset": "WHSK",
+        "price": "0.0874129883475230279077675872745674112775306377870331818475386262316179812328909",
+        "pool": "0x4ff515761864e7838b0adb8b5b2b8b7a068905dc",
+        "liquidity_raw": "1475831005908433993",
+        "fee_pips": 3000
+      },
+      "WETH": {
+        "asset": "WETH",
+        "price": "2235.61893983280024806907807179540709915651566823052131510790150351083815404830",
+        "pool": "0xb92b79ed6b370d5cfee2e14b1d0983c258304c16",
+        "liquidity_raw": "1012957283335421",
+        "fee_pips": 3000
+      },
+      "WBTC": {
+        "asset": "WBTC",
+        "price": "76841.0816387862598625436260645548547247679786437287611873004683955879297659122",
+        "pool": "0xd9ea2ce468957ba49ccc38c4758ed6ecd561449a",
+        "liquidity_raw": "1823343427",
+        "fee_pips": 3000
+      }
+    },
+    "pnl": {
+      "mode": "paper",
+      "initial_cash_usdt": "100",
+      "nav_usdt": "99.972016",
+      "net_pnl_usdt": "-0.027984",
+      "realized_pnl_usdt": "-0.027984",
+      "unrealized_pnl_usdt": "0",
+      "fills": 2,
+      "valuation_assumption": "USDT is the accounting numeraire; no independent USD peg is asserted."
+    },
+    "last_known_pnl": {
+      "mode": "paper",
+      "initial_cash_usdt": "100",
+      "nav_usdt": "99.972016",
+      "net_pnl_usdt": "-0.027984",
+      "realized_pnl_usdt": "-0.027984",
+      "unrealized_pnl_usdt": "0",
+      "fills": 2,
+      "valuation_assumption": "USDT is the accounting numeraire; no independent USD peg is asserted."
+    },
+    "positions": [],
+    "valuation_fresh": true,
+    "signals": [
+      {
+        "id": "021e73b9-1f27-40dd-b5b1-553ff125995f",
+        "type": "mean_reversion",
+        "asset": "WHSK",
+        "action": "skip",
+        "expected_edge_bps": "0",
+        "confidence": "0",
+        "reason": "Warming up: need at least 20 distinct, fresh block observations",
+        "inputs_snapshot": {
+          "samples": 1
+        }
+      },
+      {
+        "id": "13399f35-23b2-4802-80a5-1b17d76026ee",
+        "type": "mean_reversion",
+        "asset": "WETH",
+        "action": "skip",
+        "expected_edge_bps": "0",
+        "confidence": "0",
+        "reason": "Warming up: need at least 20 distinct, fresh block observations",
+        "inputs_snapshot": {
+          "samples": 1
+        }
+      },
+      {
+        "id": "7842ccf5-faad-4490-9a40-f3cccbe5be45",
+        "type": "mean_reversion",
+        "asset": "WBTC",
+        "action": "skip",
+        "expected_edge_bps": "0",
+        "confidence": "0",
+        "reason": "Warming up: need at least 20 distinct, fresh block observations",
+        "inputs_snapshot": {
+          "samples": 1
+        }
+      }
+    ],
+    "params": {
+      "position_size_pct": "5",
+      "max_trades_per_hour": 6,
+      "risk_level": "balanced",
+      "target_assets": [
+        "WHSK",
+        "WETH",
+        "WBTC"
+      ],
+      "stop_loss_pct": "5",
+      "take_profit_pct": "10",
+      "trailing_stop_pct": null,
+      "max_holding_seconds": 3600,
+      "tick_seconds": 30
+    },
+    "params_version": 1,
+    "caps": {
+      "max_position_size_pct": "10",
+      "max_trades_per_hour": 6,
+      "max_trades_per_day": 20,
+      "max_token_exposure_pct": "30",
+      "max_positions": 3,
+      "daily_loss_limit_pct": "2",
+      "max_drawdown_pct": "10",
+      "cooldown_seconds": 30,
+      "max_stop_loss_pct": "10",
+      "max_take_profit_pct": "15",
+      "max_holding_seconds": 3600,
+      "source": "Reviewed Guard constructor defaults; no public deployment is registered yet"
+    },
+    "risk": {
+      "day": 20757,
+      "day_nav": "99.972016",
+      "high_water": "99.972016",
+      "daily_loss_pct": "0",
+      "drawdown_pct": "0",
+      "max_drawdown_pct": "0"
+    },
+    "trades_this_hour": 2,
+    "trades_today": 2,
+    "fills": [
+      {
+        "id": "b57e2e67-e7af-4761-a7da-0c61480ac5bb",
+        "mode": "paper",
+        "receipt": "paper:b57e2e67-e7af-4761-a7da-0c61480ac5bb",
+        "transaction_hash": null,
+        "created_at": 1793485633,
+        "chain_id": 177,
+        "quote": {
+          "id": "0788c2fa-4360-4d99-8de2-0cf3c815b521",
+          "route": {
+            "tokens": [
+              {
+                "asset_id": "WHSK",
+                "chain_id": 177,
+                "address": "0xB210D2120d57b758EE163cFfb43e73728c471Cf1",
+                "symbol": "WHSK",
+                "decimals": 18
+              },
+              {
+                "asset_id": "USDT",
+                "chain_id": 177,
+                "address": "0xf1b50ed67a9e2cc94ad3c477779e2d4cbfff9029",
+                "symbol": "USDT",
+                "decimals": 6
+              }
+            ],
+            "pools": [
+              {
+                "chain_id": 177,
+                "address": "0x4ff515761864e7838b0adb8b5b2b8b7a068905dc",
+                "token0": {
+                  "asset_id": "WHSK",
+                  "chain_id": 177,
+                  "address": "0xB210D2120d57b758EE163cFfb43e73728c471Cf1",
+                  "symbol": "WHSK",
+                  "decimals": 18
+                },
+                "token1": {
+                  "asset_id": "USDT",
+                  "chain_id": 177,
+                  "address": "0xf1b50ed67a9e2cc94ad3c477779e2d4cbfff9029",
+                  "symbol": "USDT",
+                  "decimals": 6
+                },
+                "fee_pips": 3000
+              }
+            ]
+          },
+          "amount_in_raw": 11394196023371982335,
+          "amount_out_raw": 993010,
+          "reference_out_raw": "996000.724220408314002442861119582958375554814095588181254320243053312110807424",
+          "fee_multiplier": "0.997",
+          "lp_fee_input_raw_estimate": 34182588070115947,
+          "price_impact_bps": "0.0274120128237206617960181288586655806359535410372256103764920987266783317147415",
+          "gas_estimate": 74185,
+          "states": [
+            {
+              "pool": {
+                "chain_id": 177,
+                "address": "0x4ff515761864e7838b0adb8b5b2b8b7a068905dc",
+                "token0": {
+                  "asset_id": "WHSK",
+                  "chain_id": 177,
+                  "address": "0xB210D2120d57b758EE163cFfb43e73728c471Cf1",
+                  "symbol": "WHSK",
+                  "decimals": 18
+                },
+                "token1": {
+                  "asset_id": "USDT",
+                  "chain_id": 177,
+                  "address": "0xf1b50ed67a9e2cc94ad3c477779e2d4cbfff9029",
+                  "symbol": "USDT",
+                  "decimals": 6
+                },
+                "fee_pips": 3000
+              },
+              "block_number": 29569240,
+              "block_hash": "0xeb9b61474ca9cf09b8b0195751b2fb1108d3d4a4500b00b1f5f99241053d3140",
+              "block_timestamp": 1793485615,
+              "sqrt_price_x96": 23424351023060863073728,
+              "liquidity_raw": 1475831005908433993,
+              "balance0_raw": 4992121294964652552406304,
+              "balance1_raw": 436358414215,
+              "mid_token1_per_token0": "0.0874129883475230279077675872745674112775306377870331818475386262316179812328909",
+              "unlocked": true
+            }
+          ],
+          "block_number": 29569240,
+          "block_hash": "0xeb9b61474ca9cf09b8b0195751b2fb1108d3d4a4500b00b1f5f99241053d3140",
+          "block_timestamp": 1793485615,
+          "created_at": 1793485633,
+          "expires_at": 1793485653,
+          "data_source": "hskswap_v3",
+          "fee_note": "LP fees are already included in amount_out; the input fee estimate is informational."
+        },
+        "amount_out_filled_raw": "992016",
+        "modeled_slippage_out_raw": "994",
+        "modeled_network_fee_usdt": "0.01",
+        "lp_fee_input_raw_estimate": "34182588070115947",
+        "lp_fee_charged_again": false,
+        "realized_pnl_usdt": "-0.027984",
+        "fee_methodology": "Quoter output already includes LP fees. Additional slippage reduces output; configurable network cost is deducted from virtual USDT cash."
+      },
+      {
+        "id": "7cd49cc2-dfbc-4970-ad14-a37cf6e3fc85",
+        "mode": "paper",
+        "receipt": "paper:7cd49cc2-dfbc-4970-ad14-a37cf6e3fc85",
+        "transaction_hash": null,
+        "created_at": 1793485632,
+        "chain_id": 177,
+        "quote": {
+          "id": "26af1f06-44ce-4972-9bc4-c13f86205024",
+          "route": {
+            "tokens": [
+              {
+                "asset_id": "USDT",
+                "chain_id": 177,
+                "address": "0xf1b50ed67a9e2cc94ad3c477779e2d4cbfff9029",
+                "symbol": "USDT",
+                "decimals": 6
+              },
+              {
+                "asset_id": "WHSK",
+                "chain_id": 177,
+                "address": "0xB210D2120d57b758EE163cFfb43e73728c471Cf1",
+                "symbol": "WHSK",
+                "decimals": 18
+              }
+            ],
+            "pools": [
+              {
+                "chain_id": 177,
+                "address": "0x4ff515761864e7838b0adb8b5b2b8b7a068905dc",
+                "token0": {
+                  "asset_id": "WHSK",
+                  "chain_id": 177,
+                  "address": "0xB210D2120d57b758EE163cFfb43e73728c471Cf1",
+                  "symbol": "WHSK",
+                  "decimals": 18
+                },
+                "token1": {
+                  "asset_id": "USDT",
+                  "chain_id": 177,
+                  "address": "0xf1b50ed67a9e2cc94ad3c477779e2d4cbfff9029",
+                  "symbol": "USDT",
+                  "decimals": 6
+                },
+                "fee_pips": 3000
+              }
+            ]
+          },
+          "amount_in_raw": 1000000,
+          "amount_out_raw": 11405601624996979315,
+          "reference_out_raw": "11439947528442281321.0521557057481625343960052152625954510549270840222609366368",
+          "fee_multiplier": "0.997",
+          "lp_fee_input_raw_estimate": 3000,
+          "price_impact_bps": "0.0228491238649475722386565338032868136379972884935288404881316880587671624920619",
+          "gas_estimate": 73959,
+          "states": [
+            {
+              "pool": {
+                "chain_id": 177,
+                "address": "0x4ff515761864e7838b0adb8b5b2b8b7a068905dc",
+                "token0": {
+                  "asset_id": "WHSK",
+                  "chain_id": 177,
+                  "address": "0xB210D2120d57b758EE163cFfb43e73728c471Cf1",
+                  "symbol": "WHSK",
+                  "decimals": 18
+                },
+                "token1": {
+                  "asset_id": "USDT",
+                  "chain_id": 177,
+                  "address": "0xf1b50ed67a9e2cc94ad3c477779e2d4cbfff9029",
+                  "symbol": "USDT",
+                  "decimals": 6
+                },
+                "fee_pips": 3000
+              },
+              "block_number": 29569240,
+              "block_hash": "0xeb9b61474ca9cf09b8b0195751b2fb1108d3d4a4500b00b1f5f99241053d3140",
+              "block_timestamp": 1793485615,
+              "sqrt_price_x96": 23424351023060863073728,
+              "liquidity_raw": 1475831005908433993,
+              "balance0_raw": 4992121294964652552406304,
+              "balance1_raw": 436358414215,
+              "mid_token1_per_token0": "0.0874129883475230279077675872745674112775306377870331818475386262316179812328909",
+              "unlocked": true
+            }
+          ],
+          "block_number": 29569240,
+          "block_hash": "0xeb9b61474ca9cf09b8b0195751b2fb1108d3d4a4500b00b1f5f99241053d3140",
+          "block_timestamp": 1793485615,
+          "created_at": 1793485632,
+          "expires_at": 1793485652,
+          "data_source": "hskswap_v3",
+          "fee_note": "LP fees are already included in amount_out; the input fee estimate is informational."
+        },
+        "amount_out_filled_raw": "11394196023371982335",
+        "modeled_slippage_out_raw": "11405601624996980",
+        "modeled_network_fee_usdt": "0.01",
+        "lp_fee_input_raw_estimate": "3000",
+        "lp_fee_charged_again": false,
+        "realized_pnl_usdt": "0",
+        "fee_methodology": "Quoter output already includes LP fees. Additional slippage reduces output; configurable network cost is deducted from virtual USDT cash."
+      }
+    ],
+    "decisions": [
+      {
+        "id": "0297f208-0605-418a-ab97-c040191c069d",
+        "created_at": 1793485648,
+        "status": "arbitrage_scan",
+        "payload": {
+          "reason": "No verified closed route",
+          "verified_cycles": 0
+        },
+        "verified_on_chain": false,
+        "commit_tx": null,
+        "reveal_tx": null
+      },
+      {
+        "id": "dce176ea-82e2-4494-872b-2cb18a81819a",
+        "created_at": 1793485648,
+        "status": "signal_skipped",
+        "payload": {
+          "reason": "Entries paused",
+          "signal": {
+            "action": "skip",
+            "asset": "WBTC",
+            "confidence": "0",
+            "expected_edge_bps": "0",
+            "id": "7842ccf5-faad-4490-9a40-f3cccbe5be45",
+            "inputs_snapshot": {
+              "samples": 1
+            },
+            "reason": "Warming up: need at least 20 distinct, fresh block observations",
+            "type": "mean_reversion"
+          }
+        },
+        "verified_on_chain": false,
+        "commit_tx": null,
+        "reveal_tx": null
+      },
+      {
+        "id": "96237ab3-bd8e-4370-aeb5-a6e3e12a6552",
+        "created_at": 1793485648,
+        "status": "signal_skipped",
+        "payload": {
+          "reason": "Entries paused",
+          "signal": {
+            "action": "skip",
+            "asset": "WETH",
+            "confidence": "0",
+            "expected_edge_bps": "0",
+            "id": "13399f35-23b2-4802-80a5-1b17d76026ee",
+            "inputs_snapshot": {
+              "samples": 1
+            },
+            "reason": "Warming up: need at least 20 distinct, fresh block observations",
+            "type": "mean_reversion"
+          }
+        },
+        "verified_on_chain": false,
+        "commit_tx": null,
+        "reveal_tx": null
+      },
+      {
+        "id": "07f682c9-df86-4a66-aa58-ca4dc477dc5f",
+        "created_at": 1793485648,
+        "status": "signal_skipped",
+        "payload": {
+          "reason": "Entries paused",
+          "signal": {
+            "action": "skip",
+            "asset": "WHSK",
+            "confidence": "0",
+            "expected_edge_bps": "0",
+            "id": "021e73b9-1f27-40dd-b5b1-553ff125995f",
+            "inputs_snapshot": {
+              "samples": 1
+            },
+            "reason": "Warming up: need at least 20 distinct, fresh block observations",
+            "type": "mean_reversion"
+          }
+        },
+        "verified_on_chain": false,
+        "commit_tx": null,
+        "reveal_tx": null
+      },
+      {
+        "id": "877ff726-963b-45c1-9b38-f4d09ac4d3ff",
+        "created_at": 1793485634,
+        "status": "recovered_paused",
+        "payload": {
+          "mode": "paper",
+          "reason": "Process started; entries require explicit resume"
+        },
+        "verified_on_chain": false,
+        "commit_tx": null,
+        "reveal_tx": null
+      },
+      {
+        "id": "8e528beb-cdb2-4e0f-bc48-e0e014802c97",
+        "created_at": 1793485633,
+        "status": "paper_filled",
+        "payload": {
+          "fill_id": "b57e2e67-e7af-4761-a7da-0c61480ac5bb",
+          "quote_id": "0788c2fa-4360-4d99-8de2-0cf3c815b521"
+        },
+        "verified_on_chain": false,
+        "commit_tx": null,
+        "reveal_tx": null
+      },
+      {
+        "id": "548f8251-0cf3-44fc-b9f9-3ab387957e5d",
+        "created_at": 1793485632,
+        "status": "paper_filled",
+        "payload": {
+          "fill_id": "7cd49cc2-dfbc-4970-ad14-a37cf6e3fc85",
+          "quote_id": "26af1f06-44ce-4972-9bc4-c13f86205024"
+        },
+        "verified_on_chain": false,
+        "commit_tx": null,
+        "reveal_tx": null
+      }
+    ],
+    "equity_curve": [
+      {
+        "at": 1793485648,
+        "fills": 2,
+        "initial_cash_usdt": "100",
+        "mode": "paper",
+        "nav_usdt": "99.972016",
+        "net_pnl_usdt": "-0.027984",
+        "realized_pnl_usdt": "-0.027984",
+        "unrealized_pnl_usdt": "0",
+        "valuation_assumption": "USDT is the accounting numeraire; no independent USD peg is asserted."
+      }
+    ],
+    "costs": {
+      "extra_slippage_bps": 10,
+      "network_fee_usdt": "0.01",
+      "disclosure": "LP fees included by QuoterV2; additional slippage is modeled; network fee is a configurable USDT expense model, not measured chain gas."
+    },
+    "live_enabled": false,
+    "public_deployment": null,
+    "disclosure": "PAPER \u00b7 live HSKSwap quotes, virtual funds and modeled costs. Decisions are local; no public on-chain verification is claimed."
+  },
+  "elapsed_seconds": 170.06,
+  "http_polls": 18,
+  "observed_ticks": 5,
+  "latest_data_status": "STALE",
+  "latest_error": "No verified RPC response for eth_getBlockByNumber: transport_or_invalid_response, transport_or_invalid_response, transport_or_invalid_response, transport_or_invalid_response",
+  "last_observed_block": 29569255,
+  "fills": 2,
+  "pre_restart": {
+    "available": true,
+    "mode": "paper",
+    "chain_id": 177,
+    "running": true,
+    "paused": true,
+    "emergency": false,
+    "unwind_pending": false,
+    "started_at": 1793485634,
+    "uptime_seconds": 214,
+    "tick_count": 7,
+    "last_tick_at": 1793485845,
+    "data_status": "STALE",
+    "data_source": "hskswap_v3",
+    "last_error": "No verified RPC response for eth_getBlockByNumber: transport_or_invalid_response, transport_or_invalid_response, transport_or_invalid_response, transport_or_invalid_response",
+    "block_number": 29569255,
+    "block_hash": "0xa4c4d0306c52b7eec0379a845edaa084f33b42e92aaefb20ccee392e066b7845",
+    "block_timestamp": 1793485645,
+    "markets": {
+      "WHSK": {
+        "asset": "WHSK",
+        "price": "0.0874129883475230279077675872745674112775306377870331818475386262316179812328909",
+        "pool": "0x4ff515761864e7838b0adb8b5b2b8b7a068905dc",
+        "liquidity_raw": "1475831005908433993",
+        "fee_pips": 3000
+      },
+      "WETH": {
+        "asset": "WETH",
+        "price": "2235.61893983280024806907807179540709915651566823052131510790150351083815404830",
+        "pool": "0xb92b79ed6b370d5cfee2e14b1d0983c258304c16",
+        "liquidity_raw": "1012957283335421",
+        "fee_pips": 3000
+      },
+      "WBTC": {
+        "asset": "WBTC",
+        "price": "76841.0816387862598625436260645548547247679786437287611873004683955879297659122",
+        "pool": "0xd9ea2ce468957ba49ccc38c4758ed6ecd561449a",
+        "liquidity_raw": "1823343427",
+        "fee_pips": 3000
+      }
+    },
+    "pnl": null,
+    "last_known_pnl": {
+      "mode": "paper",
+      "initial_cash_usdt": "100",
+      "nav_usdt": "99.972016",
+      "net_pnl_usdt": "-0.027984",
+      "realized_pnl_usdt": "-0.027984",
+      "unrealized_pnl_usdt": "0",
+      "fills": 2,
+      "valuation_assumption": "USDT is the accounting numeraire; no independent USD peg is asserted."
+    },
+    "positions": [],
+    "valuation_fresh": false,
+    "signals": [
+      {
+        "id": "021e73b9-1f27-40dd-b5b1-553ff125995f",
+        "type": "mean_reversion",
+        "asset": "WHSK",
+        "action": "skip",
+        "expected_edge_bps": "0",
+        "confidence": "0",
+        "reason": "Warming up: need at least 20 distinct, fresh block observations",
+        "inputs_snapshot": {
+          "samples": 1
+        }
+      },
+      {
+        "id": "13399f35-23b2-4802-80a5-1b17d76026ee",
+        "type": "mean_reversion",
+        "asset": "WETH",
+        "action": "skip",
+        "expected_edge_bps": "0",
+        "confidence": "0",
+        "reason": "Warming up: need at least 20 distinct, fresh block observations",
+        "inputs_snapshot": {
+          "samples": 1
+        }
+      },
+      {
+        "id": "7842ccf5-faad-4490-9a40-f3cccbe5be45",
+        "type": "mean_reversion",
+        "asset": "WBTC",
+        "action": "skip",
+        "expected_edge_bps": "0",
+        "confidence": "0",
+        "reason": "Warming up: need at least 20 distinct, fresh block observations",
+        "inputs_snapshot": {
+          "samples": 1
+        }
+      }
+    ],
+    "params": {
+      "position_size_pct": "3",
+      "max_trades_per_hour": 3,
+      "risk_level": "conservative",
+      "target_assets": [
+        "WHSK"
+      ],
+      "stop_loss_pct": "3",
+      "take_profit_pct": "10",
+      "trailing_stop_pct": null,
+      "max_holding_seconds": 3600,
+      "tick_seconds": 30
+    },
+    "params_version": 3,
+    "caps": {
+      "max_position_size_pct": "10",
+      "max_trades_per_hour": 6,
+      "max_trades_per_day": 20,
+      "max_token_exposure_pct": "30",
+      "max_positions": 3,
+      "daily_loss_limit_pct": "2",
+      "max_drawdown_pct": "10",
+      "cooldown_seconds": 30,
+      "max_stop_loss_pct": "10",
+      "max_take_profit_pct": "15",
+      "max_holding_seconds": 3600,
+      "source": "Reviewed Guard constructor defaults; no public deployment is registered yet"
+    },
+    "risk": {
+      "day": 20757,
+      "day_nav": "99.972016",
+      "high_water": "99.972016",
+      "daily_loss_pct": "0",
+      "drawdown_pct": "0",
+      "max_drawdown_pct": "0"
+    },
+    "trades_this_hour": 2,
+    "trades_today": 2,
+    "fills": [
+      {
+        "id": "b57e2e67-e7af-4761-a7da-0c61480ac5bb",
+        "mode": "paper",
+        "receipt": "paper:b57e2e67-e7af-4761-a7da-0c61480ac5bb",
+        "transaction_hash": null,
+        "created_at": 1793485633,
+        "chain_id": 177,
+        "quote": {
+          "id": "0788c2fa-4360-4d99-8de2-0cf3c815b521",
+          "route": {
+            "tokens": [
+              {
+                "asset_id": "WHSK",
+                "chain_id": 177,
+                "address": "0xB210D2120d57b758EE163cFfb43e73728c471Cf1",
+                "symbol": "WHSK",
+                "decimals": 18
+              },
+              {
+                "asset_id": "USDT",
+                "chain_id": 177,
+                "address": "0xf1b50ed67a9e2cc94ad3c477779e2d4cbfff9029",
+                "symbol": "USDT",
+                "decimals": 6
+              }
+            ],
+            "pools": [
+              {
+                "chain_id": 177,
+                "address": "0x4ff515761864e7838b0adb8b5b2b8b7a068905dc",
+                "token0": {
+                  "asset_id": "WHSK",
+                  "chain_id": 177,
+                  "address": "0xB210D2120d57b758EE163cFfb43e73728c471Cf1",
+                  "symbol": "WHSK",
+                  "decimals": 18
+                },
+                "token1": {
+                  "asset_id": "USDT",
+                  "chain_id": 177,
+                  "address": "0xf1b50ed67a9e2cc94ad3c477779e2d4cbfff9029",
+                  "symbol": "USDT",
+                  "decimals": 6
+                },
+                "fee_pips": 3000
+              }
+            ]
+          },
+          "amount_in_raw": 11394196023371982335,
+          "amount_out_raw": 993010,
+          "reference_out_raw": "996000.724220408314002442861119582958375554814095588181254320243053312110807424",
+          "fee_multiplier": "0.997",
+          "lp_fee_input_raw_estimate": 34182588070115947,
+          "price_impact_bps": "0.0274120128237206617960181288586655806359535410372256103764920987266783317147415",
+          "gas_estimate": 74185,
+          "states": [
+            {
+              "pool": {
+                "chain_id": 177,
+                "address": "0x4ff515761864e7838b0adb8b5b2b8b7a068905dc",
+                "token0": {
+                  "asset_id": "WHSK",
+                  "chain_id": 177,
+                  "address": "0xB210D2120d57b758EE163cFfb43e73728c471Cf1",
+                  "symbol": "WHSK",
+                  "decimals": 18
+                },
+                "token1": {
+                  "asset_id": "USDT",
+                  "chain_id": 177,
+                  "address": "0xf1b50ed67a9e2cc94ad3c477779e2d4cbfff9029",
+                  "symbol": "USDT",
+                  "decimals": 6
+                },
+                "fee_pips": 3000
+              },
+              "block_number": 29569240,
+              "block_hash": "0xeb9b61474ca9cf09b8b0195751b2fb1108d3d4a4500b00b1f5f99241053d3140",
+              "block_timestamp": 1793485615,
+              "sqrt_price_x96": 23424351023060863073728,
+              "liquidity_raw": 1475831005908433993,
+              "balance0_raw": 4992121294964652552406304,
+              "balance1_raw": 436358414215,
+              "mid_token1_per_token0": "0.0874129883475230279077675872745674112775306377870331818475386262316179812328909",
+              "unlocked": true
+            }
+          ],
+          "block_number": 29569240,
+          "block_hash": "0xeb9b61474ca9cf09b8b0195751b2fb1108d3d4a4500b00b1f5f99241053d3140",
+          "block_timestamp": 1793485615,
+          "created_at": 1793485633,
+          "expires_at": 1793485653,
+          "data_source": "hskswap_v3",
+          "fee_note": "LP fees are already included in amount_out; the input fee estimate is informational."
+        },
+        "amount_out_filled_raw": "992016",
+        "modeled_slippage_out_raw": "994",
+        "modeled_network_fee_usdt": "0.01",
+        "lp_fee_input_raw_estimate": "34182588070115947",
+        "lp_fee_charged_again": false,
+        "realized_pnl_usdt": "-0.027984",
+        "fee_methodology": "Quoter output already includes LP fees. Additional slippage reduces output; configurable network cost is deducted from virtual USDT cash."
+      },
+      {
+        "id": "7cd49cc2-dfbc-4970-ad14-a37cf6e3fc85",
+        "mode": "paper",
+        "receipt": "paper:7cd49cc2-dfbc-4970-ad14-a37cf6e3fc85",
+        "transaction_hash": null,
+        "created_at": 1793485632,
+        "chain_id": 177,
+        "quote": {
+          "id": "26af1f06-44ce-4972-9bc4-c13f86205024",
+          "route": {
+            "tokens": [
+              {
+                "asset_id": "USDT",
+                "chain_id": 177,
+                "address": "0xf1b50ed67a9e2cc94ad3c477779e2d4cbfff9029",
+                "symbol": "USDT",
+                "decimals": 6
+              },
+              {
+                "asset_id": "WHSK",
+                "chain_id": 177,
+                "address": "0xB210D2120d57b758EE163cFfb43e73728c471Cf1",
+                "symbol": "WHSK",
+                "decimals": 18
+              }
+            ],
+            "pools": [
+              {
+                "chain_id": 177,
+                "address": "0x4ff515761864e7838b0adb8b5b2b8b7a068905dc",
+                "token0": {
+                  "asset_id": "WHSK",
+                  "chain_id": 177,
+                  "address": "0xB210D2120d57b758EE163cFfb43e73728c471Cf1",
+                  "symbol": "WHSK",
+                  "decimals": 18
+                },
+                "token1": {
+                  "asset_id": "USDT",
+                  "chain_id": 177,
+                  "address": "0xf1b50ed67a9e2cc94ad3c477779e2d4cbfff9029",
+                  "symbol": "USDT",
+                  "decimals": 6
+                },
+                "fee_pips": 3000
+              }
+            ]
+          },
+          "amount_in_raw": 1000000,
+          "amount_out_raw": 11405601624996979315,
+          "reference_out_raw": "11439947528442281321.0521557057481625343960052152625954510549270840222609366368",
+          "fee_multiplier": "0.997",
+          "lp_fee_input_raw_estimate": 3000,
+          "price_impact_bps": "0.0228491238649475722386565338032868136379972884935288404881316880587671624920619",
+          "gas_estimate": 73959,
+          "states": [
+            {
+              "pool": {
+                "chain_id": 177,
+                "address": "0x4ff515761864e7838b0adb8b5b2b8b7a068905dc",
+                "token0": {
+                  "asset_id": "WHSK",
+                  "chain_id": 177,
+                  "address": "0xB210D2120d57b758EE163cFfb43e73728c471Cf1",
+                  "symbol": "WHSK",
+                  "decimals": 18
+                },
+                "token1": {
+                  "asset_id": "USDT",
+                  "chain_id": 177,
+                  "address": "0xf1b50ed67a9e2cc94ad3c477779e2d4cbfff9029",
+                  "symbol": "USDT",
+                  "decimals": 6
+                },
+                "fee_pips": 3000
+              },
+              "block_number": 29569240,
+              "block_hash": "0xeb9b61474ca9cf09b8b0195751b2fb1108d3d4a4500b00b1f5f99241053d3140",
+              "block_timestamp": 1793485615,
+              "sqrt_price_x96": 23424351023060863073728,
+              "liquidity_raw": 1475831005908433993,
+              "balance0_raw": 4992121294964652552406304,
+              "balance1_raw": 436358414215,
+              "mid_token1_per_token0": "0.0874129883475230279077675872745674112775306377870331818475386262316179812328909",
+              "unlocked": true
+            }
+          ],
+          "block_number": 29569240,
+          "block_hash": "0xeb9b61474ca9cf09b8b0195751b2fb1108d3d4a4500b00b1f5f99241053d3140",
+          "block_timestamp": 1793485615,
+          "created_at": 1793485632,
+          "expires_at": 1793485652,
+          "data_source": "hskswap_v3",
+          "fee_note": "LP fees are already included in amount_out; the input fee estimate is informational."
+        },
+        "amount_out_filled_raw": "11394196023371982335",
+        "modeled_slippage_out_raw": "11405601624996980",
+        "modeled_network_fee_usdt": "0.01",
+        "lp_fee_input_raw_estimate": "3000",
+        "lp_fee_charged_again": false,
+        "realized_pnl_usdt": "0",
+        "fee_methodology": "Quoter output already includes LP fees. Additional slippage reduces output; configurable network cost is deducted from virtual USDT cash."
+      }
+    ],
+    "decisions": [
+      {
+        "id": "231a3abf-8714-4319-a1fd-eb9c9a1716c5",
+        "created_at": 1793485848,
+        "status": "control_changed",
+        "payload": {
+          "action": "pause",
+          "mode": "paper",
+          "paused": true
+        },
+        "verified_on_chain": false,
+        "commit_tx": null,
+        "reveal_tx": null
+      },
+      {
+        "id": "5a9b8514-d4a3-4c83-b833-890a83182c6f",
+        "created_at": 1793485845,
+        "status": "data_unavailable",
+        "payload": {
+          "action": "no new fill",
+          "reason": "No verified RPC response for eth_getBlockByNumber: transport_or_invalid_response, transport_or_invalid_response, transport_or_invalid_response, transport_or_invalid_response"
+        },
+        "verified_on_chain": false,
+        "commit_tx": null,
+        "reveal_tx": null
+      },
+      {
+        "id": "32e685eb-4c48-41f3-bb81-fde7d65698b2",
+        "created_at": 1793485816,
+        "status": "data_unavailable",
+        "payload": {
+          "action": "no new fill",
+          "reason": "No verified RPC response for eth_getBlockByNumber: transport_or_invalid_response, transport_or_invalid_response, transport_or_invalid_response, transport_or_invalid_response"
+        },
+        "verified_on_chain": false,
+        "commit_tx": null,
+        "reveal_tx": null
+      },
+      {
+        "id": "98f2a011-e787-4606-ac1f-cc52dfe479a1",
+        "created_at": 1793485787,
+        "status": "data_unavailable",
+        "payload": {
+          "action": "no new fill",
+          "reason": "No verified RPC response for eth_getBlockByNumber: transport_or_invalid_response, transport_or_invalid_response, transport_or_invalid_response, transport_or_invalid_response"
+        },
+        "verified_on_chain": false,
+        "commit_tx": null,
+        "reveal_tx": null
+      },
+      {
+        "id": "b5742ab3-a237-4347-80e9-df31abd70e60",
+        "created_at": 1793485759,
+        "status": "data_unavailable",
+        "payload": {
+          "action": "no new fill",
+          "reason": "No verified RPC response for eth_getBlockByNumber: transport_or_invalid_response, transport_or_invalid_response, transport_or_invalid_response, transport_or_invalid_response"
+        },
+        "verified_on_chain": false,
+        "commit_tx": null,
+        "reveal_tx": null
+      },
+      {
+        "id": "83a8f7fe-cc9e-41de-ac5b-e860695aca7f",
+        "created_at": 1793485725,
+        "status": "data_unavailable",
+        "payload": {
+          "action": "no new fill",
+          "reason": "No verified RPC response for eth_getBlockByNumber: transport_or_invalid_response, transport_or_invalid_response, transport_or_invalid_response, transport_or_invalid_response"
+        },
+        "verified_on_chain": false,
+        "commit_tx": null,
+        "reveal_tx": null
+      },
+      {
+        "id": "cbb605c1-c1c8-4b1b-b1fc-1236c33291a3",
+        "created_at": 1793485706,
+        "status": "data_unavailable",
+        "payload": {
+          "action": "no new fill",
+          "reason": "No verified RPC response for eth_call: transport_or_invalid_response, transport_or_invalid_response, transport_or_invalid_response, transport_or_invalid_response"
+        },
+        "verified_on_chain": false,
+        "commit_tx": null,
+        "reveal_tx": null
+      },
+      {
+        "id": "ebfff897-c159-4bfc-af11-48a701bb1b59",
+        "created_at": 1793485695,
+        "status": "arbitrage_scan",
+        "payload": {
+          "reason": "No verified closed route",
+          "verified_cycles": 0
+        },
+        "verified_on_chain": false,
+        "commit_tx": null,
+        "reveal_tx": null
+      },
+      {
+        "id": "9fb2e970-b6bd-403a-9e0f-10b3be8aaa39",
+        "created_at": 1793485695,
+        "status": "signal_skipped",
+        "payload": {
+          "reason": "Warming up: need at least 20 distinct, fresh block observations",
+          "signal": {
+            "action": "skip",
+            "asset": "WHSK",
+            "confidence": "0",
+            "expected_edge_bps": "0",
+            "id": "39bef9c4-3592-4b94-8c1b-7b7f7bccac35",
+            "inputs_snapshot": {
+              "samples": 2
+            },
+            "reason": "Warming up: need at least 20 distinct, fresh block observations",
+            "type": "mean_reversion"
+          }
+        },
+        "verified_on_chain": false,
+        "commit_tx": null,
+        "reveal_tx": null
+      },
+      {
+        "id": "f1dbf843-8445-4a1c-8ef4-8d98a2d986f4",
+        "created_at": 1793485668,
+        "status": "control_changed",
+        "payload": {
+          "action": "resume",
+          "mode": "paper",
+          "paused": false
+        },
+        "verified_on_chain": false,
+        "commit_tx": null,
+        "reveal_tx": null
+      },
+      {
+        "id": "8866adee-42ac-4dfe-b74d-5b14dd2870b4",
+        "created_at": 1793485668,
+        "status": "tool_called",
+        "payload": {
+          "mode": "paper",
+          "tool": "set_params"
+        },
+        "verified_on_chain": false,
+        "commit_tx": null,
+        "reveal_tx": null
+      },
+      {
+        "id": "9d46e243-6a6b-4b66-9e84-80f1245c6f6a",
+        "created_at": 1793485668,
+        "status": "params_changed",
+        "payload": {
+          "changes": {
+            "target_assets": {
+              "after": [
+                "WHSK"
+              ],
+              "before": [
+                "WHSK",
+                "WETH",
+                "WBTC"
+              ]
+            }
+          },
+          "mode": "paper",
+          "on_chain": false
+        },
+        "verified_on_chain": false,
+        "commit_tx": null,
+        "reveal_tx": null
+      },
+      {
+        "id": "2f3d2255-bc2f-4586-8628-20b59d93b4ba",
+        "created_at": 1793485668,
+        "status": "tool_called",
+        "payload": {
+          "mode": "paper",
+          "tool": "set_params"
+        },
+        "verified_on_chain": false,
+        "commit_tx": null,
+        "reveal_tx": null
+      },
+      {
+        "id": "25127b3c-41c4-4c9a-ac71-cbcab0829753",
+        "created_at": 1793485668,
+        "status": "params_changed",
+        "payload": {
+          "changes": {
+            "max_trades_per_hour": {
+              "after": 3,
+              "before": 6
+            },
+            "position_size_pct": {
+              "after": "3",
+              "before": "5"
+            },
+            "risk_level": {
+              "after": "conservative",
+              "before": "balanced"
+            },
+            "stop_loss_pct": {
+              "after": "3",
+              "before": "5"
+            }
+          },
+          "mode": "paper",
+          "on_chain": false
+        },
+        "verified_on_chain": false,
+        "commit_tx": null,
+        "reveal_tx": null
+      },
+      {
+        "id": "0297f208-0605-418a-ab97-c040191c069d",
+        "created_at": 1793485648,
+        "status": "arbitrage_scan",
+        "payload": {
+          "reason": "No verified closed route",
+          "verified_cycles": 0
+        },
+        "verified_on_chain": false,
+        "commit_tx": null,
+        "reveal_tx": null
+      },
+      {
+        "id": "dce176ea-82e2-4494-872b-2cb18a81819a",
+        "created_at": 1793485648,
+        "status": "signal_skipped",
+        "payload": {
+          "reason": "Entries paused",
+          "signal": {
+            "action": "skip",
+            "asset": "WBTC",
+            "confidence": "0",
+            "expected_edge_bps": "0",
+            "id": "7842ccf5-faad-4490-9a40-f3cccbe5be45",
+            "inputs_snapshot": {
+              "samples": 1
+            },
+            "reason": "Warming up: need at least 20 distinct, fresh block observations",
+            "type": "mean_reversion"
+          }
+        },
+        "verified_on_chain": false,
+        "commit_tx": null,
+        "reveal_tx": null
+      },
+      {
+        "id": "96237ab3-bd8e-4370-aeb5-a6e3e12a6552",
+        "created_at": 1793485648,
+        "status": "signal_skipped",
+        "payload": {
+          "reason": "Entries paused",
+          "signal": {
+            "action": "skip",
+            "asset": "WETH",
+            "confidence": "0",
+            "expected_edge_bps": "0",
+            "id": "13399f35-23b2-4802-80a5-1b17d76026ee",
+            "inputs_snapshot": {
+              "samples": 1
+            },
+            "reason": "Warming up: need at least 20 distinct, fresh block observations",
+            "type": "mean_reversion"
+          }
+        },
+        "verified_on_chain": false,
+        "commit_tx": null,
+        "reveal_tx": null
+      },
+      {
+        "id": "07f682c9-df86-4a66-aa58-ca4dc477dc5f",
+        "created_at": 1793485648,
+        "status": "signal_skipped",
+        "payload": {
+          "reason": "Entries paused",
+          "signal": {
+            "action": "skip",
+            "asset": "WHSK",
+            "confidence": "0",
+            "expected_edge_bps": "0",
+            "id": "021e73b9-1f27-40dd-b5b1-553ff125995f",
+            "inputs_snapshot": {
+              "samples": 1
+            },
+            "reason": "Warming up: need at least 20 distinct, fresh block observations",
+            "type": "mean_reversion"
+          }
+        },
+        "verified_on_chain": false,
+        "commit_tx": null,
+        "reveal_tx": null
+      },
+      {
+        "id": "877ff726-963b-45c1-9b38-f4d09ac4d3ff",
+        "created_at": 1793485634,
+        "status": "recovered_paused",
+        "payload": {
+          "mode": "paper",
+          "reason": "Process started; entries require explicit resume"
+        },
+        "verified_on_chain": false,
+        "commit_tx": null,
+        "reveal_tx": null
+      },
+      {
+        "id": "8e528beb-cdb2-4e0f-bc48-e0e014802c97",
+        "created_at": 1793485633,
+        "status": "paper_filled",
+        "payload": {
+          "fill_id": "b57e2e67-e7af-4761-a7da-0c61480ac5bb",
+          "quote_id": "0788c2fa-4360-4d99-8de2-0cf3c815b521"
+        },
+        "verified_on_chain": false,
+        "commit_tx": null,
+        "reveal_tx": null
+      },
+      {
+        "id": "548f8251-0cf3-44fc-b9f9-3ab387957e5d",
+        "created_at": 1793485632,
+        "status": "paper_filled",
+        "payload": {
+          "fill_id": "7cd49cc2-dfbc-4970-ad14-a37cf6e3fc85",
+          "quote_id": "26af1f06-44ce-4972-9bc4-c13f86205024"
+        },
+        "verified_on_chain": false,
+        "commit_tx": null,
+        "reveal_tx": null
+      }
+    ],
+    "equity_curve": [
+      {
+        "at": 1793485648,
+        "fills": 2,
+        "initial_cash_usdt": "100",
+        "mode": "paper",
+        "nav_usdt": "99.972016",
+        "net_pnl_usdt": "-0.027984",
+        "realized_pnl_usdt": "-0.027984",
+        "unrealized_pnl_usdt": "0",
+        "valuation_assumption": "USDT is the accounting numeraire; no independent USD peg is asserted."
+      }
+    ],
+    "costs": {
+      "extra_slippage_bps": 10,
+      "network_fee_usdt": "0.01",
+      "disclosure": "LP fees included by QuoterV2; additional slippage is modeled; network fee is a configurable USDT expense model, not measured chain gas."
+    },
+    "live_enabled": false,
+    "public_deployment": null,
+    "disclosure": "PAPER \u00b7 live HSKSwap quotes, virtual funds and modeled costs. Decisions are local; no public on-chain verification is claimed.",
+    "refresh_in_progress": false
+  },
+  "completed_at": "2026-10-31T22:30:49.699384+00:00",
+  "unattended_seconds": 181.49
+}

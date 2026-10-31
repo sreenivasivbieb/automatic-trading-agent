@@ -1,0 +1,176 @@
+{
+  "observed_at": "2026-10-31T22:45:10.369130+00:00",
+  "status": "LOCAL_CONNECTED_FLOWS_PASSED_PUBLIC_DEPLOYMENT_PENDING",
+  "mode": "PAPER for web strategy; isolated local forks for signed execution",
+  "public_transactions_sent": 0,
+  "public_contracts_deployed": false,
+  "checks": {
+    "python": {
+      "passed": 256,
+      "skipped": 1,
+      "subtests_passed": 10,
+      "output": "aegis-connected-python-output.txt"
+    },
+    "contracts": {
+      "passed": 57,
+      "optional_rpc_test_skipped": 1,
+      "fuzz_properties": 3,
+      "runs_each": 256,
+      "output": "aegis-connected-contract-output.txt"
+    },
+    "browser": {
+      "passed": 18,
+      "uses": "Real authenticated API with labeled connector and wallet fixtures; external wallet signing is not validated",
+      "output": "aegis-connected-browser-output.txt"
+    },
+    "signed_gateway_fork": {
+      "status": "PASSED",
+      "evidence": "aegis-signed-fork-flow.json",
+      "public_receipts": false
+    },
+    "independent_keeper_fork": {
+      "status": "PASSED",
+      "output": "aegis-keeper-fork-output.txt"
+    },
+    "unattended_paper": {
+      "status": "PASSED",
+      "seconds": 3601.42,
+      "observed_ticks": 88,
+      "http_polls": 360,
+      "process_crashes": 0,
+      "ledger_decision_counts": {
+        "arbitrage_scan": 83,
+        "control_changed": 2,
+        "data_unavailable": 8,
+        "paper_filled": 2,
+        "params_changed": 2,
+        "recovered_paused": 2,
+        "signal_skipped": 85,
+        "tool_called": 2
+      },
+      "data_unavailable_events": 8,
+      "note": "Read failures made no new fill; this does not establish continuous RPC availability or profitability. The two forced fills precede strategy observation.",
+      "evidence": "aegis-paper-soak.json"
+    },
+    "current_http_smoke": {
+      "status": "PASSED_WITH_HANDLED_RPC_OUTAGE",
+      "note": "Startup verified live prices, chain-specific owner metadata and refusal of an unregistered public proof. The short run ended STALE after an RPC failure, retained the ledger and recovered paused after restart. A subsequent separate fresh-price check succeeded.",
+      "evidence": "aegis-current-http-smoke.json"
+    },
+    "built_app_restart": {
+      "status": "PASSED",
+      "mode": "original Krono SIMULATION",
+      "evidence": "aegis-connected-production-output.json"
+    },
+    "live_data_screenshots": {
+      "status": "CAPTURED_AND_VISUALLY_INSPECTED",
+      "data": "Actual mainnet HSKSwap reads and the copied two-fill PAPER ledger; no wallet or public transaction",
+      "desktop": "screenshots/aegis-live-paper-desktop.png",
+      "mobile": "screenshots/aegis-live-paper-mobile.png",
+      "viewport_widths": [
+        1512,
+        390
+      ],
+      "mobile_horizontal_overflow": false,
+      "post_capture_server_shutdown_seconds": 0.16
+    }
+  },
+  "forced_round_trip": {
+    "initial_usdt": "100",
+    "final_usdt": "99.972016",
+    "net_pnl_usdt": "-0.027984",
+    "network_expense_usdt_per_fill": "0.01",
+    "extra_slippage_bps": 10,
+    "lp_fees": "Embedded once in real Quoter output",
+    "purpose": "Operational accounting/execution check, not alpha evidence"
+  },
+  "source_scope": {
+    "one_hour_start_hashes": "aegis-paper-soak.json/source_sha256",
+    "changed_from_soak_start": [
+      "agent/aegis/connectors/rpc.py",
+      "agent/aegis/nl/tools.py",
+      "agent/aegis/service.py"
+    ],
+    "unchanged_core": [
+      "agent/aegis/runtime.py",
+      "agent/aegis/risk/policy.py",
+      "agent/aegis/execution/gateway.py",
+      "agent/aegis/store/db.py",
+      "agent/aegis/strategy/mean_reversion.py",
+      "agent/aegis/strategy/arbitrage.py"
+    ],
+    "note": "The one-hour run verifies the captured paper core. Read transport, optional control provider and shutdown/NL adapters were extended during that run and checked separately by the current HTTP smoke, regression and fork checks. It is not an hour-long test of every final module.",
+    "final_agent_sha256": {
+      "agent/aegis/__init__.py": "f392cfafaf4c5c3d29699503eccbf17917c902239d6a840a274011434c47e6f6",
+      "agent/aegis/connectors/__init__.py": "e3068f9985df6bcec0c6b06c4a7a1e4404cd2bdedfa061ebbe9035095f48d25e",
+      "agent/aegis/connectors/base.py": "974336b8fc2a95b5595c5a29286034a195398c5dcb6e5edb6899392f8ee098bb",
+      "agent/aegis/connectors/hskswap_v3.py": "96fd9680cd9d83d16f03c727479f527027b00e25d75758f1c77e097460c2843b",
+      "agent/aegis/connectors/mock.py": "eb7166426fd0811d444b736b8de7e455ce5d0d37d16f3ba0da3044450ee9fcd0",
+      "agent/aegis/connectors/paper.py": "3997f0a3be0d7d5dcb18e2446f0f77a0c010e60f24872d696d7f364dc678e975",
+      "agent/aegis/connectors/rpc.py": "4ea43da34fbc4697cee306cd1204a495cee87dfee5a9899d9b3e7144189d91f6",
+      "agent/aegis/data.py": "7858e03842db4bee862337f80753ca41717ff75f6c2a08010736eada0f4e79e8",
+      "agent/aegis/deploy.py": "cfab32e4145bf4bf861748f4c045026502b6c56a992188d5077f2137a5c3a050",
+      "agent/aegis/discovery.py": "ac9e9204eb07d4b5b10a59804c4822dcd3082b3fcd481be35cba9a19c4868b42",
+      "agent/aegis/execution/__init__.py": "9df288c714f93759470102142747e03d2ca7badc057d3499ae8f7b66a90fbb4f",
+      "agent/aegis/execution/decision_log_client.py": "8cccafed0f8805cd8cbf0f1ec17bac746404c787a28f09d3df0e8abceb12ac20",
+      "agent/aegis/execution/fees.py": "159b0f74cc962d835001418f694896412480cca6ad02de8204a3a9a8053cb973",
+      "agent/aegis/execution/gateway.py": "53e4fef52114df32f3e2135663003c18f1de00e814a1277431671792cadb8afa",
+      "agent/aegis/execution/live.py": "e53f08bb99def1ff0258efb88f22d58c1119845099060eb4143cbdaa32ff979c",
+      "agent/aegis/execution/vault_client.py": "5fe0c2e839f91085130c0498fc89ea627db0d9be1cd67e2ce0c7c96eb4d3e3d2",
+      "agent/aegis/keeper.py": "9c29d0d193e1ed0012f5011c691b2245d3431aaee21cced74a8d00f77e967678",
+      "agent/aegis/nl/__init__.py": "b10ca08d7802e389690deb38ca584818a1b711bb61b462232e96c582901bff21",
+      "agent/aegis/nl/agent.py": "a0d211c163b0941e0fd2bdb3ad1bf1ac802817bcce780897fef93bfc430fb4fa",
+      "agent/aegis/nl/telegram_bot.py": "aae8204ee27a8d99fb589534fc225b56817f44da521749f5176dda4a732deeb0",
+      "agent/aegis/nl/tools.py": "81b0daa3705daec62360f477512a9dcbea6d6772b916f0c9f8d73c6eef6e0561",
+      "agent/aegis/owner.py": "3b5cdfed107e2a7b5c6ff62c6742e776f724856293abe7d317a2a53c613998d0",
+      "agent/aegis/paper_demo.py": "49a47d02aac29e0252b54e107b40f2a303af2e649109cb1aac463ad4a7348934",
+      "agent/aegis/prices.py": "1480bf840a6ab2b319169db5ee1b23c117c853c9ce69b4781815a775a9fe6f99",
+      "agent/aegis/risk/__init__.py": "44ac88b2d844759ddddfb501920956b4cb7ac79c325a58804f9256323568a323",
+      "agent/aegis/risk/engine.py": "6392a8b15ed4ed5b28de19173c7cfb56ce56a884b0194035bf425b971989c8ea",
+      "agent/aegis/risk/policy.py": "1f7271d476e51fdb951ec3110631790015f83ee6974a280a20873003a7bb82bb",
+      "agent/aegis/runtime.py": "68daec6ed8f73497d942f4d8a4f7f6e4da6a73f1c2b7dfceba6a44b091ccf7a0",
+      "agent/aegis/service.py": "edf4ff0f0cdb0839dcb75c2187de2f027625a6aac4cecea918abd34f6c909fdf",
+      "agent/aegis/store/__init__.py": "93fb35cb827456e053fa8cb2a35d16fdc293120f2827cd8ec968c40eadff326f",
+      "agent/aegis/store/db.py": "fec904aa98c2272a3bc504762d37b087ea630b8274472d6d4933fef4e7c85dc9",
+      "agent/aegis/strategy/__init__.py": "d1fd5dc5047f64d251dcbaeb7fc80eaa63ff910ae7282ff8ec43828aeac7753d",
+      "agent/aegis/strategy/arbitrage.py": "1dc17dcf38dbaef9d25d345304b56960d3297c983054b23abfd0ac3d0b97a292",
+      "agent/aegis/strategy/mean_reversion.py": "d9e0f5a84c82dfba5de45428df82ef38f95318e7a0a57b0298f2845ecaea7299",
+      "agent/aegis/strategy/signals.py": "0ef1e86091a13cf4287ae6cb2f7e3030028eae6230f533128c42fdc5e41560fb",
+      "agent/aegis/transactions.py": "45cfbcf6383a1f8cbba33b665e337d6b2c8649fad871d35261475e5659b1c272",
+      "agent/aegis/verify_decision.py": "7951543bd17a9827d3fa801167c44edfa6a62c4827d017d1e5743c2e503cd63d"
+    },
+    "added_after_soak_start": [
+      "agent/aegis/execution/decision_log_client.py",
+      "agent/aegis/execution/fees.py",
+      "agent/aegis/execution/live.py",
+      "agent/aegis/execution/vault_client.py",
+      "agent/aegis/keeper.py",
+      "agent/aegis/nl/agent.py",
+      "agent/aegis/nl/telegram_bot.py",
+      "agent/aegis/owner.py",
+      "agent/aegis/transactions.py"
+    ]
+  },
+  "remaining": [
+    "Public owner address deferred by user",
+    "Separate funded deployer, agent and optional independent keeper",
+    "Public testnet deployment, source verification and funded wallet/transaction proof",
+    "Actual Claude and Telegram delivery with user credentials",
+    "Public live-entry scheduler and live chat mode are not enabled",
+    "Longer cost-inclusive strategy performance and independent security audit"
+  ],
+  "artifact_sha256": {
+    "aegis-paper-soak.json": "b3302dcb9a1d89b6a395b8a6a2314cdcb6d01f85fb429795a73c25795c330d54",
+    "aegis-current-http-smoke.json": "02b83b01dfaad7ff47ba39220a9e95432c1d97de6bc424a496c049fac398f1c8",
+    "aegis-signed-fork-flow.json": "9685640f1f1867885d6a7c5fcbd2adeacb2e211e9aa9b2e072d38abefefa8da9",
+    "aegis-connected-contract-output.txt": "965793548d6ebae33ef16ec0331e274e77e7b3c0a037ba8f562a9ba0d27fe2d0",
+    "aegis-keeper-fork-output.txt": "6064e8d59be68aad8ec063bf60f42c8590cb24891526e0546cab8438d935ffd4",
+    "aegis-connected-python-output.txt": "490d5bf9e58d63a8ffcab4a473a2a21139d608cf948dd66e581eecf945c0f4dd",
+    "aegis-connected-browser-output.txt": "a6b6c727de21366c147aefe59f27e4b42222b3b77c464541035d6aa6fe0fbfd4",
+    "aegis-connected-production-output.json": "2dc9f8087ab880a172db62412253e22e1f3f28bf5693793c661131fc630466d9",
+    "screenshots/aegis-live-paper-desktop.png": "c682f8c1a4b0a655a45ec7d93c510f280d89ab82b0256fdad7511b5db45f1974",
+    "screenshots/aegis-live-paper-desktop-top.png": "6e1ce7b31910a7b41b12374fc8ea2681998877d9e1a7110c6cfde407be0f88a5",
+    "screenshots/aegis-live-paper-mobile.png": "b3bf93aba84520ae21157dc60038764a21a49273bb08bfbe3740519da96d3ad1",
+    "screenshots/aegis-live-paper-mobile-top.png": "93faeef5b7cf3daf42f546d4bb3b9754b74286b41b36324e0a904757976fad93"
+  }
+}
