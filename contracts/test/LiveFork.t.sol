@@ -31,6 +31,13 @@ contract LiveForkTest is TestBase {
     event ForkProof(
         uint256 chainId, uint256 forkBlock, uint256 amountIn, uint256 minimumOut, uint256 amountOut
     );
+    event ForkKeeperProof(
+        uint256 chainId,
+        uint256 originalForkBlock,
+        uint256 decisionId,
+        uint256 amountIn,
+        uint256 amountOut
+    );
 
     function testRealRouterGuardedStableExitOnLocalFork() public {
         if (!vm.envOr("AEGIS_LIVE_ORACLE_TESTS", false)) {
@@ -101,5 +108,32 @@ contract LiveForkTest is TestBase {
         vm.prank(localAgent);
         log.reveal(id, decision);
         emit ForkProof(block.chainid, forkBlock, amount, minimum, output);
+
+        // The agent sends no more calls. A distinct account executes a bounded safety exit.
+        vm.warp(vm.getBlockTimestamp() + 3601);
+        require(vault.keeperStatus(wrapped) == bytes32("DEAD_MAN"), "keeper trigger after silence");
+        address localKeeper = address(0xBAD);
+        uint256 keeperAmount = 0.005 ether;
+        uint256 keeperValue = Math.mulDiv(keeperAmount, oracle.price(wrapped), 1e18);
+        uint256 keeperMinimum =
+            Math.mulDiv(keeperValue, 10 ** uint256(stableDecimals), 1e18) * 99 / 100;
+        uint256 keeperDeadline = vm.getBlockTimestamp() + 30;
+        bytes memory keeperDecision =
+            bytes('{"mode":"local_fork","actor":"keeper","reason":"DEAD_MAN"}');
+        bytes32 keeperAction =
+            vault.keeperExecutionHash(path, keeperAmount, keeperMinimum, keeperDeadline);
+        vm.prank(localKeeper);
+        uint256 keeperId = log.commitKeeper(keccak256(keeperDecision), keeperAction);
+        vm.roll(block.number + 1);
+        uint256 beforeStable = IERC20Metadata(stable).balanceOf(address(vault));
+        vm.prank(localKeeper);
+        uint256 keeperOutput = vault.keeperClose(path, keeperAmount, keeperMinimum, keeperDeadline);
+        require(keeperOutput >= keeperMinimum && vault.paused(), "bounded keeper exit");
+        eq(IERC20Metadata(stable).balanceOf(address(vault)), beforeStable + keeperOutput);
+        eq(IERC20Metadata(stable).balanceOf(localKeeper), 0);
+        eq(IERC20Metadata(wrapped).allowance(address(vault), router_), 0);
+        vm.prank(localKeeper);
+        log.reveal(keeperId, keeperDecision);
+        emit ForkKeeperProof(block.chainid, forkBlock, keeperId, keeperAmount, keeperOutput);
     }
 }

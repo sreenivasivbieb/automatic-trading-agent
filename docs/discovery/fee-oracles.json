@@ -1,0 +1,74 @@
+{
+  "testnet": {
+    "chain_id": 133,
+    "block_number": 35148429,
+    "block_hash": "0xa09e4705d119ffae6217328bf370015d1a69f82c21fbaa693e4888f1924c9b82",
+    "contracts": {
+      "gas_oracle": {
+        "address": "0x420000000000000000000000000000000000000F",
+        "runtime_code_hash": "0xfa8c9db6c6cab7108dea276f4cd09d575674eb0852c0fa3187e59e98ef977998",
+        "implementation": "0x4f1db3c6abd250ba86e0928471a8f7db3afd88f1",
+        "implementation_slot": "0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc",
+        "implementation_code_hash": "0x732c34b4d8d2e05f4326bc8386ae95cec203843beb29a801126bc8a8c7dd58b8",
+        "explorer_source_abi_available": false,
+        "observed_methods": {
+          "version()": "1.3.1-beta.1",
+          "getL1FeeUpperBound(uint256)": 1997,
+          "isFjord()": true,
+          "isIsthmus()": true,
+          "isJovian()": true
+        }
+      },
+      "l1_block": {
+        "address": "0x4200000000000000000000000000000000000015",
+        "runtime_code_hash": "0xfa8c9db6c6cab7108dea276f4cd09d575674eb0852c0fa3187e59e98ef977998",
+        "implementation": "0x3ba4007f5c922fbb33c454b41ea7a1f11e83df2c",
+        "implementation_slot": "0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc",
+        "implementation_code_hash": "0x61f8d705018f105013dda524440781d0093c94862b46e46b7fe02d64c04313f1",
+        "explorer_source_abi_available": false,
+        "observed_methods": {
+          "operatorFeeScalar()": 0,
+          "operatorFeeConstant()": 0
+        }
+      }
+    },
+    "address_source": "https://docs.hskchain.net/docs/Build-on-HashKey-Chain/Contract-Addresses",
+    "interface_source": "https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/GasPriceOracle.sol"
+  },
+  "mainnet": {
+    "chain_id": 177,
+    "block_number": 29568191,
+    "block_hash": "0xebe2228bdbb1c209898e2f37481cdd84a049d28098580bfbdd665fdc2f44e257",
+    "contracts": {
+      "gas_oracle": {
+        "address": "0x420000000000000000000000000000000000000F",
+        "runtime_code_hash": "0xfa8c9db6c6cab7108dea276f4cd09d575674eb0852c0fa3187e59e98ef977998",
+        "implementation": "0x4f1db3c6abd250ba86e0928471a8f7db3afd88f1",
+        "implementation_slot": "0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc",
+        "implementation_code_hash": "0x732c34b4d8d2e05f4326bc8386ae95cec203843beb29a801126bc8a8c7dd58b8",
+        "explorer_source_abi_available": false,
+        "observed_methods": {
+          "version()": "1.3.1-beta.1",
+          "getL1FeeUpperBound(uint256)": 21009709057844,
+          "isFjord()": true,
+          "isIsthmus()": true,
+          "isJovian()": true
+        }
+      },
+      "l1_block": {
+        "address": "0x4200000000000000000000000000000000000015",
+        "runtime_code_hash": "0xfa8c9db6c6cab7108dea276f4cd09d575674eb0852c0fa3187e59e98ef977998",
+        "implementation": "0x3ba4007f5c922fbb33c454b41ea7a1f11e83df2c",
+        "implementation_slot": "0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc",
+        "implementation_code_hash": "0x61f8d705018f105013dda524440781d0093c94862b46e46b7fe02d64c04313f1",
+        "explorer_source_abi_available": false,
+        "observed_methods": {
+          "operatorFeeScalar()": 0,
+          "operatorFeeConstant()": 0
+        }
+      }
+    },
+    "address_source": "https://docs.hskchain.net/docs/Build-on-HashKey-Chain/Contract-Addresses",
+    "interface_source": "https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/src/L2/GasPriceOracle.sol"
+  }
+}

@@ -17,6 +17,7 @@ interface Vm {
     function expectRevert(bytes4) external;
     function expectRevert(bytes calldata) external;
     function warp(uint256) external;
+    function getBlockTimestamp() external view returns (uint256);
     function roll(uint256) external;
     function deal(address, uint256) external;
     function recordLogs() external;

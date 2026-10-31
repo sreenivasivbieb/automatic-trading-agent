@@ -44,6 +44,8 @@ contract AegisVault is Ownable, ReentrancyGuard {
     uint256 public tradesToday;
     uint256 public tradesThisHour;
     uint256 public lastTradeAt;
+    uint256 public lastHeartbeat;
+    uint32 public heartbeatTimeout = 3600;
     address[] private _assets;
     mapping(address => bool) public allowedTokens;
     mapping(address => bool) private _registered;
@@ -64,11 +66,21 @@ contract AegisVault is Ownable, ReentrancyGuard {
     error ExposureLimit();
     error UnsupportedTransfer();
     error NativeTransferFailed();
+    error NotTriggered();
     event Deposited(address indexed token, uint256 amount);
     event Withdrawn(address indexed token, address indexed owner, uint256 amount);
     event TokenAllowed(address indexed token, bool allowed);
     event PauseChanged(bool paused);
     event AgentChanged(address indexed agent);
+    event Heartbeat(address indexed agent, uint256 timestamp);
+    event HeartbeatTimeoutTightened(uint32 seconds_);
+    event KeeperExit(
+        uint256 indexed decisionId,
+        address indexed keeper,
+        address indexed token,
+        bytes32 reason,
+        uint256 amountOut
+    );
     event LimitsTightened(Limits limits);
     event CircuitBreaker(bytes32 indexed reason, uint256 nav, uint256 referenceNav);
     event NavCheckpoint(
@@ -107,6 +119,7 @@ contract AegisVault is Ownable, ReentrancyGuard {
                 || ISwapRouter02(dexRouter).WETH9() != wrapped || !oracle.isAllowed(wrapped)
         ) revert InvalidRoute();
         agent = initialAgent;
+        lastHeartbeat = block.timestamp;
         router = dexRouter;
         routerCodeHash = dexRouter.codehash;
         wrappedNative = wrapped;
@@ -145,12 +158,24 @@ contract AegisVault is Ownable, ReentrancyGuard {
     function setAgent(address next) external onlyOwner {
         if (next == address(0) || next == owner()) revert Unauthorized();
         agent = next;
+        lastHeartbeat = block.timestamp;
         emit AgentChanged(next);
     }
 
     function setPaused(bool value) external onlyOwner {
         paused = value;
         emit PauseChanged(value);
+    }
+
+    function heartbeat() external onlyAgent {
+        lastHeartbeat = block.timestamp;
+        emit Heartbeat(msg.sender, block.timestamp);
+    }
+
+    function tightenHeartbeatTimeout(uint32 seconds_) external onlyOwner {
+        if (seconds_ < 300 || seconds_ > heartbeatTimeout) revert InvalidLimits();
+        heartbeatTimeout = seconds_;
+        emit HeartbeatTimeoutTightened(seconds_);
     }
 
     function setTokenAllowed(address token, bool value) external onlyOwner {
@@ -373,6 +398,70 @@ contract AegisVault is Ownable, ReentrancyGuard {
         uint256 minimumOut,
         uint256 deadline
     ) external nonReentrant onlyAgent returns (uint256 amountOut) {
+        return _executeSwap(path, amountIn, minimumOut, deadline, false);
+    }
+
+    function keeperExecutionHash(
+        bytes calldata path,
+        uint256 amountIn,
+        uint256 minimumOut,
+        uint256 deadline
+    ) public view returns (bytes32) {
+        return keccak256(
+            abi.encode(
+                block.chainid,
+                address(this),
+                keccak256("AEGIS_KEEPER_EXIT"),
+                path,
+                amountIn,
+                minimumOut,
+                deadline
+            )
+        );
+    }
+
+    /// @notice Anyone may close a triggered holding to settlement. No caller reward or arbitrary payout.
+    function keeperClose(
+        bytes calldata path,
+        uint256 amountIn,
+        uint256 minimumOut,
+        uint256 deadline
+    ) external nonReentrant returns (uint256 amountOut) {
+        (address tokenIn, address tokenOut) = _validatePath(path);
+        if (tokenIn == settlement || tokenOut != settlement) revert InvalidRoute();
+        bytes32 reason = keeperStatus(tokenIn);
+        if (reason == bytes32(0)) revert NotTriggered();
+        uint256 id = decisionLog.pending(msg.sender);
+        _trip(reason, 0, dayStartNav);
+        amountOut = _executeSwap(path, amountIn, minimumOut, deadline, true);
+        if (amountOut != 0) emit KeeperExit(id, msg.sender, tokenIn, reason, amountOut);
+    }
+
+    function keeperStatus(address token) public view returns (bytes32) {
+        if (!allowedTokens[token] || token == settlement) return bytes32(0);
+        uint256 amount = IERC20(token).balanceOf(address(this));
+        uint256 cost = positionCost[token];
+        if (amount == 0 || cost == 0) return bytes32(0);
+        if (block.timestamp > lastHeartbeat + heartbeatTimeout) return "DEAD_MAN";
+        uint256 p = oracle.price(token);
+        uint256 value = Math.mulDiv(amount, p, 10 ** uint256(oracle.decimals(token)));
+        if (value * 10000 <= cost * (10000 - limits.stopLossBps)) return "STOP_LOSS";
+        if (value * 10000 >= cost * (10000 + limits.takeProfitBps)) return "TAKE_PROFIT";
+        if (block.timestamp > openedAt[token] + limits.maxHoldingSeconds) return "TIME_STOP";
+        if (
+            limits.trailingStopBps != 0
+                && p * 10000 <= peakPrice[token] * (10000 - limits.trailingStopBps)
+        ) return "TRAILING_STOP";
+        return bytes32(0);
+    }
+
+    function _executeSwap(
+        bytes calldata path,
+        uint256 amountIn,
+        uint256 minimumOut,
+        uint256 deadline,
+        bool keeper
+    ) internal returns (uint256 amountOut) {
         if (amountIn == 0 || minimumOut == 0) revert InvalidAmount();
         if (deadline <= block.timestamp || deadline > block.timestamp + 60) {
             revert InvalidDeadline();
@@ -430,8 +519,11 @@ contract AegisVault is Ownable, ReentrancyGuard {
             if (tokenIn != settlement && beforeIn == amountIn) --countPositions;
             if (beforeOut == 0 && countPositions >= limits.maxPositions) revert ExposureLimit();
         }
-        uint256 decisionId =
-            decisionLog.consume(agent, executionHash(path, amountIn, minimumOut, deadline));
+        uint256 decisionId = keeper
+            ? decisionLog.consumeKeeper(
+                msg.sender, keeperExecutionHash(path, amountIn, minimumOut, deadline)
+            )
+            : decisionLog.consume(agent, executionHash(path, amountIn, minimumOut, deadline));
         IERC20(tokenIn).forceApprove(router, amountIn);
         uint256 reported = ISwapRouter02(router)
             .exactInput(ISwapRouter02.ExactInputParams(path, address(this), amountIn, minimumOut));
@@ -457,6 +549,7 @@ contract AegisVault is Ownable, ReentrancyGuard {
         ++tradesToday;
         ++tradesThisHour;
         lastTradeAt = block.timestamp;
+        if (!keeper) lastHeartbeat = block.timestamp;
         uint256 afterNav = 0;
         try this.nav() returns (uint256 value) {
             afterNav = value;

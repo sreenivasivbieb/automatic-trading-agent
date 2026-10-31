@@ -9,7 +9,7 @@ from decimal import Decimal
 
 import pytest
 
-from aegis.connectors.base import DexConnector
+from aegis.connectors.base import DexConnector, Quote, Route
 from aegis.connectors.hskswap_v3 import HSKSwapConnector, encode_path
 from aegis.connectors.mock import MockConnector
 from aegis.connectors.paper import PaperConnector, PaperTerms
@@ -34,6 +34,41 @@ def test_connectors_implement_the_strategy_protocol(desk):
     connector, _, gateway = desk
     assert isinstance(connector, DexConnector)
     assert isinstance(gateway.connector, DexConnector)
+
+
+def test_atomic_cycle_accounts_only_net_settlement_profit_and_replay_is_idempotent(desk):
+    c, ledger, _ = desk
+    stable, base = c.tokens["USDT"], c.tokens["WHSK"]
+    buy = c.get_quote(stable, base, 1_000_000)
+    # Explicit accounting-only fixture: no discovered mainnet cycle or executable route is asserted.
+    other = buy.route.pools[0].model_copy(update={"address": "0x" + "8" * 40})
+    route = Route(tokens=(stable, base, stable), pools=(buy.route.pools[0], other))
+    cycle = Quote.model_validate(
+        {
+            **buy.model_dump(),
+            "route": route,
+            "amount_out_raw": 1_100_000,
+            "states": (buy.states[0], buy.states[0].model_copy(update={"pool": other})),
+        }
+    )
+    marks = {stable.address.lower(): Decimal(1)}
+    args = dict(
+        key="accounting-cycle",
+        request_hash="fixture",
+        quote=cycle,
+        output_raw=1_100_000,
+        network_fee_raw=10000,
+        marks=marks,
+        max_trade_bps=1000,
+    )
+    result = ledger.apply_cycle(**args)
+    assert result["realized_pnl_usdt"] == "0.09" and result["modeled_network_fee_usdt"] == "0.01"
+    assert ledger.pnl(marks)["nav_usdt"] == "100.09"
+    assert len(ledger.balances()) == 1  # No intermediate WHSK is fabricated.
+    assert ledger.apply_cycle(**args) == result and len(ledger.fills()) == 1
+    with pytest.raises(LedgerError, match="positive net"):
+        ledger.apply_cycle(**{**args, "key": "losing", "output_raw": 1_005_000})
+    assert ledger.pnl(marks)["nav_usdt"] == "100.09" and len(ledger.fills()) == 1
 
 
 def test_v3_routes_and_packed_path(desk):

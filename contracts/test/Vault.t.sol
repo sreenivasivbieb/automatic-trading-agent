@@ -136,6 +136,119 @@ contract VaultTest is TestBase {
         pool.setTick(address(asset) < address(stable) ? tick : -tick);
     }
 
+    function keeperCommit(bytes memory p, uint256 amount, uint256 minimum, uint256 deadline)
+        internal
+        returns (uint256 id)
+    {
+        bytes32 action = vault.keeperExecutionHash(p, amount, minimum, deadline);
+        vm.prank(outsider);
+        id = log.commitKeeper(keccak256(payload), action);
+        vm.roll(block.number + 1);
+    }
+
+    function testIndependentKeeperExecutesStopWithoutAgentOrCallerPayout() public {
+        buy();
+        setRelativeTick(-1200);
+        require(vault.keeperStatus(address(asset)) == bytes32("STOP_LOSS"), "stop trigger");
+        bytes memory p = path(address(asset), address(stable));
+        uint256 amount = asset.balanceOf(address(vault));
+        uint256 minimum = amount * oracle.price(address(asset)) / 1e18 * 99 / 100;
+        uint256 deadline = block.timestamp + 30;
+        uint256 id = keeperCommit(p, amount, minimum, deadline);
+        uint256 beforeBalance = stable.balanceOf(address(vault));
+        vm.prank(outsider);
+        uint256 out = vault.keeperClose(p, amount, minimum, deadline);
+        require(out >= minimum, "keeper floor");
+        eq(stable.balanceOf(address(vault)), beforeBalance + out);
+        eq(stable.balanceOf(outsider), 0);
+        eq(asset.balanceOf(outsider), 0);
+        eq(asset.allowance(address(vault), address(router)), 0);
+        require(vault.paused(), "keeper latches entry pause");
+        vm.prank(outsider);
+        log.reveal(id, payload);
+    }
+
+    function testKeeperCannotCloseUntriggeredPosition() public {
+        buy();
+        bytes memory p = path(address(asset), address(stable));
+        vm.expectRevert(AegisVault.NotTriggered.selector);
+        vm.prank(outsider);
+        vault.keeperClose(p, 10 ether, 9.9 ether, block.timestamp + 30);
+    }
+
+    function testKeeperDeadManWorksAfterAgentSilence() public {
+        buy();
+        vm.warp(block.timestamp + 3601);
+        require(vault.keeperStatus(address(asset)) == bytes32("DEAD_MAN"), "dead man trigger");
+        bytes memory p = path(address(asset), address(stable));
+        uint256 deadline = block.timestamp + 30;
+        keeperCommit(p, 50 ether, 49.5 ether, deadline);
+        uint256 heartbeatBefore = vault.lastHeartbeat();
+        vm.prank(outsider);
+        vault.keeperClose(p, 50 ether, 49.5 ether, deadline);
+        eq(vault.lastHeartbeat(), heartbeatBefore);
+        require(vault.paused(), "dead man pause");
+    }
+
+    function testHeartbeatCannotBeSentByKeeperOrLoosenTimeout() public {
+        vm.expectRevert(AegisVault.Unauthorized.selector);
+        vm.prank(outsider);
+        vault.heartbeat();
+        vm.prank(owner);
+        vault.tightenHeartbeatTimeout(300);
+        vm.expectRevert(AegisVault.InvalidLimits.selector);
+        vm.prank(owner);
+        vault.tightenHeartbeatTimeout(301);
+        vm.warp(block.timestamp + 301);
+        vm.prank(agent);
+        vault.heartbeat();
+        eq(vault.lastHeartbeat(), block.timestamp);
+    }
+
+    function testKeeperMustCommitInEarlierBlock() public {
+        buy();
+        vm.warp(block.timestamp + 3601);
+        bytes memory p = path(address(asset), address(stable));
+        uint256 deadline = block.timestamp + 30;
+        bytes32 action = vault.keeperExecutionHash(p, 50 ether, 49.5 ether, deadline);
+        vm.prank(outsider);
+        log.commitKeeper(keccak256(payload), action);
+        vm.expectRevert(DecisionLog.InvalidCommitment.selector);
+        vm.prank(outsider);
+        vault.keeperClose(p, 50 ether, 49.5 ether, deadline);
+    }
+
+    function testKeeperCommitCannotAuthorizeAnAgentEntry() public {
+        bytes memory p = path(address(stable), address(asset));
+        uint256 deadline = block.timestamp + 30;
+        bytes32 action = vault.executionHash(p, 50 ether, 49.5 ether, deadline);
+        vm.prank(agent);
+        log.commitKeeper(keccak256(payload), action);
+        vm.roll(block.number + 1);
+        vm.expectRevert(DecisionLog.InvalidCommitment.selector);
+        vm.prank(agent);
+        vault.executeSwap(p, 50 ether, 49.5 ether, deadline);
+        eq(stable.balanceOf(address(vault)), 1000 ether);
+    }
+
+    function testKeeperCannotUseEntryRouteOrExceedTradeCap() public {
+        bytes memory wrong = path(address(stable), address(asset));
+        vm.expectRevert(AegisVault.InvalidRoute.selector);
+        vm.prank(outsider);
+        vault.keeperClose(wrong, 10 ether, 9.9 ether, block.timestamp + 30);
+        buy();
+        uint256 advancedTime = block.timestamp + 3601;
+        vm.warp(advancedTime);
+        AegisVault.Limits memory caps = defaultLimits();
+        caps.maxTradeBps = 100;
+        vm.prank(owner);
+        vault.tightenLimits(caps);
+        bytes memory p = path(address(asset), address(stable));
+        vm.expectRevert(AegisVault.TradeLimit.selector);
+        vm.prank(outsider);
+        vault.keeperClose(p, 50 ether, 49.5 ether, vm.getBlockTimestamp() + 30);
+    }
+
     function testAgentCannotWithdrawERC20() public {
         vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, agent));
         vm.prank(agent);

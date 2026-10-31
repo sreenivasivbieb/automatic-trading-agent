@@ -2,7 +2,7 @@ PYTHON ?= .venv/bin/python
 NETWORK ?= mainnet
 DEPLOY_NETWORK ?= testnet
 
-.PHONY: setup demo prices verify-discovery test-discovery paper-demo contracts-setup contracts-test contracts-fork-test prepare-deployment record-deployment verify-decision
+.PHONY: setup demo prices verify-discovery test-discovery paper-demo contracts-setup contracts-test contracts-fork-test prepare-deployment record-deployment verify-decision keeper telegram verify-paper-flow verify-signed-fork
 
 setup:
 	UV_CACHE_DIR="$(CURDIR)/.cache/uv" UV_PYTHON_INSTALL_DIR="$(CURDIR)/.python" uv sync --frozen --python 3.12
@@ -40,3 +40,15 @@ record-deployment:
 
 verify-decision:
 	PYTHONPATH=agent $(PYTHON) -m aegis.verify_decision $(ARGS)
+
+keeper:
+	$(PYTHON) -m aegis.keeper $(ARGS)
+
+telegram:
+	$(PYTHON) -m aegis.nl.telegram_bot
+
+verify-paper-flow:
+	$(PYTHON) -m scripts.verify_aegis_flow --i-understand-paper $(ARGS)
+
+verify-signed-fork:
+	$(PYTHON) -m scripts.verify_aegis_fork_flow
