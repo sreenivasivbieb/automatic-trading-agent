@@ -41,9 +41,12 @@ def test_claude_uses_bounded_tools_and_redacts_key_shaped_input(runtime):
         [{"type": "tool_use", "id": "t1", "name": "get_status", "input": {}}],
         [{"type": "text", "text": "The agent is paused."}],
     )
-    result = ControlAgent(client=p, model="fixture-model").respond(runtime, "status 0x" + "a" * 64)
+    result = ControlAgent(client=p, model="fixture-model").respond(
+        runtime, "status 0x" + "a" * 64 + " " + "b" * 64
+    )
     assert result["mode"] == "paper" and result["tool"] == "get_status"
     assert "a" * 64 not in json.dumps(p.messages.requests)
+    assert "b" * 64 not in json.dumps(p.messages.requests)
 
 
 def test_claude_cannot_confirm_close_or_apply_out_of_range_settings(runtime):

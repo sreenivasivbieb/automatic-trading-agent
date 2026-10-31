@@ -12,4 +12,4 @@
     from langgraph.checkpoint.serde.jsonplus import JsonPlusSerializer
 
 -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
-256 passed, 1 skipped, 2 warnings, 10 subtests passed in 6.75s
+256 passed, 1 skipped, 2 warnings, 10 subtests passed in 6.97s

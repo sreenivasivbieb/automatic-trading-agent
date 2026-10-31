@@ -97,7 +97,7 @@ class ControlAgent:
         if re.search(r"private.?key|seed phrase|recovery phrase", message, re.I):
             raise ValueError("PAPER: wallet credentials are never accepted by the assistant")
         clean = re.sub(
-            r"0x[0-9a-fA-F]{64}|sk-[A-Za-z0-9_-]{20,}",
+            r"(?<![0-9a-fA-F])(?:0x)?[0-9a-fA-F]{64}(?![0-9a-fA-F])|sk-[A-Za-z0-9_-]{20,}",
             "[redacted credential-shaped value]",
             message,
         )
