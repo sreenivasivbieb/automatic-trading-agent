@@ -75,7 +75,7 @@ The user-supplied `kavach-main/` folder is retained as an ignored local referenc
 
 [Current validation](evidence/aegis-connected-validation.json) records 256 Python checks (plus ten subtests), 57 contract checks and 18 browser workflows. The mainnet-data PAPER service ran unattended for 3,601 seconds, observed 88 ticks and recovered its ledger/preferences after restart with entries paused. Eight durable data-unavailable events blocked new fills; zero process crashes does not imply uninterrupted RPC availability. The two forced accounting fills preceded strategy observation and netted −0.027984 virtual USDT.
 
-The one-hour report retains its starting source hashes. Its paper runtime, policy, strategy, gateway and ledger stayed unchanged during the run; transport, optional control adapters and shutdown handling were extended and checked separately. The final entire tree is not claimed to have run unchanged for an hour. A separate shorter final-code HTTP smoke ended stale after an RPC outage without fallback fills; a later independent fresh-price check recovered. See the evidence for both results.
+The one-hour report retains its starting source hashes. Its paper runtime, policy, strategy, gateway and ledger stayed unchanged during the run; transport, optional control adapters and shutdown handling were extended and checked separately. The final entire tree is not claimed to have run unchanged for an hour. A separate shorter HTTP smoke ended stale after an RPC outage without fallback fills; a later independent fresh-price check recovered. See the evidence for both results.
 
 | Phase              | Current acceptance boundary                                                                                                  |
 | ------------------ | ---------------------------------------------------------------------------------------------------------------------------- |
@@ -86,3 +86,5 @@ The one-hour report retains its starting source hashes. Its paper runtime, polic
 | Language/Telegram  | Bounded tools and credential-gated adapters implemented/tested with transport fixtures; real model/Telegram delivery pending |
 | Dashboard/verifier | Desktop/mobile API flows and refusal of missing public proofs pass; real public verification badge pending deployment        |
 | Public proof       | No public AEGIS transaction has been sent; funded testnet proof and mainnet approval remain outstanding                      |
+
+Actual live-data PAPER screenshots: [desktop](evidence/screenshots/aegis-live-paper-desktop.png) and [mobile](evidence/screenshots/aegis-live-paper-mobile.png). These capture virtual balances and local decisions; they are not funded wallet or public transaction evidence.
