@@ -34,6 +34,8 @@ class PaperLedger:
             CREATE TABLE IF NOT EXISTS ticks(block_hash TEXT PRIMARY KEY, block_number INTEGER NOT NULL, snapshot_json TEXT NOT NULL);
             CREATE TABLE IF NOT EXISTS fills(id TEXT PRIMARY KEY, idempotency_key TEXT UNIQUE NOT NULL, request_hash TEXT NOT NULL, result_json TEXT NOT NULL);
             CREATE TABLE IF NOT EXISTS decisions(id TEXT PRIMARY KEY, created_at INTEGER NOT NULL, status TEXT NOT NULL, payload_json TEXT NOT NULL);
+            CREATE TABLE IF NOT EXISTS observations(id INTEGER PRIMARY KEY, created_at INTEGER NOT NULL, payload_json TEXT NOT NULL);
+            CREATE TABLE IF NOT EXISTS managed_positions(asset TEXT PRIMARY KEY, opened_at INTEGER NOT NULL, peak_price TEXT NOT NULL);
         """)
         self.db.execute("BEGIN IMMEDIATE")
         try:
@@ -97,11 +99,93 @@ class PaperLedger:
             for row in self.db.execute("SELECT * FROM balances")
         }
 
-    def record(self, status: str, payload: dict) -> None:
+    def record(self, status: str, payload: dict) -> str:
+        decision_id = str(uuid4())
         self.db.execute(
             "INSERT INTO decisions VALUES(?,?,?,?)",
-            (str(uuid4()), int(time.time()), status, json.dumps(payload, sort_keys=True)),
+            (decision_id, int(time.time()), status, json.dumps(payload, sort_keys=True)),
         )
+        return decision_id
+
+    def metadata(self, key: str, default=None):
+        row = self.db.execute("SELECT value FROM metadata WHERE key=?", (key,)).fetchone()
+        return json.loads(row[0]) if row else default
+
+    def set_metadata(self, key: str, value) -> None:
+        if key == "identity":
+            raise LedgerError("Funding identity is immutable")
+        self.db.execute(
+            "INSERT INTO metadata VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value",
+            (key, json.dumps(value, sort_keys=True)),
+        )
+
+    def decisions(self, limit: int = 40) -> list[dict]:
+        if not 1 <= limit <= 200:
+            raise LedgerError("Choose 1–200 decisions")
+        return [
+            {
+                "id": r["id"],
+                "created_at": r["created_at"],
+                "status": r["status"],
+                "payload": json.loads(r["payload_json"]),
+                "verified_on_chain": False,
+                "commit_tx": None,
+                "reveal_tx": None,
+            }
+            for r in self.db.execute(
+                "SELECT * FROM decisions ORDER BY rowid DESC LIMIT ?", (limit,)
+            )
+        ]
+
+    def observe(self, payload: dict) -> None:
+        self.db.execute(
+            "INSERT INTO observations(created_at,payload_json) VALUES(?,?)",
+            (int(time.time()), json.dumps(payload, sort_keys=True)),
+        )
+        self.db.execute(
+            "DELETE FROM observations WHERE id < (SELECT MAX(id)-4096 FROM observations)"
+        )
+
+    def observations(self, limit: int = 300) -> list[dict]:
+        if not 1 <= limit <= 4096:
+            raise LedgerError("Choose 1–4096 observations")
+        return [
+            json.loads(r[0])
+            for r in reversed(
+                list(
+                    self.db.execute(
+                        "SELECT payload_json FROM observations ORDER BY id DESC LIMIT ?", (limit,)
+                    )
+                )
+            )
+        ]
+
+    def position_clock(self, token: Token, mark: Decimal) -> dict:
+        address = token.address.lower()
+        row = self.db.execute(
+            "SELECT * FROM managed_positions WHERE asset=?", (address,)
+        ).fetchone()
+        if row is None:
+            # Recover holding time from fills created before this schema, rather than restarting stops.
+            amount, opened = 0, 0
+            for fill in self.fills():
+                route = fill["quote"]["route"]["tokens"]
+                if route[0]["address"].lower() == address:
+                    amount -= fill["quote"]["amount_in_raw"]
+                if route[-1]["address"].lower() == address:
+                    if amount == 0:
+                        opened = fill["created_at"]
+                    amount += int(fill["amount_out_filled_raw"])
+            if not opened:
+                raise LedgerError("Holding has no recoverable opening time")
+            peak = mark
+        else:
+            opened, peak = row["opened_at"], max(mark, Decimal(row["peak_price"]))
+        self.db.execute(
+            "INSERT INTO managed_positions VALUES(?,?,?) ON CONFLICT(asset) DO UPDATE SET peak_price=excluded.peak_price",
+            (address, opened, str(peak)),
+        )
+        return {"opened_at": opened, "peak_price": peak}
 
     def save_tick(self, quote: Quote) -> None:
         self.db.execute("BEGIN IMMEDIATE")
@@ -216,6 +300,10 @@ class PaperLedger:
                             str(row["cost_usdt"]),
                         ),
                     )
+                if first != self.stable and incoming["amount_raw"] == 0:
+                    self.db.execute(
+                        "DELETE FROM managed_positions WHERE asset=?", (first.address.lower(),)
+                    )
                 fill_id = str(uuid4())
                 result = {
                     "id": fill_id,
@@ -249,6 +337,80 @@ class PaperLedger:
             json.loads(r[0])
             for r in self.db.execute("SELECT result_json FROM fills ORDER BY rowid")
         ]
+
+    def apply_cycle(
+        self,
+        *,
+        key: str,
+        request_hash: str,
+        quote: Quote,
+        output_raw: int,
+        network_fee_raw: int,
+        marks: dict[str, Decimal],
+        max_trade_bps: int,
+    ) -> dict:
+        """Atomic same-settlement cycle; fees are deducted once and no intermediate holding is minted."""
+        if quote.route.tokens[0] != self.stable or quote.route.tokens[-1] != self.stable:
+            raise LedgerError("Cycles must begin and end in the ledger settlement token")
+        if output_raw <= quote.amount_in_raw + network_fee_raw or network_fee_raw < 0:
+            raise LedgerError("Cycle has no positive net output after modeled costs")
+        self.db.execute("BEGIN IMMEDIATE")
+        try:
+            previous = self.previous(key, request_hash)
+            if previous is not None:
+                self.db.execute("COMMIT")
+                return previous
+            if int(time.time()) > quote.expires_at:
+                raise LedgerError("Cycle quote expired before ledger commit")
+            row = self.balances()[self.stable.address.lower()]
+            nav = Decimal(self.pnl(marks)["nav_usdt"])
+            if (
+                quote.amount_in_raw > row["amount_raw"]
+                or Decimal(quote.amount_in_raw) / 10**self.stable.decimals * 10000
+                > nav * max_trade_bps
+            ):
+                raise LedgerError("Cycle exceeds balance or current NAV cap")
+            profit_raw = output_raw - quote.amount_in_raw - network_fee_raw
+            cash = row["amount_raw"] + profit_raw
+            self.db.execute(
+                "UPDATE balances SET amount_raw=?,cost_usdt=? WHERE asset=?",
+                (
+                    str(cash),
+                    str(Decimal(cash) / 10**self.stable.decimals),
+                    self.stable.address.lower(),
+                ),
+            )
+            fill_id = str(uuid4())
+            result = {
+                "id": fill_id,
+                "mode": "paper",
+                "kind": "atomic_cycle",
+                "receipt": "paper:" + fill_id,
+                "transaction_hash": None,
+                "created_at": int(time.time()),
+                "chain_id": self.stable.chain_id,
+                "quote": quote.model_dump(mode="json"),
+                "amount_out_filled_raw": str(output_raw),
+                "modeled_slippage_out_raw": str(quote.amount_out_raw - output_raw),
+                "modeled_network_fee_usdt": str(
+                    Decimal(network_fee_raw) / 10**self.stable.decimals
+                ),
+                "lp_fee_input_raw_estimate": str(quote.lp_fee_input_raw_estimate),
+                "lp_fee_charged_again": False,
+                "realized_pnl_usdt": str(Decimal(profit_raw) / 10**self.stable.decimals),
+            }
+            self.db.execute(
+                "INSERT INTO fills VALUES(?,?,?,?)",
+                (fill_id, key, request_hash, json.dumps(result)),
+            )
+            self.record(
+                "paper_filled", {"fill_id": fill_id, "quote_id": quote.id, "kind": "atomic_cycle"}
+            )
+            self.db.execute("COMMIT")
+            return result
+        except Exception:
+            self.db.execute("ROLLBACK")
+            raise
 
     def pnl(self, marks: dict[str, Decimal]) -> dict:
         with localcontext() as ctx:

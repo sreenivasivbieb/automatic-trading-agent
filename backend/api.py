@@ -21,6 +21,7 @@ from fastapi.responses import FileResponse, JSONResponse
 from pydantic import Field
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
+from aegis.service import AegisService
 from backend.analytics import aggregate, chart_indicators, correlations
 from backend.backtesting import backtest
 from backend.data import ASSETS, Providers
@@ -74,7 +75,42 @@ class RefreshSettings(Model):
     config: ProviderRefresh
 
 
-def create_app(db_path=None, *, testing=False, transport=None, api_token=None):
+class AegisControl(Model):
+    action: Literal[
+        "pause", "resume", "panic", "clear_emergency", "close_all_preview", "close_all_confirm"
+    ]
+    acknowledgement: str | None = Field(default=None, max_length=80)
+    confirmation: str | None = Field(default=None, max_length=100)
+
+
+class AegisSettings(Model):
+    expected_version: int = Field(ge=1)
+    patch: dict
+
+
+class OwnerRequest(Model):
+    network: Literal["testnet", "mainnet"] = "testnet"
+    account: str = Field(pattern=r"^0x[0-9a-fA-F]{40}$")
+    action: Literal["deposit", "withdraw", "deposit_native", "withdraw_native", "pause", "resume"]
+    amount: str | None = Field(default=None, max_length=90)
+    i_understand_live: bool = False
+
+
+class OwnerReceipt(Model):
+    network: Literal["testnet", "mainnet"] = "testnet"
+    tx_hash: str = Field(pattern=r"^0x[0-9a-fA-F]{64}$")
+    expected: dict
+
+
+class DecisionProof(Model):
+    network: Literal["testnet", "mainnet"] = "testnet"
+    decision_id: int = Field(gt=0)
+    reveal_tx: str = Field(pattern=r"^0x[0-9a-fA-F]{64}$")
+
+
+def create_app(db_path=None, *, testing=False, transport=None, api_token=None, aegis_factory=None):
+    if aegis_factory is not None and not testing:
+        raise ValueError("Connector injection is restricted to isolated test applications")
     settings = get_settings()
     sessions = {}
     counters = {"requests": 0, "errors": 0}
@@ -131,7 +167,21 @@ def create_app(db_path=None, *, testing=False, transport=None, api_token=None):
         )
         if not testing:
             engine.scheduler_task = asyncio.create_task(engine.scheduler_loop())
+        aegis_path = (
+            Path(db_path).with_name("aegis-paper.sqlite3")
+            if db_path
+            else Path(os.getenv("AEGIS_DB", str(ROOT / ".runtime/aegis-paper.sqlite3")))
+        )
+        aegis = AegisService(
+            aegis_path,
+            factory=aegis_factory,
+            enabled=(not testing and os.getenv("AEGIS_ENABLED", "true").lower() == "true")
+            or aegis_factory is not None,
+        )
+        app.state.aegis = aegis
+        await aegis.start()
         yield
+        await aegis.close()
         await engine.close()
         await app.state.exchange.close()
         store.close()
@@ -274,6 +324,76 @@ def create_app(db_path=None, *, testing=False, transport=None, api_token=None):
 
     def engine(request: Request) -> Engine:
         return request.app.state.engine
+
+    @app.get("/api/aegis/state")
+    async def aegis_state(request: Request):
+        return request.app.state.aegis.view()
+
+    @app.get("/api/aegis/vault")
+    async def aegis_vault(network: Literal["testnet", "mainnet"] = "testnet"):
+        from aegis.owner import metadata
+
+        return metadata(network)
+
+    @app.post("/api/aegis/vault/prepare")
+    async def aegis_owner_prepare(body: OwnerRequest):
+        from aegis.owner import prepare
+
+        return await asyncio.to_thread(
+            prepare,
+            body.network,
+            body.account,
+            body.action,
+            body.amount,
+            i_understand_live=body.i_understand_live,
+        )
+
+    @app.post("/api/aegis/vault/receipt")
+    async def aegis_owner_receipt(body: OwnerReceipt):
+        from aegis.owner import receipt
+
+        return await asyncio.to_thread(receipt, body.network, body.tx_hash, body.expected)
+
+    @app.post("/api/aegis/verify")
+    async def aegis_verify(body: DecisionProof):
+        from aegis.connectors.rpc import ReadOnlyRpc
+        from aegis.owner import registered
+        from aegis.verify_decision import verify_reveal
+
+        def verify():
+            network, deployment = registered(body.network)
+            if not deployment:
+                raise ValueError(
+                    "No verified public AEGIS deployment is registered for this network"
+                )
+            rpc = ReadOnlyRpc(network.chain_id, network.rpc_urls)
+            try:
+                return verify_reveal(network, deployment, body.decision_id, body.reveal_tx, rpc)
+            finally:
+                rpc.close()
+
+        return await asyncio.to_thread(verify)
+
+    @app.post("/api/aegis/check")
+    async def aegis_check(request: Request):
+        return await request.app.state.aegis.check()
+
+    @app.put("/api/aegis/settings")
+    async def aegis_settings(body: AegisSettings, request: Request):
+        return await request.app.state.aegis.call("set_params", body.patch, body.expected_version)
+
+    @app.post("/api/aegis/control")
+    async def aegis_control(body: AegisControl, request: Request):
+        return await request.app.state.aegis.call(
+            "control",
+            body.action,
+            acknowledgement=body.acknowledgement,
+            confirmation=body.confirmation,
+        )
+
+    @app.post("/api/aegis/chat")
+    async def aegis_chat(body: ChatRequest, request: Request):
+        return await request.app.state.aegis.call("chat", body.message)
 
     @app.post("/api/session")
     async def session(request: Request):
@@ -630,8 +750,11 @@ def create_app(db_path=None, *, testing=False, transport=None, api_token=None):
         return e.control(body)
 
     @app.post("/api/emergency-stop")
-    async def emergency_stop(e: Engine = Depends(engine)):
-        return e.control(SchedulerAction(action="emergency_stop"))
+    async def emergency_stop(request: Request, e: Engine = Depends(engine)):
+        result = e.control(SchedulerAction(action="emergency_stop"))
+        if request.app.state.aegis.runtime is not None:
+            await request.app.state.aegis.call("control", "panic")
+        return result
 
     @app.post("/api/backtests")
     async def backtests(body: BacktestRequest, e: Engine = Depends(engine)):

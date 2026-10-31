@@ -10,7 +10,9 @@ const backend = spawn(
   [
     "-m",
     "uvicorn",
-    "backend.api:app",
+    process.env.TERMINAL_TEST_RUN === "1"
+      ? "e2e.aegis_server:app"
+      : "backend.api:app",
     "--host",
     "127.0.0.1",
     "--port",

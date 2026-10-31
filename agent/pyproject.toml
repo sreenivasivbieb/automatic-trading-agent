@@ -1,0 +1,13 @@
+[build-system]
+requires = ["hatchling>=1.27,<2"]
+build-backend = "hatchling.build"
+
+[project]
+name = "aegis-hskswap"
+version = "0.1.0"
+description = "Verified HSKSwap connectors and guarded AEGIS trading runtime"
+requires-python = ">=3.12,<3.14"
+dependencies = ["web3>=7.14,<8", "pydantic>=2.10,<3", "httpx>=0.28,<1", "pyyaml>=6,<7"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["aegis"]

@@ -3,6 +3,7 @@ export type Page =
   | "overview"
   | "desk"
   | "platform"
+  | "aegis"
   | "markets"
   | "news"
   | "strategies"

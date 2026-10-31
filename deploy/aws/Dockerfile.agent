@@ -5,6 +5,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 UV_CACHE_DIR=/app/.runtime/uv-c
 WORKDIR /app
 RUN groupadd -g 10001 krono && useradd -u 10001 -g krono krono && mkdir -p /app/.runtime && chown 10001:10001 /app/.runtime
 COPY pyproject.toml uv.lock ./
+COPY agent agent
 RUN uv sync --frozen --no-dev --no-cache
 COPY backend backend
 COPY tradingagents tradingagents

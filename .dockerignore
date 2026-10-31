@@ -12,6 +12,11 @@
 .cache
 .runtime
 .reference
+.tools
+kavach-main
+contracts/out
+contracts/cache
+contracts/broadcast
 .python
 node_modules
 artifacts

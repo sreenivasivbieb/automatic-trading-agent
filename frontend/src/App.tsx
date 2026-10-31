@@ -28,6 +28,7 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { api } from "./api";
+import { AegisDesk } from "./AegisDesk";
 import { KronoBrand, KronoMark } from "./brand";
 import { WorkspaceHighlights, WorkspaceSearch } from "./discovery";
 import { PlatformWorkspace } from "./platform/Platform";
@@ -61,6 +62,7 @@ const NAV: { id: Page; name: string; icon: LucideIcon; group?: string }[] = [
   { id: "overview", name: "Overview", icon: LayoutDashboard },
   { id: "desk", name: "Trading Desk", icon: Activity },
   { id: "platform", name: "Agent Platform", icon: Bot },
+  { id: "aegis", name: "AEGIS · HSKSwap", icon: ShieldCheck },
   { id: "markets", name: "Markets", icon: Activity },
   { id: "news", name: "News Intelligence", icon: Newspaper },
   { id: "strategies", name: "Strategies", icon: SlidersHorizontal },
@@ -82,6 +84,10 @@ const focusPlatform = () =>
     .querySelector<HTMLTextAreaElement>(".platform-composer textarea")
     ?.focus();
 const TITLES: Record<Page, [string, string]> = {
+  aegis: [
+    "AEGIS on HSKSwap",
+    "Verified pool data, autonomous paper trading and bounded human control.",
+  ],
   platform: [
     "Agent platform",
     "Create, deploy and operate your agents through a private AWS workspace.",
@@ -359,6 +365,8 @@ export default function App() {
         event.preventDefault();
         if (CLOUD_PLATFORM || window.location.hash === "#/platform")
           focusPlatform();
+        else if (window.location.hash === "#/aegis")
+          document.getElementById("aegis-chat-input")?.focus();
         else setChat((v) => !v);
       }
       if (event.key === "Escape") {
@@ -458,7 +466,9 @@ export default function App() {
           </span>
           <div>
             <strong>Research desk</strong>
-            <small>Simulation mode</small>
+            <small>
+              {page === "aegis" ? "AEGIS paper mode" : "Simulation mode"}
+            </small>
           </div>
           <ChevronDown size={13} />
         </div>
@@ -593,18 +603,29 @@ export default function App() {
               <span className="data-dot" />
               {page === "platform"
                 ? "TENANT WORKSPACE"
-                : status?.providers.market === "fixture"
-                  ? "FIXTURE DATA"
-                  : "REFERENCE DATA"}
+                : page === "aegis"
+                  ? "HSKSWAP DATA"
+                  : status?.providers.market === "fixture"
+                    ? "FIXTURE DATA"
+                    : "REFERENCE DATA"}
             </span>
             <span className="mode-label">
               <FlaskConical size={12} />
-              SIMULATION
+              {page === "aegis" ? "PAPER" : "SIMULATION"}
             </span>
             {page !== "platform" && (
               <button
                 className="button secondary header-wallet"
-                onClick={() => navigate("wallet")}
+                onClick={() =>
+                  page === "aegis"
+                    ? document
+                        .getElementById("aegis-owner-wallet")
+                        ?.scrollIntoView({
+                          behavior: "smooth",
+                          block: "center",
+                        })
+                    : navigate("wallet")
+                }
               >
                 <Wallet size={13} />
                 {account
@@ -659,7 +680,11 @@ export default function App() {
                 <button
                   className="button secondary assistant-shortcut"
                   onClick={() =>
-                    page === "platform" ? focusPlatform() : setChat(true)
+                    page === "platform"
+                      ? focusPlatform()
+                      : page === "aegis"
+                        ? document.getElementById("aegis-chat-input")?.focus()
+                        : setChat(true)
                   }
                 >
                   <MessageSquare size={14} />
@@ -668,7 +693,7 @@ export default function App() {
                     <Command size={10} />K
                   </kbd>
                 </button>
-                {page !== "platform" && (
+                {page !== "platform" && page !== "aegis" && (
                   <>
                     <select
                       aria-label="Analysis asset"
@@ -700,7 +725,7 @@ export default function App() {
             )}
             {data && page === "overview" && <PortfolioMetrics data={data} />}
           </section>
-          {connectionError && page !== "platform" && (
+          {connectionError && page !== "platform" && page !== "aegis" && (
             <div className="connection-warning" role="alert">
               Backend connection interrupted: {connectionError}.{" "}
               {data
@@ -709,7 +734,7 @@ export default function App() {
               <button onClick={() => void reload()}>Retry</button>
             </div>
           )}
-          {data?.scheduler.emergency && (
+          {data?.scheduler.emergency && page !== "aegis" && (
             <div className="emergency-banner" role="alert">
               <ShieldOff size={18} />
               <strong>EMERGENCY STOP ACTIVE</strong>
@@ -724,6 +749,8 @@ export default function App() {
           )}
           {page === "platform" ? (
             <PlatformWorkspace />
+          ) : page === "aegis" ? (
+            <AegisDesk />
           ) : base ? (
             <>
               {(status!.providers.market === "fixture" ||
@@ -787,7 +814,7 @@ export default function App() {
             </span>
             <span>
               KRONO / v0.1 <span className="footer-divider">|</span>{" "}
-              <StatusBadge value="SIMULATION" />
+              <StatusBadge value={page === "aegis" ? "PAPER" : "SIMULATION"} />
             </span>
           </footer>
         </main>
@@ -795,15 +822,19 @@ export default function App() {
       {!chat && page !== "platform" && (
         <button
           className="chat-launcher"
-          onClick={() => setChat(true)}
+          onClick={() =>
+            page === "aegis"
+              ? document.getElementById("aegis-chat-input")?.focus()
+              : setChat(true)
+          }
           aria-label="Open trading assistant"
         >
           <Bot size={19} />
-          <span>Ask Krono</span>
+          <span>{page === "aegis" ? "Ask AEGIS" : "Ask Krono"}</span>
           <kbd>⌘ K</kbd>
         </button>
       )}
-      {chat && page !== "platform" && (
+      {chat && page !== "platform" && page !== "aegis" && (
         <Chat close={() => setChat(false)} act={act} />
       )}{" "}
       {search && (

@@ -1,0 +1,286 @@
+.aegis-workspace {
+  display: grid;
+  gap: 22px;
+  min-width: 0;
+}
+.aegis-address {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+.aegis-owner-review {
+  display: grid;
+  gap: 12px;
+  border: 1px solid var(--border);
+  padding: 16px;
+  border-radius: 12px;
+  min-width: 0;
+}
+.aegis-owner-review pre {
+  overflow: auto;
+  max-width: 100%;
+  font-size: 11px;
+}
+.aegis-disclosure,
+.aegis-toolbar,
+.aegis-error {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+.aegis-disclosure {
+  padding: 16px 20px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  color: var(--muted);
+}
+.aegis-disclosure .badge:last-child {
+  margin-left: auto;
+}
+.aegis-toolbar {
+  justify-content: space-between;
+}
+.aegis-toolbar p {
+  margin: 7px 0 0;
+}
+.aegis-toolbar .inline {
+  flex-wrap: wrap;
+}
+.aegis-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+.aegis-metric {
+  padding: 22px;
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+}
+.aegis-metric strong {
+  font-size: 24px;
+  overflow-wrap: anywhere;
+}
+.aegis-metric small {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--muted);
+}
+.aegis-metric a {
+  color: var(--accent);
+  font-size: 12px;
+}
+.aegis-columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 22px;
+}
+.aegis-columns > .panel {
+  min-width: 0;
+}
+.aegis-market-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+.aegis-curve {
+  padding: 20px;
+}
+.aegis-curve svg {
+  display: block;
+  width: 100%;
+  min-height: 145px;
+}
+.aegis-curve .inline {
+  flex-wrap: wrap;
+  font-size: 12px;
+}
+.aegis-curve .inline span:first-child {
+  color: var(--positive);
+}
+.aegis-curve .inline span:nth-child(2) {
+  color: var(--accent);
+}
+.aegis-risk {
+  padding: 22px;
+  display: grid;
+  gap: 18px;
+}
+.aegis-risk label {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+.aegis-risk .inline {
+  flex-wrap: wrap;
+}
+.aegis-risk input,
+.aegis-risk select {
+  min-width: 0;
+  max-width: 100%;
+}
+.aegis-risk p {
+  overflow-wrap: anywhere;
+}
+#aegis-owner-wallet {
+  min-width: 0;
+}
+.aegis-risk meter {
+  width: 100%;
+  height: 12px;
+  accent-color: var(--accent);
+}
+.aegis-risk p {
+  font-size: 13px;
+  margin: 0;
+  line-height: 1.6;
+}
+.aegis-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  padding: 22px;
+  gap: 18px;
+}
+.aegis-form label {
+  display: grid;
+  gap: 8px;
+  font-size: 13px;
+}
+.aegis-form input,
+.aegis-form select {
+  width: 100%;
+  min-width: 0;
+  padding: 11px;
+  color: var(--text);
+}
+.aegis-form fieldset {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  grid-column: 1/-1;
+}
+.aegis-form fieldset label {
+  display: flex;
+}
+.aegis-form input[type="checkbox"] {
+  width: 16px;
+}
+.aegis-form > button {
+  justify-self: start;
+}
+.aegis-chat {
+  min-height: 160px;
+  max-height: 300px;
+  overflow: auto;
+  padding: 20px;
+}
+.aegis-chat p {
+  font-size: 13px;
+  line-height: 1.7;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.aegis-message {
+  padding: 13px;
+  margin-bottom: 10px;
+  border-radius: 12px;
+  background: var(--raised);
+}
+.aegis-message.you {
+  margin-left: 24px;
+}
+.aegis-message strong {
+  font-size: 12px;
+  color: var(--accent);
+}
+.aegis-chips {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 0 20px 16px;
+}
+.aegis-chips button {
+  background: var(--raised);
+  color: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 7px 11px;
+  font-size: 12px;
+}
+.aegis-composer {
+  display: flex;
+  gap: 10px;
+  padding: 0 20px 20px;
+}
+.aegis-composer input {
+  flex: 1;
+  min-width: 0;
+  padding: 12px;
+}
+.aegis-decisions {
+  max-height: 440px;
+  overflow: auto;
+}
+.aegis-decisions details {
+  border-bottom: 1px solid var(--border);
+  padding: 15px 20px;
+}
+.aegis-decisions summary {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-size: 12px;
+}
+.aegis-decisions time {
+  color: var(--muted);
+}
+.aegis-decisions pre {
+  max-height: 260px;
+  overflow: auto;
+  font-size: 11px;
+  padding: 14px;
+  background: var(--bg);
+  border-radius: 12px;
+}
+.aegis-error {
+  border: 1px solid var(--negative);
+  border-radius: 16px;
+  padding: 15px;
+  color: var(--negative);
+}
+.aegis-loading {
+  display: grid;
+  justify-items: center;
+  gap: 20px;
+  padding: 40px;
+}
+@media (max-width: 1100px) {
+  .aegis-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 800px) {
+  .aegis-columns {
+    grid-template-columns: 1fr;
+  }
+  .aegis-market-grid {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 500px) {
+  .aegis-metrics,
+  .aegis-form {
+    grid-template-columns: 1fr;
+  }
+  .aegis-toolbar .inline {
+    width: 100%;
+  }
+  .aegis-toolbar button {
+    flex: 1;
+  }
+}

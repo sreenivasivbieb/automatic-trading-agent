@@ -32,6 +32,7 @@ def main():
         **os.environ,
         "TERMINAL_MODE": "SIMULATION",
         "TERMINAL_DB": str(task_dir / "simulation.sqlite3"),
+        "AEGIS_DB": str(task_dir / "aegis-paper.sqlite3"),
         "TERMINAL_API_TOKEN": token,
         "TERMINAL_QUIET_LOGS": "true",
         "RESEARCH_ENABLED": "false",

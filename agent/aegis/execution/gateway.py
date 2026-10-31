@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from decimal import ROUND_UP, Decimal
 
 from aegis.connectors.base import Token
@@ -19,12 +20,14 @@ class ExecutionGateway:
         risk: RiskEngine | None = None,
         *,
         allow_test_connectors: bool = False,
+        before_fill: Callable | None = None,
     ):
         if connector.name != "paper" or ledger.stable.chain_id != connector.chain_id:
             raise ValueError("This gateway only supports paper execution on the ledger's chain")
         if connector.live.name != "hskswap_v3" and not allow_test_connectors:
             raise ValueError("Fixture connectors are not allowed in the demo path")
         self.connector, self.ledger, self.risk = connector, ledger, risk or RiskEngine()
+        self.before_fill = before_fill
 
     def marks(
         self, extra: tuple[Token, ...] = (), *, block_hash: str | None = None
@@ -96,7 +99,14 @@ class ExecutionGateway:
                     self.connector.terms.network_fee_usdt * 10**self.ledger.stable.decimals
                 ).to_integral_value(rounding=ROUND_UP)
             )
-            return self.ledger.apply_fill(
+            if self.before_fill is not None:
+                self.before_fill(quote, marks)
+            apply = (
+                self.ledger.apply_cycle
+                if quote.route.tokens[0] == quote.route.tokens[-1]
+                else self.ledger.apply_fill
+            )
+            return apply(
                 key=key,
                 request_hash=request_hash,
                 quote=quote,

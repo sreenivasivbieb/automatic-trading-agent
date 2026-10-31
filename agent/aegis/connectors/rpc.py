@@ -22,6 +22,8 @@ READ_METHODS = frozenset(
         "eth_getCode",
         "eth_getStorageAt",
         "eth_getTransactionReceipt",
+        "eth_getTransactionByHash",
+        "eth_gasPrice",
         "eth_call",
     }
 )

@@ -37,6 +37,7 @@ Thumbs.db
 
 # Reference checkouts, local caches, and private runtime state
 .reference/
+kavach-main/
 .cache/
 .tools/
 contracts/out/

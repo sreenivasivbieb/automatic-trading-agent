@@ -2,10 +2,14 @@ PYTHON ?= .venv/bin/python
 NETWORK ?= mainnet
 DEPLOY_NETWORK ?= testnet
 
-.PHONY: setup prices verify-discovery test-discovery paper-demo contracts-setup contracts-test contracts-fork-test prepare-deployment record-deployment verify-decision
+.PHONY: setup demo prices verify-discovery test-discovery paper-demo contracts-setup contracts-test contracts-fork-test prepare-deployment record-deployment verify-decision
 
 setup:
 	UV_CACHE_DIR="$(CURDIR)/.cache/uv" UV_PYTHON_INSTALL_DIR="$(CURDIR)/.python" uv sync --frozen --python 3.12
+	npm ci --ignore-scripts
+
+demo:
+	npm run dev
 
 prices:
 	PYTHONPATH=agent $(PYTHON) -m aegis.prices --network $(NETWORK) $(ARGS)

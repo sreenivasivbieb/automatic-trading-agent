@@ -4,6 +4,8 @@ version = "0.1.0"
 description = "Auditable crypto research terminal with deterministic risk and simulation execution"
 requires-python = ">=3.12,<3.14"
 dependencies = [
+  "aegis-hskswap",
+  "anthropic>=0.40,<1",
   "fastapi>=0.115,<1",
   "uvicorn>=0.34,<1",
   "httpx>=0.28,<1",
@@ -38,4 +40,7 @@ select = ["E4", "E7", "E9", "F", "I"]
 
 [tool.uv]
 package = false
+
+[tool.uv.sources]
+aegis-hskswap = { path = "agent", editable = true }
 
