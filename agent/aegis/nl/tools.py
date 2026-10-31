@@ -95,6 +95,7 @@ def execute_tool(runtime, call: ToolCall) -> dict:
             if exits
             else None,
             "max_observed_drawdown_pct": runtime.baseline.get("max_drawdown_pct"),
+            "max_drawdown_scope": "Since paper funding, not limited to the requested period",
             "methodology": "Period NAV change spans stored observations only. LP fees are embedded in fills; costs are modeled. Partial exits count as exit fills.",
         }
     if call.name == "get_recent_decisions":
@@ -232,7 +233,7 @@ def chat(runtime, text: str) -> dict:
     elif call.name == "get_pnl":
         pnl = data["current"]
         reply = (
-            f"PAPER: NAV {pnl['nav_usdt']} USDT; net P&L {pnl['net_pnl_usdt']} USDT after modeled costs."
+            f"PAPER: current NAV {pnl['nav_usdt']} USDT; total net P&L since paper funding {pnl['net_pnl_usdt']} USDT after modeled costs. Realized P&L for {data['period']}: {data['realized_in_period_usdt']} USDT."
             if pnl
             else "PAPER: fresh valuation is unavailable; refresh verified market data first."
         )
