@@ -4,7 +4,7 @@
 
 Built for the **HashKey Chain Horizon Hackathon · AI Agent Trading** track, Krono connects live V3 pool monitoring, on-chain analysis, arbitrage/spread detection, deterministic risk gates and automated execution in one auditable loop. Users inspect positions and P&L or change strategy through conversation. The original Krono interface, coin artwork and five-strategy library are preserved.
 
-**Try it without keys:** `make setup && make demo`, then open [the AEGIS workspace](http://127.0.0.1:5173/#/aegis). The default uses **live mainnet data and virtual USDT**. Signed execution uses a separate gateway. All three contracts are deployed and verified against compiled runtime on public testnet; the existing 0.05-HSK deposit is confirmed and the micro-swap proof remains pending. [Deployment evidence](docs/evidence/hsk-onchain-deployment.json) contains actual addresses and receipt links.
+**Try it without keys:** `make setup && make demo`, then open [the AEGIS workspace](http://127.0.0.1:5173/#/aegis). The default uses **live mainnet data and virtual USDT**. Signed execution uses a separate gateway. All three contracts are deployed and verified against compiled runtime on public testnet; the vault holds **0.05 WHSK**. The first public decision was committed and revealed as a stale-quote skip; a guarded micro-swap proof remains pending. [Deployment evidence](docs/evidence/hsk-onchain-deployment.json) contains actual addresses and receipt links.
 
 ![Original Krono home and coin artwork](docs/evidence/screenshots/compact-home-desktop.png)
 
@@ -109,7 +109,9 @@ Telegram is opt-in: configure the private chat, bot token and API bearer token, 
 .venv/bin/python -m scripts.deploy_and_verify_hsk resume --network testnet --broadcast --amount-whsk 0.005
 ```
 
-The saved 0.05-HSK native deposit is confirmed. This reuses the registry and journal, wraps only existing vault HSK if WHSK is still needed, then completes the agent proof. Already wrapped funds skip owner signing. It cannot create contracts or send another deposit. Testnet sessions stay on `https://testnet.hsk.xyz`; missing/mismatched block views are retried for up to 15 seconds, and persistent inconsistency still stops execution. [Resume evidence](docs/evidence/hsk-testnet-resume.json) records the live state and checks.
+The existing deposit and wrap are confirmed, so this configuration prompts **only for the local `hsk-agent` password** and uses the vault's existing WHSK. It rechecks journaled hashes and exact on-chain commit/reveal state before choosing the remaining work. The first decision is revealed and unused: it cannot authorize a later swap. Its audit record stays intact, and resume may create one fresh **0.005 WHSK** attempt after verifying that no swap was broadcast. There are at most three attempts across invocations; a submitted or reverted swap never authorizes an automatic new trade.
+
+Execution quotes refresh after commit confirmation, with the original route, amount, minimum output and 60-second deadline fixed. Freshness is checked again immediately before signing. Testnet uses pinned read batches over `curl` to avoid consuming quote lifetime during serial verification; mainnet retains serial reads. Sessions stay on `https://testnet.hsk.xyz`; inconsistent receipt/block views receive a 15-second grace period and persistent inconsistency stops execution. [Resume evidence](docs/evidence/hsk-testnet-resume.json) records the live state and tests.
 
 The configured testnet identities are in [the public deployment profile](config/hsk-testnet-deployment.json): `hsk-owner` owns/deploys the vault, while the distinct `hsk-agent` has swap-only authority. To deploy and verify everything interactively from the project root:
 
@@ -175,7 +177,7 @@ npm run test:e2e
 .venv/bin/python -m scripts.production_smoke
 ```
 
-[Current validation](docs/evidence/hackathon-upgrade-validation.json): **295 Python tests, 57 Solidity tests and 28 browser workflows**, plus ten Python subtests, Ruff, production build/restart and 19 optional platform tests. Opt-in live tests are reported separately. [Verification](docs/VERIFICATION.md) contains the 15-checkpoint audit: **13 verified within their stated local/read-only scopes; two public deployment/proof checkpoints blocked by missing actual wallet configuration and funds**. Provider protocol tests do not claim credential-backed delivery.
+[Current recovery validation](docs/evidence/hsk-testnet-resume.json): **355 Python tests, 57 Solidity tests and 28 browser workflows**, plus ten Python subtests, Ruff, production build/restart and a signed local-fork recovery with a deliberately delayed commit. The [earlier upgrade report](docs/evidence/hackathon-upgrade-validation.json) retains its original counts, including 19 optional platform tests. [Verification](docs/VERIFICATION.md) contains the 15-checkpoint audit: **14 verified within their stated scopes; the public guarded micro-swap lifecycle awaits local agent signing**. Provider protocol tests do not claim credential-backed delivery.
 
 Also see the [three-minute demo](docs/DEMO_SCRIPT.md), [architecture](docs/ARCHITECTURE.md), [source/API index](docs/SOURCE_REFERENCE.md), [strategy rules](docs/STRATEGIES.md) and [connection guide](docs/CONNECTIONS.md). Retained research, backtests, news, legacy CLI/Dash and optional AWS tenant workspaces remain accessible without extra main navigation.
 

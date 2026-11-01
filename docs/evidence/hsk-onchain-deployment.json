@@ -2,10 +2,10 @@
   "schema_version": 1,
   "networks": {
     "testnet": {
-      "observed_at": "2026-11-01T14:38:16.558764+00:00",
+      "observed_at": "2026-11-01T16:39:15.466062+00:00",
       "chain_id": 133,
       "environment": "PUBLIC_HSK_CHAIN",
-      "status": "DEPLOYED_PROOF_PENDING",
+      "status": "PUBLIC_DEPLOYMENT_WRAP_AND_UNUSED_DECISION_CONFIRMED_SWAP_PENDING",
       "contracts": {
         "BandedTwapOracle": {
           "address": "0x521C86fD6fe77Fee7493dC9e7242BBed271dE73f",
@@ -27,7 +27,7 @@
         }
       },
       "source_verification": "Compiled runtime and immutable bindings checked on-chain. Explorer source publication is separate.",
-      "next": "Existing deposit is canonical. Resume wraps only vault native HSK if needed, then runs the agent proof; never deploy or deposit again.",
+      "next": "Existing vault holds 0.05 WHSK. Resume needs only the local hsk-agent password. Decision 1 stays revealed/unused; a fresh bounded attempt must produce a canonical swap before public lifecycle verification passes.",
       "owner_setup": {
         "deposit_native": {
           "status": "CONFIRMED",
@@ -41,11 +41,32 @@
           "block_number": 35178625,
           "explorer": "https://testnet-explorer.hskchain.net/tx/0x89bba7756cc3a3fdcb7b149c1bda15cdd6a55494abbf3c3b87dca00b03b5aa5a"
         },
-        "wrapping_required": true
+        "wrapping_required": false,
+        "wrap_native": {
+          "status": "CONFIRMED",
+          "hash": "0x03e8517979d2e4abc3e384a9e1e06c96bc5b3eacd04ff69484e5ee17b45e5a24",
+          "block_number": 35181336,
+          "explorer": "https://testnet-explorer.hskchain.net/tx/0x03e8517979d2e4abc3e384a9e1e06c96bc5b3eacd04ff69484e5ee17b45e5a24"
+        },
+        "owner_signing_required": false
       },
       "rpc_url": "https://testnet.hsk.xyz",
       "resume_command": ".venv/bin/python -m scripts.deploy_and_verify_hsk resume --network testnet --broadcast --amount-whsk 0.005",
-      "resume_evidence": "hsk-testnet-resume.json"
+      "resume_evidence": "hsk-testnet-resume.json",
+      "unused_decision": {
+        "key": "public-hsk-micro-proof-v1",
+        "status": "skipped",
+        "reason": "Quote is stale or has an invalid timestamp",
+        "decision_id": 1,
+        "commit_tx": "0x6b72b4d84d48f9dde5dc3b9e44ff4114fa8587ed2333a2a92b25c5a52fd9f77c",
+        "reveal_tx": "0x614e6ff788e6c5e70aa1201b3e1dd31815bb515b0d337cfc71c0d11b781835a8",
+        "onchain_consumed": false,
+        "onchain_revealed": true,
+        "explorer_links": {
+          "commit": "https://testnet-explorer.hskchain.net/tx/0x6b72b4d84d48f9dde5dc3b9e44ff4114fa8587ed2333a2a92b25c5a52fd9f77c",
+          "reveal": "https://testnet-explorer.hskchain.net/tx/0x614e6ff788e6c5e70aa1201b3e1dd31815bb515b0d337cfc71c0d11b781835a8"
+        }
+      }
     },
     "mainnet": {
       "observed_at": "2026-11-01T13:25:58.959772+00:00",

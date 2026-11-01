@@ -2,31 +2,31 @@
 
 ## Hackathon upgrade: current evidence
 
-The latest [testnet resume check](evidence/hsk-testnet-resume.json) passes **321 Python tests** and a signed local-fork funding/proof run, including no new owner transaction on funding replay. All three public contracts and the existing owner deposit are now verified. The remaining wrap and public agent proof require local signing. The [earlier readiness check](evidence/hsk-testnet-readiness.json) and the 15-checkpoint report below preserve their original snapshots and test counts.
+The latest [testnet resume check](evidence/hsk-testnet-resume.json) passes **355 Python tests**, **57 Solidity tests**, **28 browser workflows**, Ruff and production build/restart checks. All three public contracts, the existing deposit and the wrap are confirmed; the vault holds **0.05 WHSK**. Public decision 1 was committed and revealed without a swap because the quote expired. Recovery reconciles those exact receipts and permits a bounded fresh attempt without owner signing. A signed local-fork run verifies recovery after that skip, a 21-second commit delay, an actual guarded fill and a restart with no duplicate transaction.
 
 [Full upgrade report and every changed file](evidence/hackathon-upgrade-validation.json), [actual mainnet data and built UI](evidence/hsk-judge-live-data.json), [signed local-fork proof](evidence/hsk-signed-fork-proof.json), and [public deployment status](evidence/hsk-onchain-deployment.json) keep local, paper and public-chain evidence separate.
 
-The final upgrade suite passes **295 Python tests** plus ten subtests (one opt-in live test skipped), **57 Solidity tests** (one opt-in live fork test skipped), **28 Chromium workflows**, Ruff, strict frontend types/build, production restart checks, and **19 optional platform tests**. The explicit signed-fork runner separately executes actual router bytecode locally. Live UI checks use three HSKSwap markets, actual reference inputs and two indicative spreads; no public transactions or paid model requests were sent.
+The earlier upgrade report retains its **295-test** snapshot and **19 optional platform tests**. The recovery suite above includes ten Python subtests, with one opt-in live Python test and one opt-in Solidity fork test skipped. The explicit signed-fork runner separately executes actual router bytecode locally. This recovery run rechecked real mainnet pools and public testnet state but sent no public transactions or paid model requests.
 
-| #   | Audit checkpoint                                                 | Result / evidence scope                                                                                         |
-| --- | ---------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| 1   | Chain IDs, verified V3 contracts, token decimals and live pools  | **Pass:** registry/code/metadata checks and actual mainnet reads                                                |
-| 2   | Turnkey deployment, canonical recorder and broadcast gates       | **Pass locally:** runner tests; isolated Foundry deployment; separate mainnet acknowledgement                   |
-| 3   | Public GuardVault, Oracle and DecisionLog deployments            | **Blocked:** distinct actual owner/agent addresses and funded deployer not supplied                             |
-| 4   | Public commit → guarded swap → reveal with explorer links        | **Blocked:** requires checkpoint 3, owner-authorized vault funding and agent gas                                |
-| 5   | Guard custody, caps, slippage, stop/circuit and owner exits      | **Pass locally:** 57 Solidity tests and exact TradeLimit rejection on a fork                                    |
-| 6   | Portfolio, P&L, virtual balances, win rate and risk tools        | **Pass:** typed handlers and API/browser tests; stale valuations masked                                         |
-| 7   | Immediate sizing, frequency, risk, targets and strategy updates  | **Pass:** atomic validation/diffs; 25 USDT correctly refused on 100 NAV; accepted bounded example               |
-| 8   | Anthropic / OpenAI-compatible / Bedrock fallback                 | **Pass in protocol tests:** same tools; no replay after tool start; actual providers require credentials        |
-| 9   | Human confirmation, panic and selected injection refusals        | **Pass:** separate one-use confirmation, latched stops and schema restrictions                                  |
-| 10  | On-chain analysis and five-stage pipeline                        | **Pass:** actual slot0/tick/liquidity/fees in live UI and durable observations                                  |
-| 11  | Arbitrage and reference-spread cost math                         | **Pass:** same-settlement net-cost tests, route scans, two live indicative spreads; no profitable cycle claimed |
-| 12  | Autonomous paper loop, stop exits and restart recovery           | **Pass:** scheduler, replayed stop and production persistence checks; no new one-hour soak claimed              |
-| 13  | Frontend integration and original UI/strategy preservation       | **Pass:** 28 desktop/mobile browser workflows; original strategy source and Guard contracts unchanged           |
-| 14  | Judge README, traceability, architecture and deployment evidence | **Pass:** linked implementation paths, demo flow and explicit deployment state                                  |
-| 15  | Required regression and publication checks                       | **Pass:** Python, Ruff, build, contracts, browser, production restart and bounded secret/path scan              |
+| #   | Audit checkpoint                                                 | Result / evidence scope                                                                                              |
+| --- | ---------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| 1   | Chain IDs, verified V3 contracts, token decimals and live pools  | **Pass:** registry/code/metadata checks and actual mainnet reads                                                     |
+| 2   | Turnkey deployment, canonical recorder and broadcast gates       | **Pass locally:** runner tests; isolated Foundry deployment; separate mainnet acknowledgement                        |
+| 3   | Public GuardVault, Oracle and DecisionLog deployments            | **Pass publicly:** real canonical deployment receipts, runtime code pins and module/role bindings checked            |
+| 4   | Public commit → guarded swap → reveal with explorer links        | **Pending:** first public decision is a verified unused skip; fresh micro-swap needs local agent signing             |
+| 5   | Guard custody, caps, slippage, stop/circuit and owner exits      | **Pass:** 57 local Solidity tests; exact TradeLimit rejection by public deployed bytecode through read-only eth_call |
+| 6   | Portfolio, P&L, virtual balances, win rate and risk tools        | **Pass:** typed handlers and API/browser tests; stale valuations masked                                              |
+| 7   | Immediate sizing, frequency, risk, targets and strategy updates  | **Pass:** atomic validation/diffs; 25 USDT correctly refused on 100 NAV; accepted bounded example                    |
+| 8   | Anthropic / OpenAI-compatible / Bedrock fallback                 | **Pass in protocol tests:** same tools; no replay after tool start; actual providers require credentials             |
+| 9   | Human confirmation, panic and selected injection refusals        | **Pass:** separate one-use confirmation, latched stops and schema restrictions                                       |
+| 10  | On-chain analysis and five-stage pipeline                        | **Pass:** actual slot0/tick/liquidity/fees in live UI and durable observations                                       |
+| 11  | Arbitrage and reference-spread cost math                         | **Pass:** same-settlement net-cost tests, route scans, two live indicative spreads; no profitable cycle claimed      |
+| 12  | Autonomous paper loop, stop exits and restart recovery           | **Pass:** scheduler, replayed stop and production persistence checks; no new one-hour soak claimed                   |
+| 13  | Frontend integration and original UI/strategy preservation       | **Pass:** 28 desktop/mobile browser workflows; original strategy source and Guard contracts unchanged                |
+| 14  | Judge README, traceability, architecture and deployment evidence | **Pass:** linked implementation paths, demo flow and explicit deployment state                                       |
+| 15  | Required regression and publication checks                       | **Pass:** Python, Ruff, build, contracts, browser, production restart and bounded secret/path scan                   |
 
-**13 checkpoints are verified within the stated local/read-only scopes; two public-chain checkpoints remain blocked.** Actual LLM/Telegram delivery, independent security audit and sustained profitability are not established by these checks. [Desktop](evidence/screenshots/judge-aegis-desktop.png) and [mobile](evidence/screenshots/judge-aegis-mobile.png) show the preserved theme and integrated status panel.
+**14 checkpoints are verified within their stated scopes; the public guarded swap lifecycle remains pending.** A successful `resume` must record canonical commit/swap/reveal receipts and an exact-byte reveal before checkpoint 4 can pass. Actual LLM/Telegram delivery, independent security audit and sustained profitability are not established by these checks. [Desktop](evidence/screenshots/judge-aegis-desktop.png) and [mobile](evidence/screenshots/judge-aegis-mobile.png) show the preserved theme and integrated status panel.
 
 ## Local checks
 
@@ -86,4 +86,4 @@ make verify-signed-fork
 
 Evidence includes source hashes, modes and limitations. The earlier one-hour run predates the strategy-library adapter. Forced/replayed fills test accounting and control behavior; they are separate from strategy performance. Other files under `docs/evidence/` retain their historical checkpoint scope.
 
-No recorded check proves sustained profitability, a public AEGIS deployment, funded wallet execution or actual Claude/Telegram delivery. The publication scanner checks bounded credential patterns and private paths; it is not a full security audit. See [security](../SECURITY.md) and the public [CI workflow](https://github.com/vishal88736/automatic-trading-agent/actions/workflows/ci.yml).
+The public deployment and unused decision are verified; public guarded swap execution remains pending. No recorded check proves sustained profitability or actual Claude/Telegram delivery. The publication scanner checks bounded credential patterns and private paths; it is not a full security audit. See [security](../SECURITY.md) and the public [CI workflow](https://github.com/vishal88736/automatic-trading-agent/actions/workflows/ci.yml).

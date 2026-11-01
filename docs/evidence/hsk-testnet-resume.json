@@ -1,8 +1,8 @@
 {
-  "observed_at": "2026-11-01T14:57:34.028481+00:00",
+  "observed_at": "2026-11-01T16:39:15.466062+00:00",
   "chain_id": 133,
   "rpc_url": "https://testnet.hsk.xyz",
-  "status": "PUBLIC_DEPLOYMENT_AND_DEPOSIT_CONFIRMED_PROOF_PENDING",
+  "status": "PUBLIC_DEPLOYMENT_WRAP_AND_UNUSED_DECISION_CONFIRMED_SWAP_PENDING",
   "contracts": {
     "BandedTwapOracle": {
       "address": "0x521C86fD6fe77Fee7493dC9e7242BBed271dE73f",
@@ -26,15 +26,17 @@
       "transaction_link": "https://testnet-explorer.hskchain.net/tx/0x550d205f8ea7d80063e3a423ee5f7af32a015dc3bf9f390da9bf8d20173b52da"
     }
   },
-  "verification": "Rechecked real canonical CREATE receipts, compiled runtime excluding immutable slots, ownership, role/module bindings, Guard limits and Oracle markets with record_deployment; public registry retained.",
+  "verification": "Public runtime code pins, module/role bindings, wrap and commit/reveal receipts rechecked. The exact skipped payload/action matches decision 1, revealed=true, consumed=false. The owner deposit was also verified in the prior deployment recovery.",
   "balances_hsk": {
-    "owner": "0.027221637407945545",
-    "agent": "0.014978978999999743"
+    "owner": "0.027053741679945288",
+    "agent": "0.014700113412996198",
+    "vault": "0"
   },
   "vault_assets": {
-    "native_raw": "50000000000000000",
-    "wrapped_raw": "0",
-    "block_number": 35179191
+    "native_raw": "0",
+    "wrapped_raw": "50000000000000000",
+    "stable_raw": "0",
+    "block_number": 35182180
   },
   "owner_setup": {
     "deposit_native": {
@@ -49,16 +51,39 @@
       "block_number": 35178625,
       "explorer": "https://testnet-explorer.hskchain.net/tx/0x89bba7756cc3a3fdcb7b149c1bda15cdd6a55494abbf3c3b87dca00b03b5aa5a"
     },
-    "wrapping_required": true
+    "wrapping_required": false,
+    "wrap_native": {
+      "status": "CONFIRMED",
+      "hash": "0x03e8517979d2e4abc3e384a9e1e06c96bc5b3eacd04ff69484e5ee17b45e5a24",
+      "block_number": 35181336,
+      "explorer": "https://testnet-explorer.hskchain.net/tx/0x03e8517979d2e4abc3e384a9e1e06c96bc5b3eacd04ff69484e5ee17b45e5a24"
+    },
+    "owner_signing_required": false
   },
   "decision_log": {
-    "count": 0,
-    "pending_agent_decision": 0
+    "count": 1,
+    "pending_agent_decision": 0,
+    "verified_attempts": [
+      {
+        "key": "public-hsk-micro-proof-v1",
+        "status": "skipped",
+        "reason": "Quote is stale or has an invalid timestamp",
+        "decision_id": 1,
+        "commit_tx": "0x6b72b4d84d48f9dde5dc3b9e44ff4114fa8587ed2333a2a92b25c5a52fd9f77c",
+        "reveal_tx": "0x614e6ff788e6c5e70aa1201b3e1dd31815bb515b0d337cfc71c0d11b781835a8",
+        "onchain_consumed": false,
+        "onchain_revealed": true,
+        "explorer_links": {
+          "commit": "https://testnet-explorer.hskchain.net/tx/0x6b72b4d84d48f9dde5dc3b9e44ff4114fa8587ed2333a2a92b25c5a52fd9f77c",
+          "reveal": "https://testnet-explorer.hskchain.net/tx/0x614e6ff788e6c5e70aa1201b3e1dd31815bb515b0d337cfc71c0d11b781835a8"
+        }
+      }
+    ]
   },
   "remaining_steps": [
-    "wrap existing vault native HSK if needed",
-    "agent commit -> guarded 0.005 WHSK stable exit -> reveal",
-    "exact risk/reveal verification"
+    "Unlock hsk-agent locally; preserve decision 1 as a terminal unused freshness skip",
+    "One new bounded 0.005 WHSK commit -> guarded stable exit -> reveal attempt",
+    "Verify exact revealed bytes and canonical receipts before marking the public lifecycle PASS"
   ],
   "new_deposits_permitted": false,
   "redeployment_permitted": false,
@@ -66,25 +91,114 @@
   "public_transactions_sent_by_this_fix": 0,
   "registry_sha256": "491eec21280deb534fa8946b1606cb42478ebcad372bb4d962a6d66a616b94a6",
   "command": ".venv/bin/python -m scripts.deploy_and_verify_hsk resume --network testnet --broadcast --amount-whsk 0.005",
-  "python_validation": "321 passed, 1 skipped, 2 warnings, 10 subtests passed in 11.58s",
+  "python_validation": "355 passed, 1 skipped, 2 warnings, 10 subtests passed in 7.83s",
   "local_fork_validation": {
     "status": "PASSED",
     "owner_resume_no_new_transaction": true,
     "signed_execution": "reconciled",
     "risk_error": "TradeLimit()",
     "public_broadcast_artifact_unchanged": true,
-    "scope": "Isolated loopback fork using generated dev accounts; no public-chain gas spent."
+    "scope": "Isolated loopback fork using generated dev accounts; no public-chain gas spent.",
+    "delayed_commit_seconds": 21,
+    "fresh_quote_after_delayed_commit": true,
+    "revealed_skip_reconciled_before_new_attempt": true,
+    "idempotent_replay": true
   },
-  "browser_validation": "  28 passed (1.6m)",
+  "browser_validation": "28 passed (1.5m)",
   "test_registry_isolation": "Unregistered unit/browser fixtures use empty private registries and never mutate the real public registry.",
   "production_build": "PASS: npm run build",
   "source_sha256": {
-    "agent/aegis/connectors/rpc.py": "408c2a95152dd23f2bc81ec3e8c5362897210b30cdad85c3107f80a8eb10e4df",
-    "agent/aegis/execution/confirmations.py": "efd5f795922d34b16b1d6576810400a273489e02ff76917e21b844987dd8ada3",
-    "agent/aegis/execution/proof.py": "16898487435b92d307f8a7703303c5190846b2cbc29c56d0f511f8334ab73696",
-    "agent/aegis/execution/vault_client.py": "6237abc5a425c7f9896cfe12351c2563f4a182a3d0d9ae1c05437bbac1a7ef09",
-    "agent/aegis/verify_decision.py": "706baf14c169701ca89452049e5528e9fc0ad2c6e4bddabc82dc6719a5fbaf89",
-    "scripts/deploy_and_verify_hsk.py": "ff7cd5fd8185ed33ddc571335527c8399e3c9d02dbb3c011bbc427012294b94e",
-    "scripts/hsk_testnet_setup.py": "0bb7e5ef02eee7853e56dc417b561d100b41ec48587f88ebe1a31cdd2cbbef7e"
+    "agent/aegis/connectors/rpc.py": "c5e39e4d902f67025f7239ca22bdfb805fe9f6a32dc3e759b98f94d76e5e6787",
+    "agent/aegis/data.py": "570b97070b6d6f2bb3a24e1f33d41c3446ec13954bc5eaba045e86da55d2345f",
+    "agent/aegis/execution/fees.py": "69cddae9e71b5c7fc577524be6cafcaca7b9d1636fab659d704492b05f2e1b7c",
+    "agent/aegis/execution/live.py": "dee34a6bbffb849c75cfddea4bab5afcdde03dc14639833b1fce20d389c88588",
+    "agent/aegis/execution/proof.py": "1f72bd48ade02e324436ace1356ca1f1141577af999f59012302349a6e87fcc9",
+    "agent/aegis/execution/vault_client.py": "540316a2c17a340535dc1cffc6432ef1c9abdde6e4c93d1451ea59f240323ce3",
+    "scripts/deploy_and_verify_hsk.py": "3f0c29cd9ed5fb9c928a6c73328503f227c75a2f75029f2666748852d1baa637",
+    "scripts/verify_aegis_fork_flow.py": "b0eb1c098b6fc5a9ed4ed60550f272538696b88d3db10c800ec9cf9e0c262273"
+  },
+  "balance_observed_block": 35182180,
+  "reconciliation": {
+    "next_key": "public-hsk-micro-proof-v1:attempt:2",
+    "old_journal_preserved": true,
+    "max_attempts_total": 3,
+    "max_new_attempts_per_invocation": 1,
+    "submitted_or_reverted_swap_never_allows_new_attempt": true,
+    "agent_nonce_observed": 3,
+    "reason": "The original quote expired; commit and reveal confirmed, no swap was broadcast. The old revealed commitment cannot authorize a future swap."
+  },
+  "quote_performance": {
+    "original_elapsed_seconds": 39.35,
+    "testnet_pinned_batch_elapsed_seconds": 4.02,
+    "fresh_block_age_seconds": 7,
+    "quote_ttl_seconds": 20,
+    "deadline_seconds": 60,
+    "scope": "One before/after read-only observation, not a latency benchmark. Mainnet retains serial requests."
+  },
+  "public_guard_readonly": {
+    "observed_at": "2026-11-01T16:37:06.200638+00:00",
+    "chain_id": 133,
+    "rpc_url": "https://testnet.hsk.xyz",
+    "block": 35182180,
+    "block_hash": "0x6f8070030303b4965afea3dc8407fc69aa3d57287dc03a962e9276215baf883c",
+    "risk_limit": {
+      "status": "VERIFIED_ETH_CALL_REVERT",
+      "method": "executeSwap",
+      "error": "TradeLimit()",
+      "selector": "0x8297907d",
+      "block_number": 35182173,
+      "block_hash": "0x4e9cfdb4fbb3ada0a49ef52c2b871507e8273ff144e7f1c54d38799e18341463",
+      "attempted_amount_raw": 50000000000000001,
+      "nav_x18": 2709510807485432333,
+      "transaction_sent": false,
+      "scope": "Canonical read-only execution of deployed bytecode; not a mined reverting transaction or a loss-circuit trigger."
+    },
+    "micro_swap_check": {
+      "expected_error": "InvalidCommitment()",
+      "selector": "0xc06789fa",
+      "scope": "Read-only execution of actual funded vault: validates route, oracle, slippage and size before requiring a fresh earlier-block commitment. Router execution was not reached."
+    },
+    "wrapped_balance_raw": "50000000000000000",
+    "pending_agent_decision": 0,
+    "agent_nonce": 3,
+    "agent_hsk_raw": "14700113412996198",
+    "public_transactions_sent": 0
+  },
+  "solidity_validation": "57 passed, 0 failed, 1 opt-in test skipped",
+  "audit_summary": {
+    "total": 15,
+    "verified_with_stated_scope": 14,
+    "pending_public_guarded_swap_lifecycle": 1
+  },
+  "production_restart": "PASS: simulated ledger persists and restart remains paused",
+  "mainnet_reads": {
+    "block": 29601914,
+    "markets": ["WHSK/USDT", "WETH/USDT", "WBTC/USDT", "USDC.e/WHSK"],
+    "scope": "Actual read-only verified prices; no public transactions"
+  },
+  "balances_native_wei": {
+    "owner": "27053741679945288",
+    "agent": "14700113412996198",
+    "vault": "0"
+  },
+  "recovery_file_changes": {
+    "agent/aegis/connectors/rpc.py": "Strict block-pinned, chain-checked testnet batches with atomic cache publication; mainnet retains serial reads.",
+    "agent/aegis/data.py": "Prefetch unchanged contract, token and pool verification reads for one confirmed block.",
+    "agent/aegis/execution/fees.py": "Batch pinned fee-predeploy checks without changing code, proxy or tariff validation.",
+    "agent/aegis/execution/vault_client.py": "Batch identity checks, remove duplicate verification before unsigned estimation, and validate freshness immediately before signing.",
+    "agent/aegis/execution/live.py": "Refresh execution validation after commit, freeze original action/payload, match Guard integer NAV math and persist real skip reasons before reveal.",
+    "agent/aegis/execution/proof.py": "Reconcile canonical journal hashes, exact commitment/reveal state and fills before selecting a bounded new freshness attempt.",
+    "scripts/deploy_and_verify_hsk.py": "Resume recorded work, preserve prior attempts, allow at most one new attempt per invocation and report specific safe failure reasons.",
+    "scripts/verify_aegis_fork_flow.py": "Exercise an actual skipped decision, 21-second commit delay, guarded fill and no-send restart on an isolated loopback fork.",
+    "agent/tests/test_rpc_batch.py": "Test wrong-chain, partial, duplicate, reverted and unpinned batch rejection, cache reorg separation and mainnet serial compatibility.",
+    "agent/tests/test_proof_recovery.py": "Test exact journal reconciliation, known/unknown skip reasons, pending and reverted swaps, mismatched payloads and no duplicate fills.",
+    "agent/tests/test_gateway_refresh.py": "Test fixed action bytes, signing-time expiry, price deterioration, deadline expiry, Guard errors, interrupted reveals and integer NAV boundaries.",
+    "agent/tests/test_live_clients.py": "Adapt the existing reverted-swap fixture to the refreshed quote return and signing callback; preserve the one-send invariant.",
+    "README.md": "Document wrapped funds, agent-only recovery, immutable action limits and the actual 14/15 scoped audit state.",
+    "docs/VERIFICATION.md": "Update real public deployment/risk scope and current regression counts; keep the public guarded swap pending.",
+    "docs/evidence/hsk-testnet-resume.json": "Record real recovery state, prior transaction hashes, live risk checks, tests and changed files.",
+    "docs/evidence/hsk-onchain-deployment.json": "Record the confirmed wrap and unused public decision without inventing a swap.",
+    "docs/evidence/hsk-signed-fork-proof.json": "Save actual local-fork recovery receipts with explicit zero public transactions.",
+    "docs/evidence/hackathon-upgrade-validation.json": "Link the latest 14/15 recovery result while retaining the original upgrade snapshot."
   }
 }

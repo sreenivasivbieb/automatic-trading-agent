@@ -133,15 +133,8 @@
     "report": "hsk-judge-live-data.json",
     "chain_id": 177,
     "observed_block": 29596655,
-    "markets": [
-      "WHSK",
-      "WETH",
-      "WBTC"
-    ],
-    "reference_spreads": [
-      "WBTC",
-      "WETH"
-    ],
+    "markets": ["WHSK", "WETH", "WBTC"],
+    "reference_spreads": ["WBTC", "WETH"],
     "final": {
       "paused": true,
       "data_status": "LIVE",
@@ -304,10 +297,7 @@
     "scripts/verify_aegis_fork_flow.py": "Extend the actual signed fork lifecycle with exact TradeLimit enforcement proof.",
     "scripts/verify_frontend.mjs": "Check actual slot0 and five-stage evidence in the built live-data browser run."
   },
-  "implementation_commits": [
-    "59840ad",
-    "ac089b2"
-  ],
+  "implementation_commits": ["59840ad", "ac089b2"],
   "local_development_restart": {
     "health_status": 200,
     "available": true,
@@ -315,5 +305,13 @@
     "paused": true,
     "live_enabled": false
   },
-  "provider_badge_failure_state": "Unavailable (Tool Result Retained) after any tool starts; fallback is never claimed or replayed for that mutation."
+  "provider_badge_failure_state": "Unavailable (Tool Result Retained) after any tool starts; fallback is never claimed or replayed for that mutation.",
+  "latest_public_recovery": {
+    "observed_at": "2026-11-01T16:39:15.466062+00:00",
+    "report": "hsk-testnet-resume.json",
+    "total": 15,
+    "verified_with_stated_scope": 14,
+    "pending_public_guarded_swap_lifecycle": 1,
+    "scope": "Original upgrade snapshot above is retained. Public deployment now passes; the signed public guarded swap is the remaining checkpoint."
+  }
 }
