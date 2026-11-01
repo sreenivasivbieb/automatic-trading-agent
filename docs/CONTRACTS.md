@@ -1,6 +1,6 @@
 # AEGIS contracts and deployment
 
-Local contract and fork checks are recorded below. Distinct testnet owner/agent identities and keystore references are configured. Public deployment still requires a funded, successful interactive run; [wallet/RPC readiness](evidence/hsk-testnet-readiness.json) records the latest observed balances. There is no `deployments/133.json`, public AEGIS transaction hash or on-chain verification badge yet. Mainnet broadcasting requires the user's separate explicit confirmation.
+All three testnet contracts are deployed and independently reverified against successful canonical receipts, compiled runtime, ownership, module bindings, limits and oracle markets in `deployments/133.json`. The 0.05-HSK owner deposit is confirmed; wrapping and the micro-swap decision proof remain pending. [Resume evidence](evidence/hsk-testnet-resume.json) records the current state. Mainnet broadcasting still requires separate explicit confirmation.
 
 ## Reproduce local checks
 
@@ -36,6 +36,14 @@ make verify-decision ARGS='--payload path/to/decision.json --expected 0xYOUR_64_
 That command explicitly reports local hash verification only. Once a confirmed deployment registry exists, `--network testnet --decision-id ID --reveal-tx HASH` additionally checks the pinned log code, commitment state, canonical confirmed receipt and exact `Revealed` event. It proves byte integrity, not the truth of a rationale or profitability.
 
 ## Prepare a real testnet deployment
+
+An existing deployment must be resumed instead of deployed again:
+
+```bash
+.venv/bin/python -m scripts.deploy_and_verify_hsk resume --network testnet --broadcast --amount-whsk 0.005
+```
+
+`resume` requires `deployments/133.json`, uses the original funding journal amount, prohibits new deposits/deployments, and checks actual native/WHSK balances before any owner action. It prompts for the owner only if an existing native balance needs wrapping. Owner receipts, signer receipts and the read-only risk proof retry inconsistent/missing block views for up to 15 seconds on one primary RPC. A persistent mismatch remains an error; the recorded hash is kept and no replacement trade is silently submitted. Fork checks use private broadcast/cache directories and preserve the public deployment artifact.
 
 The supplied testnet owner/deployer and distinct agent are configured in `config/hsk-testnet-deployment.json` (`hsk-owner` / `hsk-agent`). For local interactive deployment, owner funding/wrapping and the guarded proof in one invocation:
 

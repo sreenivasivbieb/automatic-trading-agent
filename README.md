@@ -4,7 +4,7 @@
 
 Built for the **HashKey Chain Horizon Hackathon · AI Agent Trading** track, Krono connects live V3 pool monitoring, on-chain analysis, arbitrage/spread detection, deterministic risk gates and automated execution in one auditable loop. Users inspect positions and P&L or change strategy through conversation. The original Krono interface, coin artwork and five-strategy library are preserved.
 
-**Try it without keys:** `make setup && make demo`, then open [the AEGIS workspace](http://127.0.0.1:5173/#/aegis). The default uses **live mainnet data and virtual USDT**. Signed execution uses a separate, explicitly enabled gateway. Public testnet signer identities are configured; a successful funded interactive deployment remains pending. [Deployment evidence](docs/evidence/hsk-onchain-deployment.json) records that status without invented addresses or hashes.
+**Try it without keys:** `make setup && make demo`, then open [the AEGIS workspace](http://127.0.0.1:5173/#/aegis). The default uses **live mainnet data and virtual USDT**. Signed execution uses a separate gateway. All three contracts are deployed and verified against compiled runtime on public testnet; the existing 0.05-HSK deposit is confirmed and the micro-swap proof remains pending. [Deployment evidence](docs/evidence/hsk-onchain-deployment.json) contains actual addresses and receipt links.
 
 ![Original Krono home and coin artwork](docs/evidence/screenshots/compact-home-desktop.png)
 
@@ -94,14 +94,22 @@ Telegram is opt-in: configure the private chat, bot token and API bearer token, 
 
 ## Public deployment and on-chain verification
 
-| Network     | Chain / RPC                         | GuardVault          | Oracle              | DecisionLog / proof |
-| ----------- | ----------------------------------- | ------------------- | ------------------- | ------------------- |
-| HSK testnet | **133** · `https://testnet.hsk.xyz` | Awaiting deployment | Awaiting deployment | No public tx yet    |
-| HSK mainnet | **177** · `https://mainnet.hsk.xyz` | Awaiting deployment | Awaiting deployment | No public tx yet    |
+| Network     | Chain / RPC                         | GuardVault                                                                                                                             | Oracle                                                                                                                                 | DecisionLog / proof                                                                                                                                   |
+| ----------- | ----------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| HSK testnet | **133** · `https://testnet.hsk.xyz` | [0xE14185B7beFeeFF8ab241c3Ffae13bA7Ed61df5d](https://testnet-explorer.hskchain.net/address/0xE14185B7beFeeFF8ab241c3Ffae13bA7Ed61df5d) | [0x521C86fD6fe77Fee7493dC9e7242BBed271dE73f](https://testnet-explorer.hskchain.net/address/0x521C86fD6fe77Fee7493dC9e7242BBed271dE73f) | [0xA015aEAB0E97857b7eE322c7F7ee98AE98Cd9A30](https://testnet-explorer.hskchain.net/address/0xA015aEAB0E97857b7eE322c7F7ee98AE98Cd9A30); proof pending |
+| HSK mainnet | **177** · `https://mainnet.hsk.xyz` | Awaiting deployment                                                                                                                    | Awaiting deployment                                                                                                                    | No public tx yet                                                                                                                                      |
 
 [Deployment evidence JSON](docs/evidence/hsk-onchain-deployment.json) is the address/transaction source of truth. A successful runner populates direct Blockscout links for contracts and **commit → swap → reveal**. Network, explorer and token identities come from the [registry](config/networks.yaml) and [discovery](docs/DISCOVERY.md); testnet USDT has **18 decimals**, mainnet **6**. [Official network settings](https://docs.hskchain.net/docs/Build-on-HashKey-Chain/network-info) list current explorers.
 
 ### Signed, guarded mode
+
+**Resume the deployed testnet vault without another deposit or deployment:**
+
+```bash
+.venv/bin/python -m scripts.deploy_and_verify_hsk resume --network testnet --broadcast --amount-whsk 0.005
+```
+
+The saved 0.05-HSK native deposit is confirmed. This reuses the registry and journal, wraps only existing vault HSK if WHSK is still needed, then completes the agent proof. Already wrapped funds skip owner signing. It cannot create contracts or send another deposit. Testnet sessions stay on `https://testnet.hsk.xyz`; missing/mismatched block views are retried for up to 15 seconds, and persistent inconsistency still stops execution. [Resume evidence](docs/evidence/hsk-testnet-resume.json) records the live state and checks.
 
 The configured testnet identities are in [the public deployment profile](config/hsk-testnet-deployment.json): `hsk-owner` owns/deploys the vault, while the distinct `hsk-agent` has swap-only authority. To deploy and verify everything interactively from the project root:
 
@@ -111,7 +119,7 @@ The configured testnet identities are in [the public deployment profile](config/
 
 This prompts locally for the owner/deployer keystore password, deploys the modules, deposits and wraps **0.1 HSK**, then prompts for the separate agent password and executes the bounded **0.005 WHSK** stable-exit proof plus exact risk-limit/reveal checks. Owner signing uses project-local `cast`; no raw owner key enters the Python/web signer. The owner needs funding plus a **0.03 HSK gas reserve**; the agent needs **0.01 HSK**. A zero-balance owner stops the run before password entry or broadcasting. Confirmed steps are journaled; uncertain sends are never retried automatically. `deploy` and `prove` remain available separately below.
 
-All testnet read helpers and the testnet Web3 signing provider use bounded `curl -sS` subprocess requests, with the thirdweb chain-133 endpoint in the fallback list. Every endpoint must report chain 133; provider errors never count as valid data, and an uncertain signed send does not fail over into a second broadcast. Mainnet behavior and Guard limits are unchanged.
+All testnet read helpers and the testnet Web3 signing provider use bounded `curl -sS` requests. Testnet configuration is pinned to the primary RPC for the session. Chain checks, confirmation depth, exact receipt hashes and Guard checks remain mandatory. Mainnet behavior and Guard limits are unchanged.
 
 [Wallet/RPC readiness](docs/evidence/hsk-testnet-readiness.json) records the observed chain, public balances and exact command. This follow-up passed **308 Python tests** and the signed local-fork setup/proof. Local fork transactions have no public explorer receipts; the funding preflight still requires actual native HSK at the owner address.
 

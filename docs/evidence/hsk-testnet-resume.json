@@ -1,0 +1,90 @@
+{
+  "observed_at": "2026-11-01T14:57:34.028481+00:00",
+  "chain_id": 133,
+  "rpc_url": "https://testnet.hsk.xyz",
+  "status": "PUBLIC_DEPLOYMENT_AND_DEPOSIT_CONFIRMED_PROOF_PENDING",
+  "contracts": {
+    "BandedTwapOracle": {
+      "address": "0x521C86fD6fe77Fee7493dC9e7242BBed271dE73f",
+      "transaction_hash": "0x1782b833a5d688894483603a3dc6bd3a4c9573ba757ab173eb2a8fc219cfe763",
+      "block_number": 35178600,
+      "explorer": "https://testnet-explorer.hskchain.net/address/0x521C86fD6fe77Fee7493dC9e7242BBed271dE73f",
+      "transaction_link": "https://testnet-explorer.hskchain.net/tx/0x1782b833a5d688894483603a3dc6bd3a4c9573ba757ab173eb2a8fc219cfe763"
+    },
+    "DecisionLog": {
+      "address": "0xA015aEAB0E97857b7eE322c7F7ee98AE98Cd9A30",
+      "transaction_hash": "0xd2f1a51211de223e7aed05f319c64d8c27335bc12f9358d8d18674e4adf9eea5",
+      "block_number": 35178601,
+      "explorer": "https://testnet-explorer.hskchain.net/address/0xA015aEAB0E97857b7eE322c7F7ee98AE98Cd9A30",
+      "transaction_link": "https://testnet-explorer.hskchain.net/tx/0xd2f1a51211de223e7aed05f319c64d8c27335bc12f9358d8d18674e4adf9eea5"
+    },
+    "AegisVault": {
+      "address": "0xE14185B7beFeeFF8ab241c3Ffae13bA7Ed61df5d",
+      "transaction_hash": "0x550d205f8ea7d80063e3a423ee5f7af32a015dc3bf9f390da9bf8d20173b52da",
+      "block_number": 35178602,
+      "explorer": "https://testnet-explorer.hskchain.net/address/0xE14185B7beFeeFF8ab241c3Ffae13bA7Ed61df5d",
+      "transaction_link": "https://testnet-explorer.hskchain.net/tx/0x550d205f8ea7d80063e3a423ee5f7af32a015dc3bf9f390da9bf8d20173b52da"
+    }
+  },
+  "verification": "Rechecked real canonical CREATE receipts, compiled runtime excluding immutable slots, ownership, role/module bindings, Guard limits and Oracle markets with record_deployment; public registry retained.",
+  "balances_hsk": {
+    "owner": "0.027221637407945545",
+    "agent": "0.014978978999999743"
+  },
+  "vault_assets": {
+    "native_raw": "50000000000000000",
+    "wrapped_raw": "0",
+    "block_number": 35179191
+  },
+  "owner_setup": {
+    "deposit_native": {
+      "status": "CONFIRMED",
+      "expected": {
+        "from": "0xAc85C4d3129cB1773c473Cc6A766aF9Af738fdE8",
+        "to": "0xE14185B7beFeeFF8ab241c3Ffae13bA7Ed61df5d",
+        "data": "0x",
+        "value": "0xb1a2bc2ec50000"
+      },
+      "hash": "0x89bba7756cc3a3fdcb7b149c1bda15cdd6a55494abbf3c3b87dca00b03b5aa5a",
+      "block_number": 35178625,
+      "explorer": "https://testnet-explorer.hskchain.net/tx/0x89bba7756cc3a3fdcb7b149c1bda15cdd6a55494abbf3c3b87dca00b03b5aa5a"
+    },
+    "wrapping_required": true
+  },
+  "decision_log": {
+    "count": 0,
+    "pending_agent_decision": 0
+  },
+  "remaining_steps": [
+    "wrap existing vault native HSK if needed",
+    "agent commit -> guarded 0.005 WHSK stable exit -> reveal",
+    "exact risk/reveal verification"
+  ],
+  "new_deposits_permitted": false,
+  "redeployment_permitted": false,
+  "receipt_lag_retry_seconds": 15,
+  "public_transactions_sent_by_this_fix": 0,
+  "registry_sha256": "491eec21280deb534fa8946b1606cb42478ebcad372bb4d962a6d66a616b94a6",
+  "command": ".venv/bin/python -m scripts.deploy_and_verify_hsk resume --network testnet --broadcast --amount-whsk 0.005",
+  "python_validation": "321 passed, 1 skipped, 2 warnings, 10 subtests passed in 11.58s",
+  "local_fork_validation": {
+    "status": "PASSED",
+    "owner_resume_no_new_transaction": true,
+    "signed_execution": "reconciled",
+    "risk_error": "TradeLimit()",
+    "public_broadcast_artifact_unchanged": true,
+    "scope": "Isolated loopback fork using generated dev accounts; no public-chain gas spent."
+  },
+  "browser_validation": "  28 passed (1.6m)",
+  "test_registry_isolation": "Unregistered unit/browser fixtures use empty private registries and never mutate the real public registry.",
+  "production_build": "PASS: npm run build",
+  "source_sha256": {
+    "agent/aegis/connectors/rpc.py": "408c2a95152dd23f2bc81ec3e8c5362897210b30cdad85c3107f80a8eb10e4df",
+    "agent/aegis/execution/confirmations.py": "efd5f795922d34b16b1d6576810400a273489e02ff76917e21b844987dd8ada3",
+    "agent/aegis/execution/proof.py": "16898487435b92d307f8a7703303c5190846b2cbc29c56d0f511f8334ab73696",
+    "agent/aegis/execution/vault_client.py": "6237abc5a425c7f9896cfe12351c2563f4a182a3d0d9ae1c05437bbac1a7ef09",
+    "agent/aegis/verify_decision.py": "706baf14c169701ca89452049e5528e9fc0ad2c6e4bddabc82dc6719a5fbaf89",
+    "scripts/deploy_and_verify_hsk.py": "ff7cd5fd8185ed33ddc571335527c8399e3c9d02dbb3c011bbc427012294b94e",
+    "scripts/hsk_testnet_setup.py": "0bb7e5ef02eee7853e56dc417b561d100b41ec48587f88ebe1a31cdd2cbbef7e"
+  }
+}

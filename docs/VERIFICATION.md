@@ -2,7 +2,7 @@
 
 ## Hackathon upgrade: current evidence
 
-The subsequent [testnet curl/setup readiness check](evidence/hsk-testnet-readiness.json) passes **308 Python tests** and an actual signed local-fork funding/wrapping/proof run. The owner/agent identities are now configured; public deployment is awaiting sufficient observed owner funds and interactive signing. The 15-checkpoint upgrade report below preserves its earlier snapshot and test counts.
+The latest [testnet resume check](evidence/hsk-testnet-resume.json) passes **321 Python tests** and a signed local-fork funding/proof run, including no new owner transaction on funding replay. All three public contracts and the existing owner deposit are now verified. The remaining wrap and public agent proof require local signing. The [earlier readiness check](evidence/hsk-testnet-readiness.json) and the 15-checkpoint report below preserve their original snapshots and test counts.
 
 [Full upgrade report and every changed file](evidence/hackathon-upgrade-validation.json), [actual mainnet data and built UI](evidence/hsk-judge-live-data.json), [signed local-fork proof](evidence/hsk-signed-fork-proof.json), and [public deployment status](evidence/hsk-onchain-deployment.json) keep local, paper and public-chain evidence separate.
 

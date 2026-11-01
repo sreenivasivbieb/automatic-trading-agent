@@ -22,7 +22,7 @@ Changing only an RPC URL is insufficient. The registry selects chain-specific co
 
 ## 3. Deploy and record the owner-bound vault
 
-No public AEGIS deployment is registered. Deployment requires actual owner/agent addresses and a funded deployer. Funding controls remain disabled until a verified deployment is recorded.
+The testnet deployment is registered in `deployments/133.json`; its 0.05-HSK native deposit is confirmed. Use the README's `resume` command to wrap existing vault HSK if needed and finish the micro-swap proof, with no redeployment or new deposit. Public receipts and current balances are recorded in `docs/evidence/hsk-testnet-resume.json`.
 
 Keep owner and agent addresses distinct. The supplied testnet profile uses local `hsk-owner` as owner/deployer and `hsk-agent` as the separate hot agent; a third deployer account is also supported. Owner signing stays in the local interactive Foundry process. A separately funded keeper is optional but needed for independent safety-exit availability. Follow [CONTRACTS.md](CONTRACTS.md) to prepare, simulate, broadcast to testnet and verify canonical deployment receipts. Only the recorder may create `deployments/133.json` after real code/ownership/binding checks. Local fork addresses never belong in that public registry. Mainnet deployment requires the user's separate explicit approval.
 
@@ -34,7 +34,7 @@ Choose an operation and amount, then **Review owner transaction**. Inspect the f
 
 Owner withdrawals always pay the registered owner. Native withdrawal uses unwrapped HSK; the contract also supports owner withdrawal of WHSK and other held ERC-20s through its verified interface. Ownership cannot transfer or renounce. Funding does not start trading. Review caps and deliberately unpause the real vault separately. The local PAPER agent remains a different ledger.
 
-Actual funded Trust Wallet signing is pending public deployment and funds. Browser tests use a labeled wallet fixture; Python transaction encoding and receipt matching are separately tested.
+Actual Trust Wallet browser signing remains unvalidated. Public contract deployment and the CLI owner deposit are confirmed. Browser tests use an isolated wallet fixture; Python transaction encoding and receipt matching are separately tested.
 
 ## 5. Optional AI providers and Telegram
 

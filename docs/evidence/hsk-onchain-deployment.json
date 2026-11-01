@@ -2,24 +2,50 @@
   "schema_version": 1,
   "networks": {
     "testnet": {
-      "observed_at": "2026-11-01T14:20:17.877570+00:00",
+      "observed_at": "2026-11-01T14:38:16.558764+00:00",
       "chain_id": 133,
-      "status": "BLOCKED_NOT_DEPLOYED",
       "environment": "PUBLIC_HSK_CHAIN",
-      "contracts": {},
-      "transactions": {},
-      "blockers": [
-        "Owner/deployer must have enough native testnet HSK for deployment and the explicit vault funding amount; interactive local keystore passwords are required."
-      ],
-      "public_transactions_sent_by_this_run": 0,
-      "configured_owner": "0xAc85C4d3129cB1773c473Cc6A766aF9Af738fdE8",
-      "configured_agent": "0x372bd66F76Ff5802Ee640690f2D8373f47AF6750",
-      "deployer_account": "hsk-owner",
-      "balances_hsk": {
-        "owner": "0",
-        "agent": "0.1"
+      "status": "DEPLOYED_PROOF_PENDING",
+      "contracts": {
+        "BandedTwapOracle": {
+          "address": "0x521C86fD6fe77Fee7493dC9e7242BBed271dE73f",
+          "transaction_hash": "0x1782b833a5d688894483603a3dc6bd3a4c9573ba757ab173eb2a8fc219cfe763",
+          "explorer": "https://testnet-explorer.hskchain.net/address/0x521C86fD6fe77Fee7493dC9e7242BBed271dE73f",
+          "transaction_link": "https://testnet-explorer.hskchain.net/tx/0x1782b833a5d688894483603a3dc6bd3a4c9573ba757ab173eb2a8fc219cfe763"
+        },
+        "DecisionLog": {
+          "address": "0xA015aEAB0E97857b7eE322c7F7ee98AE98Cd9A30",
+          "transaction_hash": "0xd2f1a51211de223e7aed05f319c64d8c27335bc12f9358d8d18674e4adf9eea5",
+          "explorer": "https://testnet-explorer.hskchain.net/address/0xA015aEAB0E97857b7eE322c7F7ee98AE98Cd9A30",
+          "transaction_link": "https://testnet-explorer.hskchain.net/tx/0xd2f1a51211de223e7aed05f319c64d8c27335bc12f9358d8d18674e4adf9eea5"
+        },
+        "AegisVault": {
+          "address": "0xE14185B7beFeeFF8ab241c3Ffae13bA7Ed61df5d",
+          "transaction_hash": "0x550d205f8ea7d80063e3a423ee5f7af32a015dc3bf9f390da9bf8d20173b52da",
+          "explorer": "https://testnet-explorer.hskchain.net/address/0xE14185B7beFeeFF8ab241c3Ffae13bA7Ed61df5d",
+          "transaction_link": "https://testnet-explorer.hskchain.net/tx/0x550d205f8ea7d80063e3a423ee5f7af32a015dc3bf9f390da9bf8d20173b52da"
+        }
       },
-      "readiness_report": "hsk-testnet-readiness.json"
+      "source_verification": "Compiled runtime and immutable bindings checked on-chain. Explorer source publication is separate.",
+      "next": "Existing deposit is canonical. Resume wraps only vault native HSK if needed, then runs the agent proof; never deploy or deposit again.",
+      "owner_setup": {
+        "deposit_native": {
+          "status": "CONFIRMED",
+          "expected": {
+            "from": "0xAc85C4d3129cB1773c473Cc6A766aF9Af738fdE8",
+            "to": "0xE14185B7beFeeFF8ab241c3Ffae13bA7Ed61df5d",
+            "data": "0x",
+            "value": "0xb1a2bc2ec50000"
+          },
+          "hash": "0x89bba7756cc3a3fdcb7b149c1bda15cdd6a55494abbf3c3b87dca00b03b5aa5a",
+          "block_number": 35178625,
+          "explorer": "https://testnet-explorer.hskchain.net/tx/0x89bba7756cc3a3fdcb7b149c1bda15cdd6a55494abbf3c3b87dca00b03b5aa5a"
+        },
+        "wrapping_required": true
+      },
+      "rpc_url": "https://testnet.hsk.xyz",
+      "resume_command": ".venv/bin/python -m scripts.deploy_and_verify_hsk resume --network testnet --broadcast --amount-whsk 0.005",
+      "resume_evidence": "hsk-testnet-resume.json"
     },
     "mainnet": {
       "observed_at": "2026-11-01T13:25:58.959772+00:00",
