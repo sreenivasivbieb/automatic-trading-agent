@@ -12,9 +12,11 @@ from pathlib import Path
 from eth_account import Account
 from hexbytes import HexBytes
 from web3 import HTTPProvider, Web3
+from web3.exceptions import BlockNotFound
 
 from aegis.connectors.curl_rpc import CurlHTTPProvider
 from aegis.connectors.rpc import DiscoveryError, ReadOnlyRpc
+from aegis.execution.confirmations import consistent_read
 from aegis.execution.fees import LiveFees
 
 
@@ -128,6 +130,9 @@ class VaultClient:
         self.lock.close()
 
     def verify(self):
+        return consistent_read(self._verify_once)
+
+    def _verify_once(self):
         if self.w3.eth.chain_id != self.network.chain_id:
             raise DiscoveryError("Signing RPC reports the wrong chain")
         block = self.rpc.block(
@@ -234,7 +239,12 @@ class VaultClient:
     def confirm(self, tx_hash: str, key: str, *, timeout=90):
         end = time.monotonic() + timeout
         receipt = None
+        inconsistent_since = None
         while time.monotonic() < end:
+            if inconsistent_since is not None and time.monotonic() - inconsistent_since >= 15:
+                raise ReconciliationRequired(
+                    "RPC receipt view remained inconsistent for 15 seconds; keep the recorded hash and do not submit another trade"
+                )
             attempts = self.db.execute(
                 "SELECT hash,kind FROM attempts WHERE key=?", (key,)
             ).fetchall() or [(tx_hash, "call")]
@@ -253,9 +263,20 @@ class VaultClient:
             if latest < receipt["blockNumber"] + self.network.confirmations:
                 time.sleep(1)
                 continue
-            actual = self.w3.eth.get_block(receipt["blockNumber"])
-            if HexBytes(actual["hash"]) != HexBytes(receipt["blockHash"]):
-                raise ReconciliationRequired("Receipt was reorganized; do not submit another trade")
+            try:
+                actual = self.w3.eth.get_block(receipt["blockNumber"])
+            except BlockNotFound:
+                actual = None
+            if (
+                actual is None
+                or not actual.get("hash")
+                or HexBytes(actual["hash"]) != HexBytes(receipt["blockHash"])
+            ):
+                inconsistent_since = (
+                    inconsistent_since if inconsistent_since is not None else time.monotonic()
+                )
+                time.sleep(1)
+                continue
             status = (
                 "cancelled"
                 if winner == "cancel"

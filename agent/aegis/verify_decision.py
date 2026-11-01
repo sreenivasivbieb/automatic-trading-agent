@@ -10,7 +10,7 @@ from pathlib import Path
 from eth_abi import decode
 from web3 import Web3
 
-from aegis.connectors.rpc import BlockRef, DiscoveryError, ReadOnlyRpc
+from aegis.connectors.rpc import BlockRef, DiscoveryError, ReadOnlyRpc, RpcViewLag
 from aegis.data import ROOT, Network, load_network
 
 
@@ -53,14 +53,17 @@ def verify_reveal(
         or int(receipt["blockNumber"], 16) > block.number
     ):
         raise DiscoveryError("Reveal receipt is missing, reverted or insufficiently confirmed")
-    actual_block = BlockRef.from_rpc(
-        rpc.request("eth_getBlockByNumber", [receipt["blockNumber"], False])
-    )
+    raw = rpc.request("eth_getBlockByNumber", [receipt["blockNumber"], False])
+    if raw is None:
+        raise RpcViewLag("Reveal receipt block is temporarily unavailable")
+    actual_block = BlockRef.from_rpc(raw)
+    if actual_block.number < commitment[3]:
+        raise DiscoveryError("Reveal receipt predates its commitment")
     if (
-        actual_block.hash.lower() != receipt["blockHash"].lower()
-        or actual_block.number < commitment[3]
+        actual_block.number != int(receipt["blockNumber"], 16)
+        or actual_block.hash.lower() != receipt["blockHash"].lower()
     ):
-        raise DiscoveryError("Reveal receipt is noncanonical or predates its commitment")
+        raise RpcViewLag("Reveal receipt is noncanonical or the RPC block view is lagging")
     topic = Web3.keccak(text="Revealed(uint256,bytes,uint256)").to_0x_hex()
     id_topic = "0x" + decision_id.to_bytes(32, "big").hex()
     matches = [

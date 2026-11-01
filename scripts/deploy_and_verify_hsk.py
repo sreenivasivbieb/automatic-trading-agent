@@ -23,14 +23,21 @@ from pathlib import Path
 from eth_account import Account
 
 from aegis.connectors.hskswap_v3 import HSKSwapConnector
-from aegis.connectors.rpc import ReadOnlyRpc
+from aegis.connectors.rpc import ReadOnlyRpc, RpcViewLag
 from aegis.data import ROOT, HSKSwapData, load_network
 from aegis.deploy import make_plan, record_deployment
+from aegis.execution.confirmations import consistent_read
 from aegis.execution.live import LiveExecutionGateway
 from aegis.execution.proof import prove_trade_limit
 from aegis.execution.vault_client import VaultClient
 from aegis.verify_decision import verify_reveal
-from scripts.hsk_testnet_setup import TestnetSetupBlocked, fund_vault, preflight, verify_deployer
+from scripts.hsk_testnet_setup import (
+    TestnetSetupBlocked,
+    fund_vault,
+    preflight,
+    vault_assets,
+    verify_deployer,
+)
 
 EVIDENCE = ROOT / "docs/evidence/hsk-onchain-deployment.json"
 
@@ -227,8 +234,10 @@ def prove(args, network) -> dict:
         )
         if result["status"] != "reconciled":
             raise DeploymentBlocked("Proof is not reconciled; inspect signer journal before retry")
-        verification = verify_reveal(
-            network, deployment, result["decision_id"], result["reveal_tx"], client.rpc
+        verification = consistent_read(
+            lambda: verify_reveal(
+                network, deployment, result["decision_id"], result["reveal_tx"], client.rpc
+            )
         )
         report = deployment_report(network, deployment)
         report.update(
@@ -253,10 +262,75 @@ def prove(args, network) -> dict:
         client.close()
 
 
+def resume_testnet(args, network) -> dict:
+    require_broadcast(args)
+    registry = ROOT / "deployments/133.json"
+    if network.chain_id != 133 or not registry.exists():
+        raise DeploymentBlocked(
+            "Resume requires the existing confirmed testnet registry; it never deploys contracts"
+        )
+    deployment = json.loads(registry.read_text())
+    if (
+        deployment["owner"].lower() != args.owner.lower()
+        or deployment["agent"].lower() != args.agent.lower()
+    ):
+        raise DeploymentBlocked("Resume signer addresses differ from the existing deployment")
+    assets = vault_assets(network, deployment)
+    working = copy.copy(args)
+    journal = ROOT / ".runtime/hsk-deploy-133/owner-setup.json"
+    if working.fund_hsk is None:
+        original = (
+            json.loads(journal.read_text())["identity"]["amount_wei"]
+            if journal.exists()
+            else max(
+                int(Decimal(args.amount_whsk) * 10**19),
+                min(assets["native_raw"] + assets["wrapped_raw"], 10**17),
+            )
+        )
+        working.fund_hsk = str(Decimal(original) / 10**18)
+    micro = int(Decimal(args.amount_whsk) * 10**18)
+    if assets["native_raw"] + assets["wrapped_raw"] < micro:
+        raise DeploymentBlocked(
+            "Existing vault funds cannot cover the micro-swap; resume will not deposit more"
+        )
+    needs_wrap = assets["wrapped_raw"] < micro
+    rpc = ReadOnlyRpc(133, network.rpc_urls)
+    try:
+        if needs_wrap and int(rpc.request("eth_getBalance", [args.owner, "latest"]), 16) < 10**15:
+            raise DeploymentBlocked(
+                "The remaining wrap needs owner gas; no new deposit or deployment is requested"
+            )
+    finally:
+        rpc.close()
+    print(
+        f"Reusing vault {deployment['contracts']['AegisVault']['address']} via {network.rpc_urls[0]}; no deployment or new deposit is allowed.",
+        flush=True,
+    )
+    directory = ROOT / ".runtime/hsk-deploy-133"
+    directory.mkdir(parents=True, exist_ok=True)
+    with ExitStack() as stack:
+        if needs_wrap:
+            working.password_file = local_password_file(
+                stack,
+                args.password_file,
+                directory,
+                "Local owner keystore password (remaining wrap only): ",
+            )
+            verify_deployer(working)
+        setup = fund_vault(network, deployment, working, resume_only=True)
+        result = prove(working, network)
+        result.update(
+            owner_setup=setup, resumed_existing_deployment=True, rpc_url=network.rpc_urls[0]
+        )
+        return result
+
+
 def run_testnet(args, network) -> dict:
     require_broadcast(args)
     if not args.owner or not args.agent or args.owner.lower() == args.agent.lower():
         raise DeploymentBlocked("Supply distinct public owner and agent addresses")
+    if (ROOT / "deployments/133.json").exists():
+        return resume_testnet(args, network)
     print(
         "Checking chain, owner/deployer funding and agent gas before any broadcast...", flush=True
     )
@@ -307,7 +381,10 @@ def apply_testnet_profile(args) -> None:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
-        "operation", nargs="?", choices=["status", "deploy", "prove", "run"], default="status"
+        "operation",
+        nargs="?",
+        choices=["status", "deploy", "prove", "run", "resume"],
+        default="status",
     )
     parser.add_argument("--network", choices=["testnet", "mainnet"], default="testnet")
     parser.add_argument("--broadcast", action="store_true")
@@ -334,6 +411,8 @@ def main() -> int:
     parser.add_argument("--output", type=Path, default=EVIDENCE)
     args = parser.parse_args()
     network = load_network(args.network)
+    if network.chain_id == 133:
+        network = network.model_copy(update={"rpc_urls": ["https://testnet.hsk.xyz"]})
     try:
         apply_testnet_profile(args)
         if args.operation == "status":
@@ -364,16 +443,15 @@ def main() -> int:
                 print("Existing verified evidence retained; use prove to recheck the chain")
                 return 0
         else:
-            report = (
-                run_testnet(args, network)
-                if args.operation == "run"
-                else deploy(args, network)
-                if args.operation == "deploy"
-                else prove(args, network)
-            )
+            report = {
+                "resume": resume_testnet,
+                "run": run_testnet,
+                "deploy": deploy,
+                "prove": prove,
+            }[args.operation](args, network)
         write_evidence(args.output, args.network, report)
         print(json.dumps(report, indent=2))
-    except (DeploymentBlocked, TestnetSetupBlocked) as exc:
+    except (DeploymentBlocked, TestnetSetupBlocked, RpcViewLag) as exc:
         print(f"HSK operation stopped: {exc}")
         return 1
     except Exception as exc:

@@ -164,7 +164,10 @@ async def test_api_rejects_arbitrary_live_mode_and_raw_transaction_fields(client
     assert state["live_enabled"] is False and state["params_version"] == 1
 
 
-async def test_owner_routes_require_auth_and_refuse_unregistered_actions(client):
+async def test_owner_routes_require_auth_and_refuse_unregistered_actions(
+    client, monkeypatch, tmp_path
+):
+    monkeypatch.setattr("aegis.owner.ROOT", tmp_path)
     assert (await client.get("/api/aegis/vault")).status_code == 401
     metadata = (await client.get("/api/aegis/vault", headers=H)).json()
     assert metadata["chain_id"] == 133 and metadata["registered"] is False

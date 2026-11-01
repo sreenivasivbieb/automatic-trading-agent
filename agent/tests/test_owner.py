@@ -52,7 +52,8 @@ def registry(monkeypatch):
     return network, Rpc
 
 
-def test_owner_metadata_does_not_invent_a_public_vault():
+def test_owner_metadata_does_not_invent_a_public_vault(monkeypatch, tmp_path):
+    monkeypatch.setattr(owner, "ROOT", tmp_path)
     assert owner.metadata("testnet")["registered"] is False
     assert owner.metadata("mainnet")["settlement_decimals"] == 6
     assert owner.metadata("testnet")["settlement_decimals"] == 18

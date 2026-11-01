@@ -1,14 +1,20 @@
 """Explicit browser-test harness; never imported by normal startup or deployment images."""
 import os
 import asyncio
+from pathlib import Path
 
 if os.environ.get("TERMINAL_TEST_RUN") != "1":
     raise RuntimeError("This application is for isolated browser tests only")
 
 from aegis.runtime import PaperRuntime
+from aegis import owner
 from agent.tests.test_runtime import ReplayConnector, seed_entry
 from agent.tests.test_library import library_snapshot, start
 from backend.api import create_app
+
+# Browser fixtures must never consume a developer's real public deployment registry.
+# The wallet-specific browser flow supplies its own explicit HTTP fixture.
+owner.ROOT = Path(os.environ["TERMINAL_DB"]).parent / "isolated-owner-registry"
 
 
 class ReplayRuntime(PaperRuntime):

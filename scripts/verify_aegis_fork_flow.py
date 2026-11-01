@@ -85,7 +85,12 @@ def main():
         plan = make_plan(n, reader.snapshot(), owner.address, agent.address)
         path = directory / "plan.json"
         path.write_text(json.dumps(plan))
-        environment = {**os.environ, "AEGIS_DEPLOY_PLAN": str(path)}
+        environment = {
+            **os.environ,
+            "AEGIS_DEPLOY_PLAN": str(path),
+            "FOUNDRY_BROADCAST": str(directory / "broadcast"),
+            "FOUNDRY_CACHE_PATH": str(directory / "forge-cache"),
+        }
         command = [
             str(ROOT / ".tools/foundry/forge"),
             "script",
@@ -108,7 +113,7 @@ def main():
             raise RuntimeError("Local fork deployment script failed; inspect private fork log")
         time.sleep(3)
         broadcast = json.loads(
-            (ROOT / "contracts/broadcast/Deploy.s.sol/133/run-latest.json").read_text()
+            (directory / "broadcast/Deploy.s.sol/133/run-latest.json").read_text()
         )
         deployment = record_deployment(n, plan, broadcast, rpc, directory / "deployment.json")
         vault = w3.eth.contract(
@@ -138,6 +143,24 @@ def main():
                 journal=directory / "owner-setup.json",
                 public_chain=False,
             )
+            nonce_before_resume = w3.eth.get_transaction_count(owner.address)
+            fund_vault(
+                n,
+                deployment,
+                SimpleNamespace(
+                    owner=owner.address,
+                    agent=agent.address,
+                    fund_hsk="0.1",
+                    amount_whsk="0.005",
+                    account=None,
+                    keystore=keyfile,
+                    password_file=passwordfile,
+                ),
+                journal=directory / "owner-setup.json",
+                public_chain=False,
+                resume_only=True,
+            )
+            assert w3.eth.get_transaction_count(owner.address) == nonce_before_resume
         finally:
             keyfile.unlink(missing_ok=True)
             passwordfile.unlink(missing_ok=True)
@@ -189,6 +212,7 @@ def main():
             "risk_limit": risk_proof,
             "owner_setup": owner_setup,
             "testnet_signing_transport": "curl; local cast keystore funding/wrapping",
+            "owner_resume_no_new_transaction": True,
             "idempotent_replay": True,
             "agent_nonce_after_replay": nonce,
             "agent_received_output": False,

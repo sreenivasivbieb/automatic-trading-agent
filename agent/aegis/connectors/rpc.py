@@ -37,6 +37,10 @@ class DiscoveryError(RuntimeError):
     """Data could not be independently verified. Never substitute fixture values."""
 
 
+class RpcViewLag(DiscoveryError):
+    """A block view is temporarily missing or inconsistent; never treat it as confirmed."""
+
+
 class RpcResponseError(DiscoveryError):
     def __init__(self, code: int):
         # Remote error messages may contain request data. Keep them out of logs.
@@ -162,13 +166,19 @@ class ReadOnlyRpc:
     def block(self, *, confirmations: int = 2, max_age_seconds: int = 60) -> BlockRef:
         if confirmations < 0:
             raise ValueError("Confirmations cannot be negative")
-        latest = BlockRef.from_rpc(self.request("eth_getBlockByNumber", ["latest", False]))
+        raw = self.request("eth_getBlockByNumber", ["latest", False])
+        if raw is None:
+            raise RpcViewLag("Latest block is temporarily unavailable")
+        latest = BlockRef.from_rpc(raw)
         target = latest.number - confirmations
         if target < 0:
             raise DiscoveryError("Not enough blocks for the requested confirmation depth")
-        block = BlockRef.from_rpc(self.request("eth_getBlockByNumber", [hex(target), False]))
+        raw = self.request("eth_getBlockByNumber", [hex(target), False])
+        if raw is None:
+            raise RpcViewLag("Requested block is temporarily unavailable")
+        block = BlockRef.from_rpc(raw)
         if block.number != target:
-            raise DiscoveryError("RPC did not return the requested block")
+            raise RpcViewLag("RPC did not return the requested block")
         self.assert_fresh(block, max_age_seconds)
         # One snapshot per cache lifetime, never an unbounded tick history.
         self._cache.clear()
@@ -181,10 +191,17 @@ class ReadOnlyRpc:
             raise DiscoveryError("Block is stale or its timestamp is in the future")
 
     def assert_canonical(self, block: BlockRef) -> None:
-        actual = BlockRef.from_rpc(self.request("eth_getBlockByNumber", [block.tag, False]))
-        if actual.hash.lower() != block.hash.lower():
+        raw = self.request("eth_getBlockByNumber", [block.tag, False])
+        actual = BlockRef.from_rpc(raw) if raw is not None else None
+        if (
+            actual is None
+            or actual.number != block.number
+            or actual.hash.lower() != block.hash.lower()
+        ):
             self._cache.clear()
-            raise DiscoveryError("Snapshot block was reorganized; discard this snapshot and retry")
+            raise RpcViewLag(
+                "Snapshot block was reorganized or the RPC view is lagging; retry before accepting it"
+            )
 
     def code(self, address: str, block: BlockRef) -> bytes:
         address = Web3.to_checksum_address(address)

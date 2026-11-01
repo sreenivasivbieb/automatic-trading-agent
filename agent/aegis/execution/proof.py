@@ -6,10 +6,15 @@ from web3 import Web3
 from web3.exceptions import ContractCustomError
 
 from aegis.connectors.hskswap_v3 import encode_path
+from aegis.execution.confirmations import consistent_read
 
 
 def prove_trade_limit(client, route) -> dict:
     """Require the *exact* TradeLimit selector; a timeout/other revert is not evidence."""
+    return consistent_read(lambda: _prove_trade_limit_once(client, route))
+
+
+def _prove_trade_limit_once(client, route) -> dict:
     block = client.verify()
     vault = client.vault
     oracle = client.records["BandedTwapOracle"]["address"]

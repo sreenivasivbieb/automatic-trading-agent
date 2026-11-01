@@ -10,8 +10,9 @@ import time
 from decimal import Decimal
 from pathlib import Path
 
-from aegis.connectors.rpc import BlockRef, ReadOnlyRpc
+from aegis.connectors.rpc import BlockRef, ReadOnlyRpc, RpcViewLag
 from aegis.data import ROOT
+from aegis.execution.confirmations import consistent_read
 from aegis.owner import calldata, verify_registry
 
 
@@ -112,18 +113,24 @@ def save(path, data):
 
 
 def confirm_owner_step(network, deployment, rpc, tx_hash, expected):
-    timeout = time.monotonic() + 180
-    while time.monotonic() < timeout:
+    observed_receipt = False
+
+    def inspect():
+        nonlocal observed_receipt
         receipt = rpc.request("eth_getTransactionReceipt", [tx_hash])
+        if receipt is None and observed_receipt:
+            raise RpcViewLag("A previously observed owner receipt is temporarily unavailable")
         if receipt:
+            observed_receipt = True
             if int(receipt["status"], 16) != 1:
                 raise TestnetSetupBlocked(
                     "Owner setup transaction reverted; inspect its receipt before continuing"
                 )
             tx = rpc.request("eth_getTransactionByHash", [tx_hash])
+            if tx is None:
+                raise RpcViewLag("Owner transaction is temporarily unavailable on this RPC view")
             if (
-                not tx
-                or any(
+                any(
                     tx[k].lower() != expected[a].lower()
                     for k, a in [("from", "from"), ("to", "to"), ("input", "data")]
                 )
@@ -134,25 +141,62 @@ def confirm_owner_step(network, deployment, rpc, tx_hash, expected):
                     "Owner transaction does not match the exact reviewed funding/wrapping request"
                 )
             block = verify_registry(network, deployment, rpc)
-            rb = BlockRef.from_rpc(
-                rpc.request("eth_getBlockByNumber", [receipt["blockNumber"], False])
-            )
-            if rb.hash.lower() != receipt["blockHash"].lower():
-                raise TestnetSetupBlocked("Owner receipt was reorganized")
+            raw = rpc.request("eth_getBlockByNumber", [receipt["blockNumber"], False])
+            if raw is None:
+                raise RpcViewLag("Owner receipt block is temporarily unavailable")
+            rb = BlockRef.from_rpc(raw)
+            if (
+                rb.number != int(receipt["blockNumber"], 16)
+                or rb.hash.lower() != receipt["blockHash"].lower()
+            ):
+                raise RpcViewLag("Owner receipt and RPC block view are temporarily inconsistent")
             if rb.number <= block.number:
                 return {
                     "hash": tx_hash,
                     "block_number": rb.number,
                     "explorer": network.explorer + "/tx/" + tx_hash,
                 }
+        return None
+
+    timeout = time.monotonic() + 180
+    while time.monotonic() < timeout:
+        result = consistent_read(inspect)
+        if result is not None:
+            return result
         time.sleep(2)
     raise TestnetSetupBlocked(
         "Owner setup is not confirmed yet; rerun to reconcile its recorded hash, never resend blindly"
     )
 
 
+def vault_assets(network, deployment, rpc=None) -> dict:
+    own_rpc = rpc is None
+    rpc = rpc or ReadOnlyRpc(network.chain_id, network.rpc_urls)
+    vault = deployment["contracts"]["AegisVault"]["address"]
+
+    def inspect():
+        block = verify_registry(network, deployment, rpc)
+        wrapped = rpc.call(
+            network.tokens["WHSK"].address,
+            "balanceOf(address)",
+            ["uint256"],
+            block,
+            types=["address"],
+            args=[vault],
+        )[0]
+        native = int(rpc.request("eth_getBalance", [vault, block.tag]), 16)
+        rpc.assert_canonical(block)
+        return {"native_raw": native, "wrapped_raw": wrapped, "block_number": block.number}
+
+    try:
+        return consistent_read(inspect)
+    finally:
+        if own_rpc:
+            rpc.close()
+
+
 def fund_vault(
-    network, deployment, args, *, journal: Path | None = None, public_chain=True
+    network, deployment, args, *, journal: Path | None = None, public_chain=True, resume_only=False
 ) -> dict:
     if (
         network.chain_id != 133
@@ -173,7 +217,7 @@ def fund_vault(
         raise TestnetSetupBlocked("Owner setup journal belongs to a different vault or amount")
     rpc = ReadOnlyRpc(133, network.rpc_urls)
     try:
-        verify_registry(network, deployment, rpc)
+        consistent_read(lambda: verify_registry(network, deployment, rpc))
         steps = [
             ("deposit_native", "0x", raw),
             ("wrap_native", calldata("wrapNative(uint256)", ["uint256"], [raw]), 0),
@@ -186,6 +230,34 @@ def fund_vault(
                     "Owner broadcast outcome is uncertain. Reconcile .runtime/hsk-deploy-133/owner-setup.json with the actual hash; automatic resend is blocked"
                 )
             if not previous:
+                assets = vault_assets(network, deployment, rpc)
+                micro_raw = int(Decimal(args.amount_whsk) * 10**18)
+                if name == "deposit_native" and (
+                    resume_only or assets["native_raw"] + assets["wrapped_raw"] >= raw
+                ):
+                    if assets["native_raw"] + assets["wrapped_raw"] < micro_raw:
+                        raise TestnetSetupBlocked(
+                            "Existing vault assets are insufficient; resume never submits a new deposit"
+                        )
+                    data["reused_existing_funding"] = assets
+                    save(path, data)
+                    continue
+                if name == "wrap_native":
+                    if assets["wrapped_raw"] >= micro_raw:
+                        data["reused_existing_wrapped"] = assets
+                        save(path, data)
+                        continue
+                    wrap_raw = min(raw, assets["native_raw"])
+                    if wrap_raw <= 0 or wrap_raw + assets["wrapped_raw"] < micro_raw:
+                        raise TestnetSetupBlocked(
+                            "Existing vault native balance cannot fund this wrap; no extra deposit was sent"
+                        )
+                    encoded = calldata("wrapNative(uint256)", ["uint256"], [wrap_raw])
+                    expected["data"] = encoded
+                if args.password_file is None:
+                    raise TestnetSetupBlocked(
+                        "A remaining owner wrap needs local keystore unlock; rerun the resume command interactively"
+                    )
                 data["steps"][name] = {"status": "SUBMITTING", "expected": expected}
                 save(path, data)  # Durable marker precedes cast; secrets never enter this journal.
                 command = [
@@ -218,7 +290,9 @@ def fund_vault(
                 data["steps"][name].update(hash=output, status="SUBMITTED")
                 save(path, data)
             tx_hash = data["steps"][name]["hash"]
-            confirmed = confirm_owner_step(network, deployment, rpc, tx_hash, expected)
+            confirmed = confirm_owner_step(
+                network, deployment, rpc, tx_hash, data["steps"][name].get("expected", expected)
+            )
             if not public_chain:
                 confirmed.pop("explorer", None)
             data["steps"][name].update(status="CONFIRMED", **confirmed)

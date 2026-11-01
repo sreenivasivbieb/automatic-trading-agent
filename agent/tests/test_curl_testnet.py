@@ -166,6 +166,7 @@ def test_mainnet_never_inherits_testnet_signer_profile():
 
 def test_zero_owner_funding_stops_before_password_or_broadcast(monkeypatch, tmp_path):
     monkeypatch.setattr(hsk_testnet_setup, "ROOT", tmp_path)
+    monkeypatch.setattr("scripts.deploy_and_verify_hsk.ROOT", tmp_path)
     args = SimpleNamespace(
         owner="0x" + "1" * 40,
         agent="0x" + "2" * 40,
