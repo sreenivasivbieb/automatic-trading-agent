@@ -1,5 +1,68 @@
 import { test, expect } from "@playwright/test";
 
+test("home retains the original coin artwork, reference markets and strategy preview", async ({
+  page,
+}) => {
+  await page.goto("/");
+  const home = page.getByRole("heading", {
+    name: "Command center",
+    exact: true,
+  });
+  await expect(home).toBeVisible();
+  await expect(page.getByLabel("Active workspace")).toHaveValue("research");
+  await expect(
+    page.locator('.hero-art img[src="/art/krono-orbit.webp"]'),
+  ).toBeVisible();
+  const markets = page.locator("section.panel").filter({
+    has: page.getByRole("heading", { name: "Market watch", exact: true }),
+  });
+  for (const symbol of ["BTC", "ETH", "SOL"]) {
+    await expect(
+      markets.getByText(`${symbol} / USD`, { exact: true }),
+    ).toBeVisible();
+    await expect(
+      markets.locator(`.coin-${symbol.toLowerCase()}`),
+    ).toBeVisible();
+  }
+  await expect(page.locator(".strategy-card")).toHaveCount(3);
+  await expect(
+    page.getByRole("heading", { name: "AEGIS on HSKSwap", exact: true }),
+  ).toHaveCount(0);
+  const strategies = await (await page.request.get("/api/strategies")).json();
+  expect(strategies.items).toHaveLength(5);
+  await page
+    .getByRole("navigation")
+    .getByRole("button", { name: "AEGIS · HSKSwap", exact: true })
+    .click();
+  await expect(
+    page.getByRole("heading", { name: "AEGIS on HSKSwap", exact: true }),
+  ).toBeVisible();
+  await expect(page).toHaveURL(/#\/aegis$/);
+  await page
+    .getByRole("link", { name: "Krono home", exact: true })
+    .filter({ visible: true })
+    .first()
+    .click();
+  await expect(home).toBeVisible();
+  await expect(page).toHaveURL(/#\/overview$/);
+  expect(await (await page.request.get("/api/strategies")).json()).toEqual(
+    strategies,
+  );
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/#/aegis");
+  await page
+    .getByRole("link", { name: "Krono home", exact: true })
+    .filter({ visible: true })
+    .click();
+  await expect(home).toBeVisible();
+  await expect(markets.getByText("BTC / USD", { exact: true })).toBeVisible();
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= window.innerWidth + 1,
+    ),
+  ).toBe(true);
+});
+
 test("AEGIS uses shared backend state across strategy, chat, risk, wallet and mobile navigation", async ({
   page,
 }) => {
@@ -331,7 +394,7 @@ test("HSKSwap navigation uses one ledger and never loads reference-market endpoi
     if (/^\/api\/(dashboard|status|markets|news)(\/|$)/.test(path))
       wrongRequests.push(path);
   });
-  await page.goto("/");
+  await page.goto("/#/aegis");
   await expect(
     page.getByRole("heading", { name: "AEGIS on HSKSwap" }),
   ).toBeVisible();

@@ -1,0 +1,20 @@
+
+> krono-terminal@0.1.0 build
+> tsc --noEmit -p frontend/tsconfig.json && vite build --config frontend/vite.config.ts
+
+vite v6.4.5 building for production...
+transforming...
+✓ 1602 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                                              0.75 kB │ gzip:   0.45 kB
+dist/assets/inter-vietnamese-wght-normal-CBcvBZtf.woff2     10.25 kB
+dist/assets/inter-greek-ext-wght-normal-DlzME5K_.woff2      11.23 kB
+dist/assets/inter-cyrillic-wght-normal-DqGufNeO.woff2       18.75 kB
+dist/assets/inter-greek-wght-normal-CkhJZR-_.woff2          19.00 kB
+dist/assets/inter-cyrillic-ext-wght-normal-BOeWTOD4.woff2   25.96 kB
+dist/assets/inter-latin-wght-normal-Dx4kXJAl.woff2          48.26 kB
+dist/assets/inter-latin-ext-wght-normal-DO1Apj_S.woff2      85.07 kB
+dist/assets/index-CaUnrIjc.css                             106.09 kB │ gzip:  22.50 kB
+dist/assets/index-tXSfqkfS.js                              412.96 kB │ gzip: 122.10 kB
+✓ built in 1.09s

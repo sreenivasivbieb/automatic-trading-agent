@@ -1,0 +1,37 @@
+{
+  "observed_at": "2026-11-01T09:45:23.808644+00:00",
+  "status": "HOME_RESTORED",
+  "scope": "Restore original landing page and coin artwork; preserve shared HSKSwap integration",
+  "behavior": {
+    "root": "Original Command center",
+    "home_links": "Return to original home on desktop and mobile",
+    "hskswap": "Available at /#/aegis and the existing navigation",
+    "home_strategy_preview_cards": 3,
+    "strategy_library_count": 5,
+    "existing_ledger_and_emergency_states_preserved": true
+  },
+  "checks": {
+    "browser_workflows_passed": 26,
+    "production_build": "PASSED",
+    "running_local_ui": "PASSED; actual Coinbase reference prices; read-only checks",
+    "unchanged_home_component_baseline": "5963218bcffad304378e8ba0fb788e8f70a8d1e7",
+    "unchanged_home_sources_sha256": {
+      "frontend/src/workspaces.tsx": "426ea00c96137bb572b38dce1542a2e72877ec7e8a87e994ceba48f79d29c33d",
+      "frontend/src/ui.tsx": "e7c53971226edcab58c4fe2917087cae31112ba3600bd0d5a34610527e53bc51",
+      "frontend/src/discovery.tsx": "6cf3b405c39b51d520ba49f6dd9d32ab360590f5491adb3109c8960a31fd1423",
+      "frontend/src/styles.css": "32117400b99eeff9d491ee5e4c9356261b4a1f62392993165d21245f262ad9bc",
+      "frontend/src/theme.css": "3824d1fca2d4b6d7e93806a91464611aa90b795f947370751f65f51d7d00231e",
+      "frontend/src/brand.tsx": "01190e6e6ca774c0df416913609a2fc3ab16eacfebea7f843b9e44f1b6c5c130",
+      "frontend/public/art/krono-orbit.webp": "32dd704fb50dba191256eff9e1729b516244bd35ec3ee383e7c16cdb595261d3"
+    },
+    "unchanged_original_strategy_and_backend_files": 82
+  },
+  "artifacts_sha256": {
+    "home-restoration-browser-output.txt": "aa9e8434a9e651a913516ba6dbb7f8059bbcc8b0cab5e074663ae9ac37579375",
+    "home-restoration-build-output.txt": "6c590fb73c70010c5c8fd892c476e7e16d752c1f4093560c775d8ac49d81842c",
+    "home-restoration-live-ui.json": "309625cb836df5d507baf11039ba2821ea0c2faf37fb795ce817aeaa76a0952e",
+    "screenshots/home-restored-desktop.png": "f6209ceb9bc627d310d471169262ecc928bdabfd64306584a5908c488b309e4e",
+    "screenshots/home-restored-mobile.png": "4ee9fc5a45a171b6977dd292c580408af9e3d0f7aa5738e2471d48d0eb50dfed"
+  },
+  "limits": "Browser regression suite uses explicit test connectors. Local UI checks do not prove funded execution, model delivery or profitability."
+}

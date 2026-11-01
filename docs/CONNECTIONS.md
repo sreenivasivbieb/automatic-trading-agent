@@ -2,7 +2,7 @@
 
 ## 1. Start with live data and virtual funds
 
-Run `make setup && make demo`, then open `http://127.0.0.1:5173/` or `/#/aegis`. The HSKSwap workspace is the default; its navigation uses the same backend session across screens. The existing network area switches to the preserved research simulator or AWS platform. Refresh HSKSwap data, inspect the block and three pool links, and explicitly start the paper agent. No wallet, browser connection to HSKSwap, API key or faucet is needed for this path. Fresh data failure blocks fills and exposes unavailable valuation. Keep the backend bound to loopback and run one worker.
+Run `make setup && make demo`, then open `http://127.0.0.1:5173/` for the original Command center and coin artwork. Select **AEGIS · HSKSwap** in the navigation or open `/#/aegis` for HSKSwap. Its navigation uses the same backend session across screens; the existing network area also switches between workspaces. Refresh HSKSwap data, inspect the block and three pool links, and explicitly start the paper agent. No wallet, browser connection to HSKSwap, API key or faucet is needed for this path. Fresh data failure blocks fills and exposes unavailable valuation. Keep the backend bound to loopback and run one worker.
 
 The existing Krono SIMULATION and AEGIS PAPER ledgers are separate. The AWS tenant worker still uses Krono simulation; it does not run AEGIS or accept wallet keys. Do not change its mode/tenant schema to bypass this boundary.
 

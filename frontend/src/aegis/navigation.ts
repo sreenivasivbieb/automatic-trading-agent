@@ -34,8 +34,7 @@ export function readRoute(): Route {
     return { workspace: "platform", page: "platform" };
   const path = window.location.hash.replace(/^#\/?/, "").split("?")[0];
   if (path === "platform") return { workspace: "platform", page: "platform" };
-  if (!path || path === "aegis")
-    return { workspace: "aegis", page: "overview" };
+  if (path === "aegis") return { workspace: "aegis", page: "overview" };
   if (path.startsWith("aegis/")) {
     const view = path.slice(6) as AegisView;
     return {

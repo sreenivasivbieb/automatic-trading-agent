@@ -544,10 +544,13 @@ function AppContent({
     >
       <aside className={`sidebar ${sidebar ? "is-open" : ""}`}>
         <a
-          href={`#${routeHash(route.workspace)}`}
+          href={`#${routeHash(CLOUD_PLATFORM ? "platform" : "research")}`}
           className="brand"
           aria-label="Krono home"
-          onClick={() => navigate("overview")}
+          onClick={(event) => {
+            event.preventDefault();
+            switchWorkspace(CLOUD_PLATFORM ? "platform" : "research");
+          }}
         >
           <KronoBrand />
         </a>
@@ -686,9 +689,12 @@ function AppContent({
             <Menu size={19} />
           </button>
           <a
-            href={`#${routeHash(route.workspace)}`}
+            href={`#${routeHash(CLOUD_PLATFORM ? "platform" : "research")}`}
             className="mobile-brand"
-            onClick={() => navigate("overview")}
+            onClick={(event) => {
+              event.preventDefault();
+              switchWorkspace(CLOUD_PLATFORM ? "platform" : "research");
+            }}
             aria-label="Krono home"
           >
             <KronoMark />

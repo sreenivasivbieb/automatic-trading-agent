@@ -1,0 +1,28 @@
+{
+  "status": "PASSED",
+  "observed_at": "2026-11-01T09:43:20.093Z",
+  "root": "Command center",
+  "original_artwork": "/art/krono-orbit.webp",
+  "home_strategy_preview_cards": 3,
+  "strategy_library_count": 5,
+  "markets": [
+    {
+      "symbol": "BTC",
+      "source": "coinbase_exchange",
+      "price": "77928.35"
+    },
+    {
+      "symbol": "ETH",
+      "source": "coinbase_exchange",
+      "price": "2267.7"
+    },
+    {
+      "symbol": "SOL",
+      "source": "coinbase_exchange",
+      "price": "95.36"
+    }
+  ],
+  "mobile_horizontal_overflow": false,
+  "browser_errors": [],
+  "scope": "Read-only running local app; existing ledger and emergency states preserved"
+}

@@ -4,9 +4,9 @@
 
 The [recorded checkpoint](docs/evidence/aegis-connected-validation.json) includes 256 Python checks, 57 contract checks, 18 browser workflows, a one-hour paper run and signed commit/swap/reveal on a local fork. The one-hour run handled eight unavailable-data events without fallback fills. A forced paper round trip ended 100 → **99.972016 USDT** after modeled costs; it verifies execution, not strategy profit. Public deployment awaits the user's owner address and funded accounts; actual Claude/Telegram delivery and funded wallet signing remain unverified. The web strategy is paper-only. [Discovery](docs/DISCOVERY.md), [connected flows](docs/AEGIS_FLOWS.md), [contract evidence](docs/CONTRACTS.md) and [security boundaries](SECURITY.md) separate local, paper and public proof.
 
-![AEGIS dashboard with actual HSKSwap data and virtual paper balances](docs/evidence/screenshots/frontend-overview-desktop.png)
+![Original Krono home with dimensional coin artwork and reference markets](docs/evidence/screenshots/home-restored-desktop.png)
 
-**Frontend integration:** the current Krono design is retained, with shared HSKSwap state across the desk, markets, positions, executions, risk, settings, wallet and assistant. The original five research strategies, news/research tools and AWS workspace remain available from the existing network/context control. See [the screen-to-backend mapping](docs/FRONTEND_INTEGRATION.md) and [current frontend evidence](docs/evidence/frontend-integration-validation.json). The original strategy implementations and configurations are unchanged.
+**Frontend integration:** the original Command center, dimensional coin artwork, BTC/ETH/SOL market watch and original strategy preview remain the home page. HSKSwap is available through **AEGIS · HSKSwap** or `/#/aegis`, with shared backend state across the desk, markets, positions, executions, risk, settings, wallet and assistant. News/research tools and the AWS workspace remain accessible. See [the screen-to-backend mapping](docs/FRONTEND_INTEGRATION.md) and [recorded frontend evidence](docs/evidence/frontend-integration-validation.json). The original strategy implementations and configurations are unchanged.
 
 **KRONO 2.0:** a Cognito/DynamoDB tenant control plane, centralized Bedrock MiniMax provider, conversational agent drafts and isolated ECS runtime infrastructure have been added. Configure your account using [the AWS setup guide](docs/AWS_SETUP.md) and [environment template](deploy/aws/.env.example). Cloud deployment and model access remain pending account configuration; the local simulation terminal still runs independently.
 
@@ -16,7 +16,7 @@ Krono is an independent platform built for the HSKSwap AI Agent Trading hackatho
 
 **Krono's original workspaces use SIMULATION; the AEGIS workspace uses PAPER with live HSKSwap data.** Their balances and ledgers are separate. Public HSKSwap swaps remain disabled in the web application. No profitable strategy, production readiness or public AEGIS deployment is claimed.
 
-![Krono desktop workspace, captured from the actual simulation workflow](docs/assets/terminal-overview.png)
+![AEGIS workspace with actual HSKSwap data and virtual paper balances](docs/evidence/screenshots/frontend-overview-desktop.png)
 
 The interface uses self-hosted Inter, brighter charcoal surfaces, lavender controls, a compact icon rail and original dimensional coin artwork. The discovery cards support filtering, sorting, grid/list views, versioned configuration and measured backtests. Reference-price previews are explicitly distinguished from strategy performance. Workspace search opens real markets and application sections. HSKSwap is identified as an exchange integration rather than the platform brand.
 

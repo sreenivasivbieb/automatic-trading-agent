@@ -34,6 +34,13 @@ const nav = (name) =>
 try {
   await page.goto(url);
   await expect(
+    page.getByRole("heading", { name: "Command center", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.locator('.hero-art img[src="/art/krono-orbit.webp"]'),
+  ).toBeVisible();
+  await page.getByLabel("Active workspace").selectOption("aegis");
+  await expect(
     page.getByRole("heading", { name: "AEGIS on HSKSwap", exact: true }),
   ).toBeVisible();
   const refresh = page.getByRole("button", { name: "Refresh HSKSwap data" });
@@ -55,7 +62,7 @@ try {
   report.block = observed.block_number;
   report.markets = observed.markets;
   report.checks.push(
-    "Built root UI reads three actual HSKSwap markets and the isolated PAPER ledger",
+    "Original home and coin artwork are retained; the HSKSwap workspace reads three actual markets and the isolated PAPER ledger",
   );
   await page.screenshot({
     path: "artifacts/frontend-live/overview-desktop.png",
