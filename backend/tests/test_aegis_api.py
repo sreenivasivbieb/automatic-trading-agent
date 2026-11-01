@@ -52,6 +52,10 @@ async def test_aegis_api_complete_preferences_chat_checks_and_panic(client):
     state = (await client.post("/api/aegis/check", headers=H)).json()
     assert state["data_status"] == "TEST_FIXTURE"
     assert state["pnl"]["nav_usdt"] == "100"
+    assert state["price_history"][-1]["block"] == state["block_number"]
+    assert state["price_history"][-1]["prices"] == {
+        asset: market["price"] for asset, market in state["markets"].items()
+    }
     version = state["params_version"]
     change = await client.put(
         "/api/aegis/settings",

@@ -3,7 +3,7 @@ import { mkdirSync } from "node:fs";
 
 test.describe.configure({ mode: "serial" });
 test.beforeEach(async ({ page }) => {
-  await page.goto("/");
+  await page.goto("/#/overview");
   await expect(
     page.getByRole("heading", { name: "Command center", exact: true }),
   ).toBeVisible();

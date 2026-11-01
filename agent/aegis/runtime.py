@@ -443,6 +443,14 @@ class PaperRuntime:
             "fills": list(reversed(fills[-40:])),
             "decisions": self.ledger.decisions(),
             "equity_curve": [{"at": o["observed_at"], **o["pnl"]} for o in observations],
+            "price_history": [
+                {
+                    "at": o["observed_at"],
+                    "block": o["block_number"],
+                    "prices": {asset: m["price"] for asset, m in o["markets"].items()},
+                }
+                for o in observations
+            ],
             "costs": self.gateway.connector.terms.model_dump(mode="json"),
             "live_enabled": False,
             "public_deployment": None,

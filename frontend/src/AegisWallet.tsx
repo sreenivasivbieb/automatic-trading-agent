@@ -33,6 +33,8 @@ type Operation = {
 };
 type Provider = {
   request: (args: { method: string; params?: unknown[] }) => Promise<unknown>;
+  on?: (event: string, callback: (value: unknown) => void) => void;
+  removeListener?: (event: string, callback: (value: unknown) => void) => void;
 };
 const storageKey = "aegis.owner-operation.v1";
 const provider = () => (window as unknown as { ethereum?: Provider }).ethereum;
@@ -57,13 +59,45 @@ function recovered(): Operation | null {
   return null;
 }
 
-export function AegisWallet() {
+export function AegisWallet({
+  account: sharedAccount = "",
+  onAccountChange,
+}: { account?: string; onAccountChange?: (value: string) => void } = {}) {
   const [operation, setOperation] = useState<Operation | null>(recovered);
   const [network, setNetwork] = useState<Network>(
     () => recovered()?.plan.network || "testnet",
   );
   const [meta, setMeta] = useState<Meta | null>(null);
-  const [account, setAccount] = useState("");
+  const [account, setAccount] = useState(sharedAccount);
+  useEffect(() => {
+    setAccount(sharedAccount);
+  }, [sharedAccount]);
+  useEffect(() => {
+    const wallet = provider();
+    let alive = true;
+    const changed = (value: unknown) => {
+      if (!alive) return;
+      const address =
+        Array.isArray(value) &&
+        typeof value[0] === "string" &&
+        /^0x[0-9a-fA-F]{40}$/.test(value[0])
+          ? value[0]
+          : "";
+      setAccount(address);
+      onAccountChange?.(address);
+    };
+    if (wallet) {
+      void wallet
+        .request({ method: "eth_accounts" })
+        .then(changed)
+        .catch(() => undefined);
+      wallet.on?.("accountsChanged", changed);
+    }
+    return () => {
+      alive = false;
+      wallet?.removeListener?.("accountsChanged", changed);
+    };
+  }, [onAccountChange]);
   const [action, setAction] = useState("deposit");
   const [amount, setAmount] = useState("1");
   const [ack, setAck] = useState(false);
@@ -114,6 +148,7 @@ export function AegisWallet() {
     })) as string[];
     if (!accounts[0]) throw new Error("No public wallet account was selected");
     setAccount(accounts[0]);
+    onAccountChange?.(accounts[0]);
     return accounts[0];
   };
   const checkWallet = async (tx: Tx) => {

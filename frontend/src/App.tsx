@@ -29,6 +29,17 @@ import {
 import type { LucideIcon } from "lucide-react";
 import { api } from "./api";
 import { AegisDesk } from "./AegisDesk";
+import { AegisProvider, useAegis } from "./aegis/context";
+import { AegisChat, AegisConfirmations } from "./aegis/Chat";
+import { AegisSearch } from "./aegis/Search";
+import {
+  AEGIS_VIEWS,
+  readRoute,
+  routeHash,
+  type Route,
+  type Workspace,
+} from "./aegis/navigation";
+import type { AegisView } from "./aegis/types";
 import { KronoBrand, KronoMark } from "./brand";
 import { WorkspaceHighlights, WorkspaceSearch } from "./discovery";
 import { PlatformWorkspace } from "./platform/Platform";
@@ -138,14 +149,48 @@ const TITLES: Record<Page, [string, string]> = {
   ],
 };
 
-function initialPage(): Page {
-  const hash = window.location.hash.replace("#/", "");
-  return import.meta.env.VITE_KRONO_PLATFORM === "true"
-    ? "platform"
-    : NAV.some((n) => n.id === hash)
-      ? (hash as Page)
-      : "overview";
-}
+const AEGIS_TITLES: Record<AegisView, [string, string]> = {
+  overview: [
+    "AEGIS on HSKSwap",
+    "Market monitoring, on-chain analysis, signals and risk-controlled paper execution.",
+  ],
+  desk: [
+    "HSKSwap trading desk",
+    "Observed pool prices, current opportunities and the agent's execution decisions.",
+  ],
+  markets: [
+    "HSKSwap markets",
+    "Verified V3 pools and recorded on-chain price observations.",
+  ],
+  strategies: [
+    "HSKSwap strategies",
+    "Position sizing, frequency, risk appetite and target assets used by the agent.",
+  ],
+  positions: [
+    "HSKSwap positions & P&L",
+    "The active paper ledger, marked exposure and cost-inclusive performance.",
+  ],
+  executions: [
+    "HSKSwap executions",
+    "Recorded gateway fills, source quote blocks and modeled costs.",
+  ],
+  observatory: [
+    "HSKSwap decision feed",
+    "Signals, risk checks, controls and execution outcomes from the same agent.",
+  ],
+  risk: [
+    "HSKSwap risk controls",
+    "Stop-loss, take-profit, exposure limits and emergency controls.",
+  ],
+  wallet: [
+    "Owner wallet & funding",
+    "Connect your device wallet and review registered vault funding operations.",
+  ],
+  settings: [
+    "HSKSwap agent settings",
+    "Persistent agent preferences bounded by the reviewed trading policy.",
+  ],
+};
 
 interface ChatMessage {
   id: number;
@@ -288,8 +333,31 @@ function Chat({
 }
 
 export default function App() {
-  const [page, setPage] = useState<Page>(initialPage),
-    [data, setData] = useState<Dashboard | null>(null),
+  const [route, setRoute] = useState<Route>(readRoute);
+  useEffect(() => {
+    const changed = () => setRoute(readRoute());
+    window.addEventListener("hashchange", changed);
+    return () => window.removeEventListener("hashchange", changed);
+  }, []);
+  return (
+    <AegisProvider active={route.workspace === "aegis"}>
+      <AppContent route={route} setRoute={setRoute} />
+    </AegisProvider>
+  );
+}
+
+function AppContent({
+  route,
+  setRoute,
+}: {
+  route: Route;
+  setRoute: (route: Route) => void;
+}) {
+  const page = route.page,
+    isAegis = route.workspace === "aegis",
+    isResearch = route.workspace === "research";
+  const aegis = useAegis();
+  const [data, setData] = useState<Dashboard | null>(null),
     [status, setStatus] = useState<Status | null>(null),
     [detail, setDetail] = useState<MarketDetail | null>(null),
     [selected, setSelected] = useState("BTC"),
@@ -302,14 +370,34 @@ export default function App() {
     [override, setOverride] = useState<Intent | null>(null),
     [account, setAccount] = useState<string | null>(null);
   const fetching = useRef(false);
-  const navigate = useCallback((next: Page) => {
-    setPage(next);
-    window.location.hash = `/${next}`;
+  const switchWorkspace = (workspace: Workspace, next: Page = "overview") => {
+    const page = workspace === "platform" ? "platform" : next;
+    setRoute({ workspace, page });
+    window.location.hash = routeHash(workspace, page);
     setSidebar(false);
+    setSearch(false);
     window.scrollTo({ top: 0 });
-  }, []);
+  };
+  const navigate = useCallback(
+    (next: Page) => {
+      const workspace =
+        next === "aegis"
+          ? "aegis"
+          : next === "platform"
+            ? "platform"
+            : route.workspace === "aegis"
+              ? "aegis"
+              : "research";
+      const page = next === "aegis" ? "overview" : next;
+      setRoute({ workspace, page });
+      window.location.hash = routeHash(workspace, page);
+      setSidebar(false);
+      window.scrollTo({ top: 0 });
+    },
+    [route.workspace, setRoute],
+  );
   const reload = useCallback(async () => {
-    if (CLOUD_PLATFORM) return;
+    if (!isResearch) return;
     if (fetching.current) return;
     fetching.current = true;
     try {
@@ -327,7 +415,7 @@ export default function App() {
     } finally {
       fetching.current = false;
     }
-  }, []);
+  }, [isResearch]);
   useEffect(() => {
     void reload();
     const id = setInterval(
@@ -337,7 +425,7 @@ export default function App() {
     return () => clearInterval(id);
   }, [reload, status?.providers.refresh?.ticker_seconds]);
   useEffect(() => {
-    if (CLOUD_PLATFORM) return;
+    if (!isResearch) return;
     let alive = true;
     void api<MarketDetail>(`/markets/${selected}`)
       .then((m) => {
@@ -350,28 +438,24 @@ export default function App() {
       alive = false;
     };
   }, [
+    isResearch,
     selected,
     status?.providers.market,
     data?.markets.find((m) => m.asset.symbol === selected)?.price_at,
   ]);
-  useEffect(() => {
-    const listener = () => setPage(initialPage());
-    window.addEventListener("hashchange", listener);
-    return () => window.removeEventListener("hashchange", listener);
-  }, []);
   useEffect(() => {
     const listener = (event: KeyboardEvent) => {
       if ((event.metaKey || event.ctrlKey) && event.key === "k") {
         event.preventDefault();
         if (CLOUD_PLATFORM || window.location.hash === "#/platform")
           focusPlatform();
-        else if (window.location.hash === "#/aegis")
-          document.getElementById("aegis-chat-input")?.focus();
+        else if (isAegis) aegis.setChatOpen(!aegis.chatOpen);
         else setChat((v) => !v);
       }
       if (event.key === "Escape") {
         setSidebar(false);
         setChat(false);
+        aegis.setChatOpen(false);
         setSearch(false);
       }
       if (
@@ -388,7 +472,7 @@ export default function App() {
     };
     window.addEventListener("keydown", listener);
     return () => window.removeEventListener("keydown", listener);
-  }, []);
+  }, [isAegis, aegis.chatOpen, aegis.setChatOpen]);
   useEffect(() => {
     if (!toast) return;
     const id = setTimeout(() => setToast(null), toast.error ? 9000 : 4500);
@@ -446,14 +530,21 @@ export default function App() {
           openIntent,
         }
       : null;
-  const nav = NAV.find((n) => n.id === page)!;
+  const navItems = isAegis
+    ? NAV.filter((n) => AEGIS_VIEWS.includes(n.id as AegisView))
+    : NAV.filter((n) => !CLOUD_PLATFORM || n.id === "platform");
+  const nav = navItems.find((n) => n.id === page) || navItems[0];
+  const titles = isAegis ? AEGIS_TITLES[page as AegisView] : TITLES[page];
+  const agentActive = isAegis
+    ? aegis.state?.available && !aegis.state.paused && !aegis.state.emergency
+    : data?.scheduler.state === "RUNNING";
   return (
     <div
-      className={`app-shell rail-shell ${page === "overview" || page === "strategies" ? "discovery-page" : ""}`}
+      className={`app-shell rail-shell ${isAegis && aegis.chatOpen ? "aegis-chat-open" : ""} ${!isAegis && (page === "overview" || page === "strategies") ? "discovery-page" : ""}`}
     >
       <aside className={`sidebar ${sidebar ? "is-open" : ""}`}>
         <a
-          href="#/overview"
+          href={`#${routeHash(route.workspace)}`}
           className="brand"
           aria-label="Krono home"
           onClick={() => navigate("overview")}
@@ -465,13 +556,37 @@ export default function App() {
             <FlaskConical size={13} />
           </span>
           <div>
-            <strong>Research desk</strong>
+            <strong>
+              {isAegis
+                ? "HSKSwap agent"
+                : page === "platform"
+                  ? "Agent platform"
+                  : "Research desk"}
+            </strong>
             <small>
-              {page === "aegis" ? "AEGIS paper mode" : "Simulation mode"}
+              {isAegis
+                ? "Autonomous paper trading"
+                : page === "platform"
+                  ? "Private AWS workspace"
+                  : "Simulation mode"}
             </small>
           </div>
           <ChevronDown size={13} />
         </div>
+        {!CLOUD_PLATFORM && (
+          <label className="workspace-switcher">
+            <span>Execution workspace</span>
+            <select
+              aria-label="Execution workspace"
+              value={route.workspace}
+              onChange={(e) => switchWorkspace(e.target.value as Workspace)}
+            >
+              <option value="aegis">HSKSwap · AEGIS paper</option>
+              <option value="research">Research · simulation</option>
+              <option value="platform">Agent platform · AWS</option>
+            </select>
+          </label>
+        )}
         <button
           className="sidebar-search"
           onClick={() => {
@@ -484,47 +599,50 @@ export default function App() {
         </button>
         <nav aria-label="Main navigation">
           <span className="nav-section">WORKSPACE</span>
-          {NAV.filter((item) => !CLOUD_PLATFORM || item.id === "platform").map(
-            (item) => (
-              <div key={item.id}>
-                {item.group && (
-                  <span className="nav-section">{item.group}</span>
+          {navItems.map((item) => (
+            <div key={item.id}>
+              {item.group && <span className="nav-section">{item.group}</span>}
+              <button
+                className={page === item.id ? "nav-item active" : "nav-item"}
+                onClick={() => navigate(item.id)}
+                aria-label={item.name}
+                title={item.name}
+                aria-current={page === item.id ? "page" : undefined}
+              >
+                <item.icon size={17} />
+                <span className="nav-label">{item.name}</span>
+                {item.id === "observatory" && (
+                  <span className={`nav-dot ${agentActive ? "running" : ""}`} />
                 )}
-                <button
-                  className={page === item.id ? "nav-item active" : "nav-item"}
-                  onClick={() => navigate(item.id)}
-                  aria-label={item.name}
-                  title={item.name}
-                  aria-current={page === item.id ? "page" : undefined}
-                >
-                  <item.icon size={17} />
-                  <span className="nav-label">{item.name}</span>
-                  {item.id === "observatory" && (
-                    <span
-                      className={`nav-dot ${data?.scheduler.state === "RUNNING" ? "running" : ""}`}
-                    />
-                  )}
-                </button>
-              </div>
-            ),
-          )}
+              </button>
+            </div>
+          ))}
         </nav>
         <div className="sidebar-bottom">
           <div className="sidebar-agent">
             <Radio size={20} className="sidebar-status-icon" />
-            <span
-              className={`agent-dot ${data?.scheduler.state === "RUNNING" ? "is-running" : ""}`}
-            />
+            <span className={`agent-dot ${agentActive ? "is-running" : ""}`} />
             <div>
               <strong>
                 Agent{" "}
-                {data?.scheduler.state?.toLowerCase().replaceAll("_", " ") ??
-                  "connecting"}
+                {isAegis
+                  ? !aegis.state?.available
+                    ? "connecting"
+                    : aegis.state.emergency
+                      ? "stopped"
+                      : aegis.state.paused
+                        ? "paused"
+                        : "running"
+                  : (data?.scheduler.state
+                      ?.toLowerCase()
+                      .replaceAll("_", " ") ?? "connecting")}
               </strong>
               <small>
-                {status?.research.enabled
-                  ? "Research provider configured"
-                  : "LLM research unconfigured"}
+                {isAegis
+                  ? `${aegis.state?.data_status === "LIVE" ? "Live pool data" : aegis.state?.data_status || "Awaiting data"} · PAPER`
+                  : status?.research.enabled
+                    ? "Research provider configured"
+                    : "LLM research unconfigured"}
               </small>
             </div>
           </div>
@@ -568,7 +686,7 @@ export default function App() {
             <Menu size={19} />
           </button>
           <a
-            href="#/overview"
+            href={`#${routeHash(route.workspace)}`}
             className="mobile-brand"
             onClick={() => navigate("overview")}
             aria-label="Krono home"
@@ -591,59 +709,73 @@ export default function App() {
               <span>Search</span>
               <kbd>/</kbd>
             </button>
-            <span className="network-pill">
-              <span className="network-dot" />
-              <Globe2 size={13} />
-              <span>{page === "platform" ? "AWS workspace" : "HSKChain"}</span>
-              <span className="muted">
-                {page === "platform" ? "Bedrock" : "177"}
+            {CLOUD_PLATFORM ? (
+              <span className="network-pill">
+                <Globe2 size={13} />
+                <span>AWS workspace</span>
+                <span className="muted">Bedrock</span>
               </span>
-            </span>
-            <span className="freshness">
+            ) : (
+              <label className="network-pill">
+                <span className="network-dot" />
+                <Globe2 size={13} />
+                <select
+                  className="header-workspace"
+                  aria-label="Active workspace"
+                  title="Switch execution workspace"
+                  value={route.workspace}
+                  onChange={(e) => switchWorkspace(e.target.value as Workspace)}
+                >
+                  <option value="aegis">HSKSwap · 177 · PAPER</option>
+                  <option value="research">Research · SIMULATION</option>
+                  <option value="platform">Agent platform · AWS</option>
+                </select>
+              </label>
+            )}
+            <span
+              className={`freshness ${isAegis && !aegis.state?.valuation_fresh ? "is-stale" : ""}`}
+            >
               <span className="data-dot" />
               {page === "platform"
                 ? "TENANT WORKSPACE"
-                : page === "aegis"
-                  ? "HSKSWAP DATA"
+                : isAegis
+                  ? `${aegis.state?.data_status === "LIVE" ? "LIVE POOLS" : aegis.state?.data_status || "CONNECTING"}`
                   : status?.providers.market === "fixture"
                     ? "FIXTURE DATA"
                     : "REFERENCE DATA"}
             </span>
             <span className="mode-label">
               <FlaskConical size={12} />
-              {page === "aegis" ? "PAPER" : "SIMULATION"}
+              {isAegis ? "PAPER" : "SIMULATION"}
             </span>
             {page !== "platform" && (
               <button
                 className="button secondary header-wallet"
-                onClick={() =>
-                  page === "aegis"
-                    ? document
-                        .getElementById("aegis-owner-wallet")
-                        ?.scrollIntoView({
-                          behavior: "smooth",
-                          block: "center",
-                        })
-                    : navigate("wallet")
-                }
+                onClick={() => navigate("wallet")}
               >
                 <Wallet size={13} />
-                {account
-                  ? `${account.slice(0, 6)}…${account.slice(-4)}`
+                {(isAegis ? aegis.ownerAccount : account)
+                  ? `${(isAegis ? aegis.ownerAccount : account)!.slice(0, 6)}…${(isAegis ? aegis.ownerAccount : account)!.slice(-4)}`
                   : "Connect wallet"}
               </button>
             )}
             <button
               className="emergency-button"
               onClick={() =>
-                void act(
-                  () =>
-                    page === "platform"
-                      ? platform("/emergency-stop", "POST", {})
-                      : api("/emergency-stop", "POST"),
-                  "Emergency stop latched. New executions are blocked.",
-                )
+                isAegis
+                  ? void act(async () => {
+                      await aegis.control("panic");
+                      await aegis.load();
+                    }, "AEGIS emergency stop latched; bounded unwind requested.")
+                  : void act(
+                      () =>
+                        page === "platform"
+                          ? platform("/emergency-stop", "POST", {})
+                          : api("/emergency-stop", "POST"),
+                      "Emergency stop latched. New executions are blocked.",
+                    )
               }
+
               aria-label="Emergency stop"
             >
               <ShieldOff size={14} />
@@ -653,9 +785,9 @@ export default function App() {
         </header>
         <main>
           <section
-            className={`workspace-intro ${page === "overview" || page === "strategies" ? "discovery-intro" : ""}`}
+            className={`workspace-intro ${!isAegis && (page === "overview" || page === "strategies") ? "discovery-intro" : ""}`}
           >
-            {(page === "overview" || page === "strategies") && (
+            {!isAegis && (page === "overview" || page === "strategies") && (
               <div className="hero-art" aria-hidden="true">
                 <img
                   src="/art/krono-orbit.webp"
@@ -673,8 +805,8 @@ export default function App() {
                     ? "KRONO / WORKSPACE 01"
                     : `KRONO / WORKSPACE ${String(NAV.findIndex((n) => n.id === page) + 1).padStart(2, "0")}`}
                 </div>
-                <h1>{TITLES[page][0]}</h1>
-                <p>{TITLES[page][1]}</p>
+                <h1>{titles[0]}</h1>
+                <p>{titles[1]}</p>
               </div>
               <div className="page-actions">
                 <button
@@ -682,8 +814,8 @@ export default function App() {
                   onClick={() =>
                     page === "platform"
                       ? focusPlatform()
-                      : page === "aegis"
-                        ? document.getElementById("aegis-chat-input")?.focus()
+                      : isAegis
+                        ? aegis.setChatOpen(true)
                         : setChat(true)
                   }
                 >
@@ -693,7 +825,7 @@ export default function App() {
                     <Command size={10} />K
                   </kbd>
                 </button>
-                {page !== "platform" && page !== "aegis" && (
+                {page !== "platform" && !isAegis && (
                   <>
                     <select
                       aria-label="Analysis asset"
@@ -720,12 +852,16 @@ export default function App() {
                 )}
               </div>
             </div>
-            {data && (page === "overview" || page === "strategies") && (
-              <WorkspaceHighlights data={data} page={page} />
+            {data &&
+              !isAegis &&
+              (page === "overview" || page === "strategies") && (
+                <WorkspaceHighlights data={data} page={page} />
+              )}
+            {data && !isAegis && page === "overview" && (
+              <PortfolioMetrics data={data} />
             )}
-            {data && page === "overview" && <PortfolioMetrics data={data} />}
           </section>
-          {connectionError && page !== "platform" && page !== "aegis" && (
+          {connectionError && page !== "platform" && !isAegis && (
             <div className="connection-warning" role="alert">
               Backend connection interrupted: {connectionError}.{" "}
               {data
@@ -734,12 +870,14 @@ export default function App() {
               <button onClick={() => void reload()}>Retry</button>
             </div>
           )}
-          {data?.scheduler.emergency && page !== "aegis" && (
+          {(isAegis ? aegis.state?.emergency : data?.scheduler.emergency) && (
             <div className="emergency-banner" role="alert">
               <ShieldOff size={18} />
               <strong>EMERGENCY STOP ACTIVE</strong>
               <span>
-                New executions are blocked. Positions are held for review.
+                {isAegis
+                  ? "Entries are blocked. Bounded stable exits require fresh quotes and risk approval."
+                  : "New executions are blocked. Positions are held for review."}
               </span>
               <button onClick={() => navigate("risk")}>
                 Review incident
@@ -749,8 +887,13 @@ export default function App() {
           )}
           {page === "platform" ? (
             <PlatformWorkspace />
-          ) : page === "aegis" ? (
-            <AegisDesk />
+          ) : isAegis ? (
+            <AegisDesk
+              view={page as AegisView}
+              openResearchStrategies={() =>
+                switchWorkspace("research", "strategies")
+              }
+            />
           ) : base ? (
             <>
               {(status!.providers.market === "fixture" ||
@@ -814,30 +957,35 @@ export default function App() {
             </span>
             <span>
               KRONO / v0.1 <span className="footer-divider">|</span>{" "}
-              <StatusBadge value={page === "aegis" ? "PAPER" : "SIMULATION"} />
+              <StatusBadge value={isAegis ? "PAPER" : "SIMULATION"} />
             </span>
           </footer>
         </main>
       </div>
-      {!chat && page !== "platform" && (
+      {!(isAegis ? aegis.chatOpen : chat) && page !== "platform" && (
         <button
           className="chat-launcher"
-          onClick={() =>
-            page === "aegis"
-              ? document.getElementById("aegis-chat-input")?.focus()
-              : setChat(true)
-          }
+          onClick={() => (isAegis ? aegis.setChatOpen(true) : setChat(true))}
           aria-label="Open trading assistant"
         >
           <Bot size={19} />
-          <span>{page === "aegis" ? "Ask AEGIS" : "Ask Krono"}</span>
+          <span>{isAegis ? "Ask AEGIS" : "Ask Krono"}</span>
           <kbd>⌘ K</kbd>
         </button>
       )}
-      {chat && page !== "platform" && page !== "aegis" && (
+      {chat && page !== "platform" && !isAegis && (
         <Chat close={() => setChat(false)} act={act} />
       )}{" "}
-      {search && (
+      {isAegis && aegis.chatOpen && <AegisChat />}
+      {isAegis && <AegisConfirmations />}
+      {search && isAegis && (
+        <AegisSearch
+          pages={navItems}
+          close={() => setSearch(false)}
+          navigate={navigate}
+        />
+      )}
+      {search && !isAegis && (
         <WorkspaceSearch
           data={data}
           pages={NAV}

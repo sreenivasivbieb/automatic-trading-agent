@@ -3,6 +3,168 @@
   gap: 22px;
   min-width: 0;
 }
+.workspace-switcher {
+  display: none;
+}
+.sidebar.is-open .workspace-switcher {
+  display: grid;
+  gap: 8px;
+  margin: 0 20px 16px;
+  font-size: 11px;
+  color: var(--muted);
+}
+.workspace-switcher select {
+  min-width: 0;
+  width: 100%;
+  padding: 10px 7px;
+  font-size: 12px;
+  color: var(--text);
+}
+.header-workspace {
+  max-width: 190px;
+  min-width: 0;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  font-size: 11px;
+  color: var(--text);
+}
+.freshness.is-stale .data-dot {
+  background: var(--negative);
+}
+.aegis-price {
+  font-size: 26px;
+}
+.aegis-price-chart {
+  margin: 0;
+  min-width: 0;
+}
+.aegis-price-chart svg {
+  display: block;
+  width: 100%;
+  min-height: 180px;
+}
+.aegis-price-chart figcaption {
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.8;
+}
+.aegis-pool-facts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+.aegis-pool-facts > div {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+.aegis-pool-facts span {
+  color: var(--muted);
+  font-size: 12px;
+}
+.aegis-pool-facts code {
+  overflow-wrap: anywhere;
+}
+.aegis-signals article {
+  padding: 20px 22px;
+  border-bottom: 1px solid var(--border);
+}
+.aegis-signals .inline {
+  flex-wrap: wrap;
+}
+.aegis-signals p {
+  font-size: 13px;
+  line-height: 1.7;
+}
+.aegis-signals small,
+.aegis-chat-engine {
+  color: var(--muted);
+  font-size: 11px;
+}
+.aegis-chat-engine {
+  display: block;
+  line-height: 1.7;
+  margin-top: 10px;
+}
+.aegis-decision-reason {
+  line-height: 1.6;
+  font-size: 13px;
+  color: var(--muted);
+}
+.aegis-assistant .aegis-composer textarea {
+  flex: 1;
+  min-width: 0;
+  resize: vertical;
+  max-height: 120px;
+  padding: 11px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  color: var(--text);
+}
+.aegis-assistant .aegis-composer button {
+  align-self: end;
+}
+@media (min-width: 1280px) {
+  .aegis-chat-open .workspace {
+    margin-right: 430px;
+  }
+  .aegis-chat-open .network-pill,
+  .aegis-chat-open .freshness {
+    display: none;
+  }
+  .aegis-chat-open .header-workspace {
+    max-width: 135px;
+  }
+  .aegis-assistant.chat-panel {
+    top: 88px;
+    bottom: 18px;
+    right: 18px;
+    max-height: none;
+    width: 398px;
+  }
+  .aegis-chat-open .aegis-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .aegis-chat-open .aegis-columns {
+    grid-template-columns: 1fr;
+  }
+}
+.aegis-assistant .aegis-chips {
+  padding-top: 10px;
+  max-height: 130px;
+  overflow: auto;
+  flex-shrink: 0;
+}
+.aegis-search-input {
+  width: 100%;
+  padding: 12px;
+  color: var(--text);
+}
+.aegis-search-results {
+  display: grid;
+  gap: 8px;
+  margin-top: 16px;
+  max-height: 55vh;
+  overflow: auto;
+}
+.aegis-search-results button {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  text-align: left;
+  padding: 12px;
+  background: var(--raised);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  white-space: normal;
+}
+.aegis-search-results small {
+  color: var(--muted);
+  margin-left: auto;
+}
 .aegis-address {
   overflow-wrap: anywhere;
   word-break: break-word;
@@ -273,11 +435,17 @@
   padding: 40px;
 }
 @media (max-width: 1100px) {
+  .header-workspace {
+    display: none;
+  }
   .aegis-metrics {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 @media (max-width: 800px) {
+  .aegis-pool-facts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
   .aegis-columns {
     grid-template-columns: 1fr;
   }
@@ -286,6 +454,9 @@
   }
 }
 @media (max-width: 500px) {
+  .aegis-pool-facts {
+    grid-template-columns: 1fr;
+  }
   .aegis-metrics,
   .aegis-form {
     grid-template-columns: 1fr;
