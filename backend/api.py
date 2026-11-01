@@ -172,11 +172,17 @@ def create_app(db_path=None, *, testing=False, transport=None, api_token=None, a
             if db_path
             else Path(os.getenv("AEGIS_DB", str(ROOT / ".runtime/aegis-paper.sqlite3")))
         )
+        from backend.aegis_bridge import collect_library
+
+        async def reference_source(state):
+            return await collect_library(engine, state)
+
         aegis = AegisService(
             aegis_path,
             factory=aegis_factory,
             enabled=(not testing and os.getenv("AEGIS_ENABLED", "true").lower() == "true")
             or aegis_factory is not None,
+            reference_source=reference_source,
         )
         app.state.aegis = aegis
         await aegis.start()
@@ -634,9 +640,11 @@ def create_app(db_path=None, *, testing=False, transport=None, api_token=None, a
             raise ValueError(
                 "Spread research cannot be enabled until compatible verified quotes exist"
             )
-        return e.store.update_config(
+        version = e.store.update_config(
             "strategy:" + strategy_id, config.model_dump(mode="json"), expected_version
         )
+        app.state.aegis.invalidate_library()
+        return version
 
     @app.put("/api/strategies/{strategy_id}")
     async def strategy_config(
@@ -802,6 +810,7 @@ def create_app(db_path=None, *, testing=False, transport=None, api_token=None, a
         version = e.store.update_config(
             "providers", {"market": body.market, "news": body.news}, body.expected_version
         )
+        app.state.aegis.invalidate_library()
         e.providers.market_provider, e.providers.news_provider = body.market, body.news
         e.markets.clear()
         await e.refresh_markets()

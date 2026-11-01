@@ -19,6 +19,11 @@ ROOT = Path(__file__).resolve().parents[1]
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--i-understand-paper", action="store_true")
+    parser.add_argument(
+        "--reference-markets",
+        action="store_true",
+        help="Also require actual Coinbase reference data for the original strategy library",
+    )
     args = parser.parse_args()
     if not args.i_understand_paper:
         parser.error("Use --i-understand-paper; no public transactions or real funds")
@@ -37,12 +42,13 @@ def main():
         "AEGIS_LLM_PROVIDER": "none",
         "TERMINAL_API_TOKEN": "",
         "TERMINAL_MODE": "SIMULATION",
-        "MARKET_PROVIDER": "fixture",
+        "MARKET_PROVIDER": "coinbase" if args.reference_markets else "fixture",
         "NEWS_PROVIDER": "fixture",
         "RESEARCH_ENABLED": "false",
         "LANGCHAIN_TRACING_V2": "false",
         "LANGSMITH_TRACING": "false",
         "AEGIS_VERIFY_URL": f"http://127.0.0.1:{port}",
+        "AEGIS_VERIFY_REFERENCE_MARKETS": "true" if args.reference_markets else "false",
     }
     with (directory / "server.log").open("w") as log:
         process = subprocess.Popen(

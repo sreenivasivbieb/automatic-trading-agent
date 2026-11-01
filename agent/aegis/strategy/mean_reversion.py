@@ -24,7 +24,7 @@ def evaluate(
             inputs_snapshot={"samples": len(values)},
         )
     with localcontext() as ctx:
-        ctx.prec = 50
+        ctx.prec = max(78, max(len(value.as_tuple().digits) for value in values) + 12)
         prior = values[:-1]
         mean = sum(prior) / len(prior)
         variance = sum((p - mean) ** 2 for p in prior) / len(prior)

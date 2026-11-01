@@ -28,6 +28,8 @@ export type Position = {
   unrealized_pnl_usdt: string;
   stop_price: string;
   take_profit_price: string;
+  strategy_id?: string;
+  strategy_stop_price?: string;
 };
 export type Decision = {
   id: string;
@@ -48,10 +50,13 @@ export type Signal = {
   type: string;
   asset: string;
   action: string;
-  expected_edge_bps: string;
+  expected_edge_bps: string | null;
   confidence: string;
   reason: string;
   inputs_snapshot: Record<string, unknown>;
+  strategy_id?: string;
+  strategy_name?: string;
+  execution_status?: string;
 };
 export type AegisState = {
   available: boolean;
@@ -77,6 +82,14 @@ export type AegisState = {
   positions: Position[];
   decisions: Decision[];
   signals: Signal[];
+  library_signals?: Signal[];
+  library_catalog?: {
+    id: string;
+    name: string;
+    enabled: boolean;
+    version: number;
+  }[];
+  library_error?: string | null;
   trades_this_hour: number;
   trades_today: number;
   markets: Record<

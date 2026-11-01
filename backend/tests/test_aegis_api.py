@@ -1,9 +1,12 @@
 from __future__ import annotations
 
+from decimal import Decimal
+
 import httpx
 import pytest
 
 from aegis.runtime import PaperRuntime
+from agent.tests.test_library import fresh_fixture
 from agent.tests.test_runtime import ReplayConnector
 from backend.api import create_app
 
@@ -33,6 +36,51 @@ async def client(tmp_path):
 
 
 H = {"Authorization": "Bearer aegis-test"}
+
+
+async def test_original_strategy_settings_invalidate_inflight_library_snapshots(client):
+    state = (await client.get("/api/aegis/state", headers=H)).json()
+    strategies = (await client.get("/api/strategies", headers=H)).json()["items"]
+    strategy = next(s for s in strategies if s["id"] == "momentum_v1")
+    changed = await client.put(
+        "/api/strategies/momentum_v1",
+        headers=H,
+        json={
+            "expected_version": strategy["version"],
+            "config": {**strategy["config"], "enabled": False},
+        },
+    )
+    assert changed.status_code == 200
+    after = (await client.get("/api/aegis/state", headers=H)).json()
+    assert after["library_revision"] == state["library_revision"] + 1
+
+
+async def test_original_strategy_to_hskswap_authenticated_loop_preserves_the_library(client):
+    first = (await client.post("/api/aegis/check", headers=H)).json()
+    engine = client._transport.app.state.engine
+    configurations = engine.strategies()
+    selection, _ = engine.store.config("selection")
+    engine.store.update_config("selection", {**selection, "enabled": False})
+
+    async def fresh(symbol):
+        asset = {"BTC": "WBTC", "ETH": "WETH"}.get(symbol)
+        price = Decimal(first["markets"][asset]["price"]) if asset else Decimal(100)
+        return fresh_fixture(symbol, price)
+
+    engine.providers.market = fresh
+    await client.post(
+        "/api/aegis/control",
+        headers=H,
+        json={"action": "resume", "acknowledgement": "AUTHORIZE_PAPER_AUTOMATION"},
+    )
+    state = (await client.post("/api/aegis/check", headers=H)).json()
+    assert len(state["library_catalog"]) == 5
+    assert len(state["library_signals"]) == 15
+    assert len(state["fills"]) == 1
+    assert state["fills"][0]["origin"]["strategy_id"] == "momentum_v1"
+    assert state["positions"][0]["asset"] == "WBTC"
+    assert engine.strategies() == configurations
+    assert engine.portfolio.view(engine.markets)["positions"] == []
 
 
 async def test_aegis_api_uses_existing_auth_and_csrf_boundary(client):

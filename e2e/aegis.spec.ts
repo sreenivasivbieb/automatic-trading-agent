@@ -564,7 +564,9 @@ test("a disconnected state poll masks current valuation and recovers through the
       : route.continue(),
   );
   await page.goto("/#/aegis");
-  await page.getByRole("button", { name: "Refresh HSKSwap data" }).click();
+  const refresh = page.getByRole("button", { name: "Refresh HSKSwap data" });
+  await refresh.click();
+  await expect(refresh).toBeEnabled();
   await expect(
     page.getByRole("main").getByText("TEST_FIXTURE", { exact: true }),
   ).toBeVisible();
@@ -582,7 +584,10 @@ test("a disconnected state poll masks current valuation and recovers through the
   await expect(
     page.getByText("Fresh valuation unavailable", { exact: true }).first(),
   ).toBeVisible();
-  disconnected = false;
+  await page.route("**/api/aegis/check", (route) => {
+    disconnected = false;
+    return route.continue();
+  });
   await page.getByRole("button", { name: "Retry market check" }).click();
   await expect(
     page.getByRole("main").getByText("TEST_FIXTURE", { exact: true }),

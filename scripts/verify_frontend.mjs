@@ -61,6 +61,29 @@ try {
     throw new Error("Expected a fresh paused virtual ledger");
   report.block = observed.block_number;
   report.markets = observed.markets;
+  if (process.env.AEGIS_VERIFY_REFERENCE_MARKETS === "true") {
+    const signals = observed.library_signals || [];
+    const supported = signals.filter((s) => ["WBTC", "WETH"].includes(s.asset));
+    if (
+      observed.library_error ||
+      observed.library_catalog?.length !== 5 ||
+      supported.length !== 10 ||
+      supported.some(
+        (s) =>
+          s.inputs_snapshot.source !== "coinbase_exchange" ||
+          s.inputs_snapshot.status !== "AVAILABLE" ||
+          Date.now() / 1000 - s.inputs_snapshot.price_at > 90,
+      )
+    )
+      throw new Error(
+        "Fresh actual reference markets did not reach the original strategy library",
+      );
+    report.library_signals = signals;
+    report.library_catalog = observed.library_catalog;
+    report.checks.push(
+      "All five unchanged library strategies receive actual Coinbase reference inputs; HSKSwap execution stays paused",
+    );
+  }
   report.checks.push(
     "Original home and coin artwork are retained; the HSKSwap workspace reads three actual markets and the isolated PAPER ledger",
   );

@@ -89,6 +89,19 @@ class PaperLedger:
             raise LedgerError("Idempotency key was already used for a different trade")
         return json.loads(row["result_json"])
 
+    def latest_entry(self, prefix: str) -> dict | None:
+        row = self.db.execute(
+            "SELECT result_json FROM fills WHERE substr(idempotency_key,1,?)=? ORDER BY rowid DESC LIMIT 1",
+            (len(prefix), prefix),
+        ).fetchone()
+        return json.loads(row[0]) if row else None
+
+    def filled_key(self, key: str) -> bool:
+        return (
+            self.db.execute("SELECT 1 FROM fills WHERE idempotency_key=?", (key,)).fetchone()
+            is not None
+        )
+
     def balances(self) -> dict[str, dict]:
         return {
             row["asset"]: {
@@ -223,6 +236,7 @@ class PaperLedger:
         network_fee_raw: int,
         marks: dict[str, Decimal],
         max_trade_bps: int,
+        origin: dict | None = None,
     ) -> dict:
         if output_raw <= 0 or network_fee_raw < 0 or not 0 < max_trade_bps <= 3000:
             raise LedgerError("Invalid fill amount, fee or NAV cap")
@@ -321,6 +335,8 @@ class PaperLedger:
                     "realized_pnl_usdt": str(realized),
                     "fee_methodology": "Quoter output already includes LP fees. Additional slippage reduces output; configurable network cost is deducted from virtual USDT cash.",
                 }
+                if origin is not None:
+                    result["origin"] = origin
                 self.db.execute(
                     "INSERT INTO fills VALUES(?,?,?,?)",
                     (fill_id, key, request_hash, json.dumps(result)),

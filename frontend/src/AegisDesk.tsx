@@ -630,18 +630,31 @@ export function AegisDesk({
       {show("strategies") && (
         <Panel
           title="Strategy engines"
-          subtitle="Strategies retain their own data and execution context"
+          subtitle="Original strategy rules and configurations feed the guarded paper gateway"
         >
           <div className="aegis-risk">
             <p>
-              HSKSwap evaluates cost-aware mean reversion and verified
-              closed-route arbitrage. Each execution passes risk checks and the
-              paper gateway.
+              HSKSwap evaluates its pool mean reversion and closed-route
+              arbitrage, plus the existing strategy library's fresh
+              reference-market signals. Every fill passes a verified HSKSwap
+              quote, risk checks and the paper gateway.
             </p>
             <p>
-              The existing multi-strategy research library is preserved with its
-              original parameters, reference data and simulation ledger.
+              Original rules and settings are unchanged. BTC maps to WBTC and
+              ETH to WETH; SOL has no verified HSKSwap mapping. Synthetic or
+              stale reference feeds cannot authorize normal trading. The Trading
+              Desk shows each strategy's execution or blocking reason.
             </p>
+            {state.library_error && <p role="alert">{state.library_error}</p>}
+            {state.library_catalog?.map((strategy) => (
+              <div className="inline gap" key={strategy.id}>
+                <strong>{strategy.name}</strong>
+                <Badge>
+                  {strategy.enabled ? "Enabled" : "Disabled"} · v
+                  {strategy.version}
+                </Badge>
+              </div>
+            ))}
             <button
               className="button secondary"
               onClick={openResearchStrategies}

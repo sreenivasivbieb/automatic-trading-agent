@@ -10,6 +10,7 @@ export function AegisMarketAnalysis() {
   const assets = Object.keys(state.markets);
   const asset = assets.includes(selectedAsset) ? selectedAsset : assets[0];
   const market = state.markets[asset];
+  const signals = [...state.signals, ...(state.library_signals || [])];
   const rows = (state.price_history || []).filter(
     (r) => r.prices[asset] && (!range || r.at >= Date.now() / 1000 - range),
   );
@@ -141,24 +142,29 @@ export function AegisMarketAnalysis() {
         title="Trading signals"
         subtitle="Deterministic opportunities and reasons from the active HSKSwap engine"
       >
-        {!state.signals?.length ? (
+        {!signals.length ? (
           <Empty
             title="Waiting for signal inputs"
             description="Refresh pool data. Mean reversion requires sufficient history; arbitrage requires a verified closed route."
           />
         ) : (
           <div className="aegis-signals">
-            {state.signals.map((s) => (
+            {signals.map((s) => (
               <article key={s.id}>
                 <div className="inline gap">
-                  <strong>{s.asset} / USDT</strong>
-                  <Badge>{s.action.toUpperCase()}</Badge>
+                  <strong>
+                    {s.strategy_name ? `${s.strategy_name} · ` : ""}
+                    {s.asset} / USDT
+                  </strong>
+                  <Badge>{s.execution_status || s.action.toUpperCase()}</Badge>
                   <span>{s.type.replaceAll("_", " ")}</span>
                 </div>
                 <p>{s.reason}</p>
                 <small>
-                  Expected net edge {number(s.expected_edge_bps, 2)} bps ·
-                  confidence {number(Number(s.confidence) * 100, 1)}%
+                  {s.type === "strategy_library"
+                    ? "Reference-market signal; expected profit is not estimated"
+                    : `Expected net edge ${number(s.expected_edge_bps, 2)} bps`}{" "}
+                  · confidence {number(Number(s.confidence) * 100, 1)}%
                 </small>
               </article>
             ))}

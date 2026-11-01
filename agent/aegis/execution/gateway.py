@@ -10,6 +10,7 @@ from aegis.connectors.paper import PaperConnector
 from aegis.connectors.rpc import DiscoveryError
 from aegis.risk.engine import RiskEngine, RiskRejected
 from aegis.store.db import LedgerError, PaperLedger
+from aegis.strategy.library import ASSET_MAP, LibraryOrigin
 
 
 class ExecutionGateway:
@@ -54,9 +55,15 @@ class ExecutionGateway:
         amount_in: int,
         *,
         min_out: int | None = None,
+        origin: LibraryOrigin | None = None,
     ) -> dict:
         if not key or len(key) > 128:
             raise ValueError("Provide a nonempty idempotency key of at most 128 characters")
+        if origin is not None and (
+            token_in != self.ledger.stable
+            or token_out.asset_id != ASSET_MAP[origin.reference_symbol]
+        ):
+            raise RiskRejected("Reference strategy origin does not match the swap intent")
         request_hash = self.ledger.request_hash(
             {
                 "chain": self.connector.chain_id,
@@ -64,6 +71,7 @@ class ExecutionGateway:
                 "out": token_out.model_dump(),
                 "amount": amount_in,
                 "min_out": min_out,
+                **({"origin": origin.model_dump(mode="json")} if origin is not None else {}),
             }
         )
         previous = self.ledger.previous(key, request_hash)
@@ -114,6 +122,15 @@ class ExecutionGateway:
                 network_fee_raw=gas_raw,
                 marks=marks,
                 max_trade_bps=self.risk.limits.max_trade_bps,
+                **(
+                    {
+                        "origin": origin.model_copy(
+                            update={"entry_mark": marks[token_out.address.lower()]}
+                        ).model_dump(mode="json")
+                    }
+                    if origin is not None
+                    else {}
+                ),
             )
         except (RiskRejected, LedgerError) as exc:
             self.ledger.record("risk_rejected", {"idempotency_key": key, "reason": str(exc)})

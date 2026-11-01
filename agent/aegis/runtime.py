@@ -21,6 +21,13 @@ from aegis.risk.engine import RiskRejected
 from aegis.risk.policy import CAPS, AgentParams, entry_check, exit_reason
 from aegis.store.db import LedgerError, PaperLedger
 from aegis.strategy.arbitrage import evaluate as evaluate_cycle
+from aegis.strategy.library import (
+    ASSET_MAP,
+    MAX_REFERENCE_BASIS_BPS,
+    LibraryOrigin,
+    LibrarySignal,
+    LibrarySnapshot,
+)
 from aegis.strategy.mean_reversion import evaluate
 
 
@@ -51,6 +58,11 @@ class PaperRuntime:
         self.last_error = None
         self.last_tick_at = None
         self.tick_count = 0
+        self.allow_test_connectors = allow_test_connectors
+        self.library_intent: LibrarySignal | None = None
+        self.library_revision = lambda: 0
+        self.library_snapshot_revision = 0
+        self.library_selection = self.ledger.metadata("library_selection", {})
         self.latest = self.ledger.observations(1)
         self.latest = self.latest[-1] if self.latest else None
         self.baseline = self.ledger.metadata("risk_baseline", {})
@@ -79,6 +91,7 @@ class PaperRuntime:
 
     def _positions(self, marks: dict[str, Decimal]) -> list[dict]:
         positions = []
+        fills = self.ledger.fills()
         for address, row in self.ledger.balances().items():
             token, amount, cost = row["token"], row["amount_raw"], row["cost_usdt"]
             if token == self.ledger.stable or amount == 0:
@@ -87,6 +100,17 @@ class PaperRuntime:
             quantity = Decimal(amount) / 10**token.decimals
             value = quantity * mark
             clock = self.ledger.position_clock(token, mark)
+            origin = next(
+                (
+                    f.get("origin")
+                    for f in reversed(fills)
+                    if f["quote"]["route"]["tokens"][-1]["asset_id"] == token.asset_id
+                ),
+                None,
+            )
+            strategy_stop = (
+                Decimal(origin["entry_mark"]) * Decimal(origin["stop_ratio"]) if origin else None
+            )
             positions.append(
                 {
                     "asset": token.asset_id,
@@ -105,11 +129,25 @@ class PaperRuntime:
                     "take_profit_price": dec(
                         cost / quantity * (1 + self.params.take_profit_pct / 100)
                     ),
+                    **(
+                        {
+                            "strategy_id": origin["strategy_id"],
+                            "strategy_stop_price": dec(strategy_stop),
+                        }
+                        if origin
+                        else {}
+                    ),
                 }
             )
         return positions
 
     def _before_fill(self, quote, marks):
+        if self.library_intent is not None:
+            if self.library_snapshot_revision != self.library_revision():
+                raise RiskRejected(
+                    "Strategy configuration changed during quote; refresh the reference snapshot"
+                )
+            self.library_intent.guard(int(time.time()), allow_fixture=self.allow_test_connectors)
         if (
             quote.route.tokens[-1] == self.ledger.stable
             and quote.route.tokens[0] != self.ledger.stable
@@ -136,6 +174,143 @@ class PaperRuntime:
             raise RiskRejected("Target asset is disabled")
         if any(p["asset"] == quote.route.tokens[-1].asset_id for p in positions):
             raise RiskRejected("A position in this asset is already open")
+        if self.library_intent is not None:
+            candidate = self.library_intent
+            candidate.guard(int(time.time()), allow_fixture=self.allow_test_connectors)
+            if ASSET_MAP[candidate.symbol] != quote.route.tokens[-1].asset_id:
+                raise RiskRejected("Reference strategy changed its mapped asset")
+            basis = (
+                abs(marks[quote.route.tokens[-1].address.lower()] / candidate.reference_price - 1)
+                * 10000
+            )
+            if basis > MAX_REFERENCE_BASIS_BPS:
+                raise RiskRejected(
+                    f"Reference/DEX price gap {basis:.1f} bps exceeds the 100 bps cap"
+                )
+            input_value = Decimal(quote.amount_in_raw) / 10**self.ledger.stable.decimals
+            output_value = (
+                Decimal(self.gateway.connector.fill_amount(quote))
+                / 10 ** quote.route.tokens[-1].decimals
+                * marks[quote.route.tokens[-1].address.lower()]
+            )
+            cost_budget = (
+                max(Decimal(0), (1 - output_value / input_value) * 20000)
+                + self.gateway.connector.terms.network_fee_usdt * 2 / input_value * 10000
+            )
+            if cost_budget > self.params.take_profit_pct * 100 / 4:
+                raise RiskRejected(
+                    "Modeled round-trip execution costs exceed 25% of the configured take-profit target; target is not a profit forecast"
+                )
+
+    def _library(
+        self,
+        snapshot: LibrarySnapshot | None,
+        marks: dict[str, Decimal],
+        *,
+        entries: bool,
+        exiting: bool,
+    ) -> tuple[list[dict], bool]:
+        if snapshot is None:
+            return [], exiting
+        self.library_snapshot_revision = snapshot.revision
+        self.library_selection = snapshot.selection
+        self.ledger.set_metadata("library_selection", snapshot.selection)
+        results = []
+        for candidate in sorted(snapshot.signals, key=lambda c: c.action != "SELL"):
+            asset = ASSET_MAP.get(candidate.symbol)
+            reason, status, fill = candidate.reason, "HOLD", None
+            try:
+                candidate.guard(int(time.time()), allow_fixture=self.allow_test_connectors)
+                if snapshot.error or abs(int(time.time()) - snapshot.captured_at) > 90:
+                    raise RiskRejected(snapshot.error or "Reference strategy snapshot is stale")
+                owned = next((p for p in self._positions(marks) if p["asset"] == asset), None)
+                if (
+                    candidate.action == "SELL"
+                    and owned
+                    and owned.get("strategy_id") == candidate.strategy_id
+                ):
+                    exiting = True
+                    self.library_intent = candidate
+                    try:
+                        self._close_position(
+                            owned,
+                            marks,
+                            "library_exit:" + candidate.strategy_id,
+                            f"exit:library:{candidate.strategy_id}:{asset}:{self.tick_count}",
+                        )
+                    finally:
+                        self.library_intent = None
+                    status = "EXIT_EXECUTED"
+                elif candidate.action == "BUY":
+                    if not candidate.selected:
+                        raise RiskRejected(
+                            "The existing strategy selector did not select this entry"
+                        )
+                    if not entries or exiting or self.halted.is_set() or not self.running:
+                        raise RiskRejected("Entries paused or an exit takes precedence")
+                    if asset not in self.params.target_assets:
+                        raise RiskRejected("Mapped asset is excluded by the HSKSwap preferences")
+                    if self.ledger.filled_key(candidate.entry_key):
+                        raise RiskRejected(
+                            "This strategy's closed hourly bar already produced a fill"
+                        )
+                    last = self.ledger.latest_entry(candidate.entry_prefix)
+                    if last and int(time.time()) - last["created_at"] < candidate.cooldown_seconds:
+                        raise RiskRejected("The original strategy's entry cooldown is active")
+                    if (
+                        not candidate.stop_price
+                        or not 0 < candidate.stop_price < candidate.reference_price
+                    ):
+                        raise RiskRejected(
+                            "The original strategy ATR stop is already breached or unavailable"
+                        )
+                    amount = int(
+                        Decimal(self.ledger.pnl(marks)["nav_usdt"])
+                        * self.params.position_size_pct
+                        / 100
+                        * 10**self.ledger.stable.decimals
+                    )
+                    origin = LibraryOrigin(
+                        strategy_id=candidate.strategy_id,
+                        reference_symbol=candidate.symbol,
+                        version=candidate.version,
+                        source=candidate.source,
+                        closed_at=candidate.closed_at,
+                        candle_hash=candidate.candle_hash,
+                        stop_ratio=candidate.stop_price / candidate.reference_price,
+                    )
+                    self.library_intent = candidate
+                    try:
+                        fill = self.gateway.execute(
+                            candidate.entry_key,
+                            self.ledger.stable,
+                            self.live.tokens[asset],
+                            amount,
+                            origin=origin,
+                        )
+                    finally:
+                        self.library_intent = None
+                    status = "ENTRY_EXECUTED"
+            except (ValueError, LedgerError, DiscoveryError) as exc:
+                reason, status = str(exc), "BLOCKED"
+            result = {
+                "id": candidate.entry_key,
+                "type": "strategy_library",
+                "strategy_id": candidate.strategy_id,
+                "strategy_name": candidate.strategy_name,
+                "asset": asset or candidate.symbol,
+                "action": candidate.action.lower(),
+                "execution_status": status,
+                "expected_edge_bps": None,
+                "confidence": dec(candidate.confidence),
+                "reason": reason,
+                "inputs_snapshot": candidate.model_dump(mode="json"),
+            }
+            self.ledger.record(
+                "library_evaluated", {**result, **({"fill_id": fill["id"]} if fill else {})}
+            )
+            results.append(result)
+        return results, exiting
 
     def _snapshot(self) -> tuple[dict, dict[str, Decimal]]:
         m = self.live.refresh()
@@ -230,7 +405,7 @@ class PaperRuntime:
             },
         )
 
-    def tick(self, *, evaluate_entries=True) -> dict:
+    def tick(self, *, evaluate_entries=True, library: LibrarySnapshot | None = None) -> dict:
         self.tick_count += 1
         self.last_tick_at = int(time.time())
         try:
@@ -245,6 +420,9 @@ class PaperRuntime:
                 reason = (
                     "panic_unwind"
                     if self.unwind
+                    else "strategy_atr_stop"
+                    if position.get("strategy_stop_price")
+                    and Decimal(position["mark"]) <= Decimal(position["strategy_stop_price"])
                     else exit_reason(position, self.params, self.last_tick_at)
                 )
                 if reason:
@@ -267,6 +445,9 @@ class PaperRuntime:
             history = self.ledger.observations(120)
             same_block = bool(history and history[-1]["block_hash"] == market["block_hash"])
             signals = []
+            library_signals, exiting = self._library(
+                library, marks, entries=evaluate_entries and not same_block, exiting=exiting
+            )
             if not same_block:
                 for asset in self.params.target_assets:
                     prices = [
@@ -381,6 +562,9 @@ class PaperRuntime:
                 "pnl": pnl,
                 "positions": self._positions(marks),
                 "signals": signals,
+                "library_signals": library_signals,
+                "library_catalog": library.catalog if library else [],
+                "library_error": library.error if library else None,
             }
             if not same_block:
                 self.ledger.observe(self.latest)
@@ -430,6 +614,11 @@ class PaperRuntime:
             "positions": latest.get("positions", []),
             "valuation_fresh": fresh,
             "signals": latest.get("signals", []),
+            "library_signals": latest.get("library_signals", []),
+            "library_catalog": latest.get("library_catalog", []),
+            "library_selection": self.library_selection,
+            "library_revision": self.library_revision(),
+            "library_error": latest.get("library_error"),
             "params": self.params.model_dump(mode="json"),
             "params_version": self.version,
             "caps": CAPS,

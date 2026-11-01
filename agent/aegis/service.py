@@ -11,11 +11,14 @@ from pathlib import Path
 from aegis.nl.agent import ControlAgent
 from aegis.nl.tools import ToolCall, execute_tool
 from aegis.runtime import PaperRuntime
+from aegis.strategy.library import LibrarySnapshot
 
 
 class AegisService:
-    def __init__(self, path: Path, *, factory=None, enabled=True):
+    def __init__(self, path: Path, *, factory=None, enabled=True, reference_source=None):
         self.path, self.factory, self.enabled = path, factory, enabled
+        self.reference_source = reference_source
+        self.library_revision = 0
         self.pool = ThreadPoolExecutor(max_workers=1, thread_name_prefix="aegis-paper")
         self.halted, self.emergency = threading.Event(), threading.Event()
         self.halted.set()
@@ -43,6 +46,7 @@ class AegisService:
                 if self.factory
                 else PaperRuntime(self.path, halted=self.halted, emergency=self.emergency)
             )
+            self.runtime.library_revision = lambda: self.library_revision
 
         try:
             await asyncio.get_running_loop().run_in_executor(self.pool, initialize)
@@ -82,6 +86,7 @@ class AegisService:
                 paused=self.halted.is_set(),
                 emergency=self.emergency.is_set(),
                 refresh_in_progress=self.inflight,
+                library_revision=self.library_revision,
             )
             import time
 
@@ -94,12 +99,31 @@ class AegisService:
                     result["data_status"] = "STALE"
         return result
 
+    def invalidate_library(self):
+        # Event-loop writers invalidate a worker's captured strategy policy without sharing SQLite.
+        self.library_revision += 1
+
     async def check(self):
         if self.inflight:
             raise ValueError("A market check is already running; wait for its recorded result")
         self.inflight = True
         try:
-            return await self.call("tick")
+            library = None
+            if self.reference_source is not None:
+                revision = self.library_revision
+                try:
+                    library = await asyncio.wait_for(self.reference_source(self.view()), timeout=15)
+                    library = library.model_copy(update={"revision": revision})
+                except Exception:
+                    import time
+
+                    library = LibrarySnapshot(
+                        captured_at=int(time.time()),
+                        signals=[],
+                        catalog=[],
+                        error="Reference-strategy data could not refresh; library entries are blocked",
+                    )
+            return await self.call("tick", library=library)
         finally:
             self.inflight = False
 
