@@ -211,10 +211,14 @@ def prove(args, network) -> dict:
             vault_code_hash=client.records["AegisVault"]["runtime_code_hash"],
         )
         raw = int(amount * 10 ** connector.tokens["WHSK"].decimals)
+        routes = connector.find_routes(connector.tokens["WHSK"], connector.tokens["USDT"])
+        if not routes:
+            raise DeploymentBlocked("No verified stable-exit route is available for the proof")
+        # Complete the independent size-limit proof before starting the short quote lifetime.
+        risk = prove_trade_limit(client, routes[0])
         quote = connector.get_quote(connector.tokens["WHSK"], connector.tokens["USDT"], raw)
         if Decimal(quote.amount_out_raw) / 10 ** connector.tokens["USDT"].decimals > 1:
             raise DeploymentBlocked("Proof is bounded to one USDT of quoted output")
-        risk = prove_trade_limit(client, quote.route)
         # Stable exit is risk-reducing; do not invent a profitable entry for a demo.
         result = LiveExecutionGateway(connector, client).execute(
             "public-hsk-micro-proof-v1",
