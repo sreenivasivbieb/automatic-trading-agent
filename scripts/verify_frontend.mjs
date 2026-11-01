@@ -78,6 +78,30 @@ try {
     throw new Error("Expected a fresh paused virtual ledger");
   report.block = observed.block_number;
   report.markets = observed.markets;
+  if (
+    observed.pipeline?.length !== 5 ||
+    Object.values(observed.markets).some(
+      (m) => !m.sqrt_price_x96 || !Number.isInteger(m.tick),
+    )
+  )
+    throw new Error("Five-stage pipeline or actual slot0 evidence is missing");
+  await expect(
+    page.getByRole("heading", {
+      name: "Closed-Loop Pipeline & Risk Status",
+      exact: true,
+    }),
+  ).toBeVisible();
+  await expect(
+    page
+      .getByRole("list", { name: "Closed-loop pipeline" })
+      .getByRole("listitem"),
+  ).toHaveCount(5);
+  report.pipeline = observed.pipeline;
+  report.spreads = observed.spreads;
+  report.ai_engine = observed.ai_engine;
+  report.checks.push(
+    "Five recorded pipeline stages expose actual slot0, tick, liquidity, fees and skipped paper execution; deterministic engine badge is honest",
+  );
   if (process.env.AEGIS_VERIFY_REFERENCE_MARKETS === "true") {
     const signals = observed.library_signals || [];
     const supported = signals.filter((s) => ["WBTC", "WETH"].includes(s.asset));

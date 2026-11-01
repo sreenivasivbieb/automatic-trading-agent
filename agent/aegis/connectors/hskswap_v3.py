@@ -140,6 +140,7 @@ class HSKSwapConnector:
             block_hash=m.block_hash,
             block_timestamp=m.block_timestamp,
             sqrt_price_x96=int(p.sqrt_price_x96),
+            tick=p.tick,
             liquidity_raw=int(p.active_liquidity_raw),
             balance0_raw=int(p.balance0_raw),
             balance1_raw=int(p.balance1_raw),

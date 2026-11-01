@@ -8,6 +8,7 @@ import "./aegis.css";
 
 import { useAegis } from "./aegis/context";
 import { AegisMarketAnalysis } from "./aegis/MarketAnalysis";
+import { ClosedLoopStatus } from "./aegis/Pipeline";
 import type {
   AegisState as State,
   AegisView,
@@ -233,7 +234,10 @@ export function AegisDesk({
           </button>
         </div>
       )}
-      {show("overview", "positions", "executions") && (
+      {show("overview", "desk", "observatory") && (
+        <ClosedLoopStatus state={state} />
+      )}
+      {show("positions", "executions") && (
         <>
           <div className="aegis-metrics">
             {[
@@ -474,6 +478,39 @@ export function AegisDesk({
                     />
                   </label>
                   <label>
+                    Absolute budget (USDT, optional)
+                    <input
+                      aria-label="AEGIS position budget"
+                      type="number"
+                      min="0"
+                      step="any"
+                      value={form.position_size_usdt ?? ""}
+                      onChange={(e) =>
+                        setForm({
+                          ...form,
+                          position_size_usdt: e.target.value || null,
+                        })
+                      }
+                    />
+                  </label>
+                  <label>
+                    Monitor frequency (seconds)
+                    <input
+                      aria-label="AEGIS monitor frequency"
+                      type="number"
+                      min="15"
+                      max="300"
+                      value={form.tick_seconds}
+                      onChange={(e) =>
+                        setForm({
+                          ...form,
+                          tick_seconds: Number(e.target.value),
+                        })
+                      }
+                      required
+                    />
+                  </label>
+                  <label>
                     Stop loss (%)
                     <input
                       aria-label="AEGIS stop loss"
@@ -523,6 +560,42 @@ export function AegisDesk({
                       </label>
                     ))}
                   </fieldset>
+                  <fieldset>
+                    <legend>Active entry strategies</legend>
+                    {[
+                      { id: "mean_reversion", name: "Pool mean reversion" },
+                      { id: "arbitrage", name: "V3 arbitrage" },
+                      ...(state.library_catalog ?? []),
+                    ].map((strategy) => (
+                      <label className="inline gap" key={strategy.id}>
+                        <input
+                          type="checkbox"
+                          checked={
+                            form.active_strategies?.includes(strategy.id) ??
+                            true
+                          }
+                          onChange={(e) =>
+                            setForm({
+                              ...form,
+                              active_strategies: e.target.checked
+                                ? [
+                                    ...(form.active_strategies ?? []),
+                                    strategy.id,
+                                  ]
+                                : (form.active_strategies ?? []).filter(
+                                    (s) => s !== strategy.id,
+                                  ),
+                            })
+                          }
+                        />
+                        {strategy.name} entries
+                      </label>
+                    ))}
+                    <small>
+                      Filters new AEGIS entries. Existing strategy rules and
+                      position safety exits remain active.
+                    </small>
+                  </fieldset>
                   <button
                     className="button primary"
                     disabled={busy}
@@ -560,6 +633,24 @@ export function AegisDesk({
                           "Recorded control or execution event",
                       )}
                     </p>
+                    {Array.isArray(d.payload.pipeline) && (
+                      <div
+                        className="aegis-feed-pipeline"
+                        aria-label="Recorded closed-loop steps"
+                      >
+                        {d.payload.pipeline.map(
+                          (step: {
+                            step: number;
+                            label: string;
+                            status: string;
+                          }) => (
+                            <Badge key={step.step}>
+                              {step.step}. {step.label} · {step.status}
+                            </Badge>
+                          ),
+                        )}
+                      </div>
+                    )}
                     <pre>{JSON.stringify(d.payload, null, 2)}</pre>
                   </details>
                 ))}

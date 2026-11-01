@@ -6,7 +6,7 @@ import { useAegis } from "./context";
 import { utcTime } from "./types";
 
 export function AegisChat() {
-  const { messages, busy, send, setChatOpen } = useAegis();
+  const { messages, busy, send, setChatOpen, state } = useAegis();
   const [message, setMessage] = useState("");
   const bottom = useRef<HTMLDivElement>(null),
     input = useRef<HTMLTextAreaElement>(null);
@@ -33,7 +33,10 @@ export function AegisChat() {
         </span>
         <div>
           <strong>AEGIS assistant</strong>
-          <small>PAPER · validated strategy controls</small>
+          <small>
+            {state?.ai_engine?.label ?? "AI Engine: Deterministic Fallback"} ·
+            PAPER
+          </small>
         </div>
         <button
           className="icon-button right"
@@ -70,11 +73,10 @@ export function AegisChat() {
       </div>
       <div className="aegis-chips">
         {[
-          "How am I doing today?",
-          "Show positions",
-          "Be more conservative",
-          "Only trade HSK and USDT",
-          "Show last 5 decisions",
+          "Show my open positions and real-time P&L",
+          "Set position size to 25 USDT and frequency to 30s",
+          "Switch risk appetite to conservative with a 1.5% stop-loss",
+          "Focus target assets on WHSK and WETH arbitrage spreads",
         ].map((text) => (
           <button disabled={busy} key={text} onClick={() => submit(text)}>
             {text}

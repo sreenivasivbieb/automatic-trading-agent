@@ -7,6 +7,18 @@ from typing import Literal
 from pydantic import Field
 
 from aegis.data import StrictModel
+from aegis.risk.policy import ActiveStrategy
+
+
+class StrategyConfigUpdate(StrictModel):
+    position_size_usdt: Decimal | None = Field(default=None, gt=0, le=1000000)
+    frequency_seconds: int | None = Field(default=None, ge=15, le=300, strict=True)
+    risk_appetite: Literal["conservative", "balanced", "aggressive"] | None = None
+    stop_loss_pct: Decimal | None = Field(default=None, gt=0, le=10)
+    take_profit_pct: Decimal | None = Field(default=None, gt=0, le=15)
+    target_assets: tuple[Literal["WHSK", "WETH", "WBTC"], ...] | None = None
+    active_strategies: tuple[ActiveStrategy, ...] | None = None
+
 
 SYSTEM_PROMPT = """You are AEGIS, an honest trading assistant. Always state PAPER or LIVE mode.
 Use only the supplied validated tools and retrieved state. Never promise profit, invent trades,
@@ -26,12 +38,84 @@ class ToolCall(StrictModel):
         "resume",
         "close_all_positions",
         "explain_trade",
+        "get_portfolio_and_pnl",
+        "update_strategy_config",
+        "explain_latest_decision",
+        "trigger_emergency_panic",
+        "request_close_all",
     ]
     arguments: dict = Field(default_factory=dict)
 
 
 def execute_tool(runtime, call: ToolCall) -> dict:
     args = call.arguments
+    if call.name == "get_portfolio_and_pnl":
+        if args:
+            raise ValueError("get_portfolio_and_pnl takes no arguments")
+        view = runtime.view()
+        pnl = execute_tool(runtime, ToolCall(name="get_pnl"))
+        return {
+            **pnl,
+            "positions": view["positions"],
+            "valuation_fresh": view["valuation_fresh"],
+            "balances": [
+                {
+                    "asset": row["token"].asset_id,
+                    "amount_raw": str(row["amount_raw"]),
+                    "decimals": row["token"].decimals,
+                    "kind": "virtual",
+                }
+                for row in runtime.ledger.balances().values()
+            ],
+            "risk_state": {
+                "paused": view["paused"],
+                "emergency": view["emergency"],
+                "risk": view["risk"],
+                "params": view["params"],
+                "caps": view["caps"],
+            },
+        }
+    if call.name == "update_strategy_config":
+        update = StrategyConfigUpdate.model_validate(args).model_dump(
+            exclude_unset=True, exclude_none=True
+        )
+        if not update:
+            raise ValueError("Supply at least one strategy preference")
+        aliases = {"frequency_seconds": "tick_seconds", "risk_appetite": "risk_level"}
+        patch = {aliases.get(k, k): v for k, v in update.items()}
+        if "position_size_usdt" in patch:
+            # This remains a hard 10% ceiling; the independent absolute budget narrows it.
+            patch["position_size_pct"] = "10"
+        return runtime.set_params(patch, runtime.version)
+    if call.name == "explain_latest_decision":
+        if args:
+            raise ValueError("explain_latest_decision takes no arguments")
+        state = runtime.view()
+        return {
+            "mode": "paper",
+            "block_number": state["block_number"],
+            "valuation_fresh": state["valuation_fresh"],
+            "markets": state["markets"],
+            "pipeline": state.get("pipeline", []),
+            "signals": state["signals"],
+            "library_signals": state["library_signals"],
+            "decisions": runtime.ledger.decisions(10),
+            "scope": "Recorded public inputs, calculations, risk outcomes and execution status; no hidden model reasoning",
+        }
+    if call.name == "trigger_emergency_panic":
+        if args:
+            raise ValueError("trigger_emergency_panic takes no arguments")
+        state = runtime.control("panic")
+        return {
+            "mode": "paper",
+            "paused": state["paused"],
+            "emergency": state["emergency"],
+            "unwind_pending": state["unwind_pending"],
+        }
+    if call.name == "request_close_all":
+        if args:
+            raise ValueError("Only a human may confirm a close preview outside the model")
+        return runtime.control("close_all_preview")
     if call.name == "get_status":
         if args:
             raise ValueError("get_status takes no arguments")
@@ -140,8 +224,16 @@ def interpret(text: str) -> ToolCall:
         return ToolCall(name="pause")
     if t in {"resume", "start", "resume trading"}:
         return ToolCall(name="resume")
+    if t in {"panic", "/panic", "emergency stop", "trigger emergency panic"}:
+        return ToolCall(name="trigger_emergency_panic")
     if re.search(r"close (all|everything)|sell everything", t):
         return ToolCall(name="close_all_positions")
+    # The complete demo commands use one atomic schema, including mixed-parameter requests.
+    absolute = re.search(
+        r"(?:position(?: size)?|allocation|size)[^\d+-]{0,15}([+-]?\d+(?:\.\d+)?)\s*usdt", t
+    )
+    seconds = re.search(r"frequency[^\d+-]{0,12}([+-]?\d+)\s*(?:s\b|seconds?\b)", t)
+    focus = bool(re.search(r"\b(?:focus|target assets)\b", t))
     patch = {}
     if "conservative" in t or "careful" in t or "less risk" in t:
         patch.update(
@@ -165,10 +257,13 @@ def interpret(text: str) -> ToolCall:
         match = re.search(pattern, t)
         if match:
             patch[key] = match[1]
+    preceding_stop = re.search(r"([+-]?\d+(?:\.\d+)?)\s*%\s*stop[ -]?loss", t)
+    if preceding_stop:
+        patch["stop_loss_pct"] = preceding_stop[1]
     frequency = re.search(r"(\d+)\s*trades?\s*(?:per|an?|/)\s*hour", t)
     if frequency:
         patch["max_trades_per_hour"] = int(frequency[1])
-    if "only" in t and re.search(r"hsk|eth|btc|bitcoin", t):
+    if ("only" in t or focus) and re.search(r"hsk|eth|btc|bitcoin", t):
         patch["target_assets"] = [
             a
             for a, pattern in [
@@ -178,11 +273,26 @@ def interpret(text: str) -> ToolCall:
             ]
             if re.search(pattern, t)
         ]
+    if absolute or seconds or focus:
+        update = {
+            "risk_appetite" if k == "risk_level" else k: v
+            for k, v in patch.items()
+            if k not in {"position_size_pct", "max_trades_per_hour"}
+        }
+        if absolute:
+            update["position_size_usdt"] = absolute[1]
+        if seconds:
+            update["frequency_seconds"] = int(seconds[1])
+        return ToolCall(name="update_strategy_config", arguments=update)
     if patch:
         return ToolCall(name="set_params", arguments=patch)
+    if re.search(r"(?:explain|why).*?(?:latest|last) (?:decision|trade)", t):
+        return ToolCall(name="explain_latest_decision")
     if "decision" in t:
         match = re.search(r"\b(\d+)\b", t)
         return ToolCall(name="get_recent_decisions", arguments={"n": int(match[1]) if match else 5})
+    if ("position" in t or "holding" in t) and any(p in t for p in ["pnl", "p&l", "profit"]):
+        return ToolCall(name="get_portfolio_and_pnl")
     if "position" in t or "holding" in t:
         return ToolCall(name="get_positions")
     trade = re.search(r"(?:explain|why).*?([a-f0-9]{8}-[a-f0-9-]{27,})", t)
@@ -211,14 +321,14 @@ def chat(runtime, text: str) -> dict:
     else:
         call = interpret(text)
     data = execute_tool(runtime, call)
-    if call.name == "set_params":
+    if call.name in {"set_params", "update_strategy_config"}:
         changes = "; ".join(
             f"{k}: {v['before']} → {v['after']}" for k, v in data["changes"].items()
         )
         reply = (
             "PAPER: " + (changes or "Settings already match") + ". Within the reviewed Guard caps."
         )
-    elif call.name == "close_all_positions":
+    elif call.name in {"close_all_positions", "request_close_all"}:
         reply = (
             "PAPER: review the positions and confirm this close request. No positions were sold yet."
             if data.get("requires_confirmation")
@@ -230,13 +340,15 @@ def chat(runtime, text: str) -> dict:
             if data["paused"]
             else "PAPER: autonomous entries enabled within the configured caps."
         )
-    elif call.name == "get_pnl":
+    elif call.name in {"get_pnl", "get_portfolio_and_pnl"}:
         pnl = data["current"]
         reply = (
             f"PAPER: current NAV {pnl['nav_usdt']} USDT; total net P&L since paper funding {pnl['net_pnl_usdt']} USDT after modeled costs. Realized P&L for {data['period']}: {data['realized_in_period_usdt']} USDT."
             if pnl
             else "PAPER: fresh valuation is unavailable; refresh verified market data first."
         )
+        if call.name == "get_portfolio_and_pnl":
+            reply += f" Open positions: {len(data['positions'])}. Balances are virtual."
     elif call.name == "get_positions":
         reply = "PAPER: " + (
             ", ".join(
@@ -254,6 +366,10 @@ def chat(runtime, text: str) -> dict:
         )
     elif call.name == "explain_trade":
         reply = f"PAPER: fill {data['fill']['id']} used a verified pool quote at block {data['fill']['quote']['block_number']}. Recorded signal and risk evidence are attached."
+    elif call.name == "explain_latest_decision":
+        reply = f"PAPER: recorded pool state and closed-loop evidence at block {data['block_number']} are attached. Execution and risk outcomes are shown without a profit promise."
+    elif call.name == "trigger_emergency_panic":
+        reply = "PAPER: emergency stop latched. Entries paused; bounded stable exits continue. Review is required before resuming."
     else:
         reply = f"PAPER: {'paused' if data['paused'] else 'running'}; market data {data['data_status']}; uptime {data['uptime_seconds']} seconds."
     runtime.ledger.record("tool_called", {"tool": call.name, "mode": "paper"})

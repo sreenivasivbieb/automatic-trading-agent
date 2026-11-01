@@ -74,7 +74,11 @@ class AegisService:
                 result = execute_tool(self.runtime, ToolCall.model_validate(args[0]))
             else:
                 result = getattr(self.runtime, operation)(*args, **kwargs)
-            self.state = {"available": True, **self.runtime.view()}
+            self.state = {
+                "available": True,
+                **self.runtime.view(),
+                "ai_engine": self.agent.status(),
+            }
             return result
 
         return await asyncio.get_running_loop().run_in_executor(self.pool, invoke)

@@ -9,9 +9,29 @@ from pydantic import Field, field_validator
 
 from aegis.data import StrictModel
 
+ActiveStrategy = Literal[
+    "mean_reversion",
+    "arbitrage",
+    "momentum_v1",
+    "mean_reversion_v1",
+    "trend_following_v1",
+    "breakout_v1",
+    "spread_research_v1",
+]
+ALL_STRATEGIES = (
+    "mean_reversion",
+    "arbitrage",
+    "momentum_v1",
+    "mean_reversion_v1",
+    "trend_following_v1",
+    "breakout_v1",
+    "spread_research_v1",
+)
+
 
 class AgentParams(StrictModel):
     position_size_pct: Decimal = Field(default=Decimal(5), gt=0, le=10)
+    position_size_usdt: Decimal | None = Field(default=None, gt=0, le=1000000)
     max_trades_per_hour: int = Field(default=6, ge=1, le=6, strict=True)
     risk_level: Literal["conservative", "balanced", "aggressive"] = "balanced"
     target_assets: tuple[Literal["WHSK", "WETH", "WBTC"], ...] = ("WHSK", "WETH", "WBTC")
@@ -20,12 +40,20 @@ class AgentParams(StrictModel):
     trailing_stop_pct: Decimal | None = Field(default=None, gt=0, le=5)
     max_holding_seconds: int = Field(default=3600, ge=60, le=3600, strict=True)
     tick_seconds: int = Field(default=30, ge=15, le=300, strict=True)
+    active_strategies: tuple[ActiveStrategy, ...] = ALL_STRATEGIES
 
     @field_validator("target_assets")
     @classmethod
     def unique_assets(cls, value):
         if not value or len(set(value)) != len(value):
             raise ValueError("Choose at least one distinct supported asset")
+        return value
+
+    @field_validator("active_strategies")
+    @classmethod
+    def distinct_strategies(cls, value):
+        if len(set(value)) != len(value):
+            raise ValueError("Active strategies must be distinct; an empty list disables entries")
         return value
 
 
@@ -59,6 +87,8 @@ def entry_check(
 
     if nav <= 0 or input_value <= 0 or input_value * 100 > nav * params.position_size_pct:
         raise RiskRejected("Position size exceeds the configured fraction of current NAV")
+    if params.position_size_usdt is not None and input_value > params.position_size_usdt:
+        raise RiskRejected("Position size exceeds the configured absolute USDT budget")
     if positions >= 3 or (exposure + input_value) * 100 > nav * 30:
         raise RiskRejected("Concurrent-position or token-exposure cap would be exceeded")
     if fills and now - fills[-1]["created_at"] < 30:

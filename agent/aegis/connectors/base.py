@@ -56,11 +56,19 @@ class PoolState(StrictModel):
     block_hash: str
     block_timestamp: int
     sqrt_price_x96: int
+    tick: int = 0
     liquidity_raw: int
     balance0_raw: int
     balance1_raw: int
     mid_token1_per_token0: Decimal
     unlocked: bool
+
+    def audit_snapshot(self) -> dict:
+        """Keep EVM integers exact when browser JSON consumers cannot represent uint160/256."""
+        data = self.model_dump(mode="json")
+        for field in ["sqrt_price_x96", "liquidity_raw", "balance0_raw", "balance1_raw"]:
+            data[field] = str(getattr(self, field))
+        return data
 
 
 class Price(StrictModel):

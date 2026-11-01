@@ -30,8 +30,23 @@ def evaluate(
             "quote_id": quote.id,
             "amount_in_raw": str(quote.amount_in_raw),
             "quoted_out_raw": str(quote.amount_out_raw),
+            "route": [t.asset_id for t in quote.route.tokens],
+            "pools": [p.address for p in quote.route.pools],
+            "fee_tiers_pips": [p.fee_pips for p in quote.route.pools],
+            "gross_mid_edge_bps": str((quote.reference_out_raw / quote.amount_in_raw - 1) * 10000),
+            "quoted_edge_after_lp_and_impact_bps": str(
+                (Decimal(quote.amount_out_raw) / quote.amount_in_raw - 1) * 10000
+            ),
+            "lp_fee_multiplier": str(quote.fee_multiplier),
+            "price_impact_bps": str(quote.price_impact_bps),
             "lp_fees_already_in_quote": True,
+            "extra_slippage_bps": extra_slippage_bps,
             "modeled_network_fee_raw": str(network_fee_raw),
+            "net_edge_bps": str(edge),
+            "net_profit_raw": str(output - quote.amount_in_raw - network_fee_raw),
+            "formula": "(quoted output * (1 - modeled slippage) - input - modeled network fee) / input * 10000; Quoter already includes LP fees and impact",
+            "gas_estimate": quote.gas_estimate,
+            "pool_states": [s.audit_snapshot() for s in quote.states],
             "block": quote.block_number,
         },
     )

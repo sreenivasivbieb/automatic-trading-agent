@@ -29,6 +29,8 @@ from aegis.strategy.library import (
     LibrarySnapshot,
 )
 from aegis.strategy.mean_reversion import evaluate
+from aegis.strategy.pipeline import build_pipeline, unavailable
+from aegis.strategy.spreads import compare_reference
 
 
 def dec(value) -> str:
@@ -65,6 +67,7 @@ class PaperRuntime:
         self.library_selection = self.ledger.metadata("library_selection", {})
         self.latest = self.ledger.observations(1)
         self.latest = self.latest[-1] if self.latest else None
+        self.pipeline = self.latest.get("pipeline", []) if self.latest else []
         self.baseline = self.ledger.metadata("risk_baseline", {})
         if self.ledger.metadata("emergency", False):
             self.emergency.set()
@@ -242,6 +245,8 @@ class PaperRuntime:
                         self.library_intent = None
                     status = "EXIT_EXECUTED"
                 elif candidate.action == "BUY":
+                    if candidate.strategy_id not in self.params.active_strategies:
+                        raise RiskRejected("Strategy is excluded by the live AEGIS selection")
                     if not candidate.selected:
                         raise RiskRejected(
                             "The existing strategy selector did not select this entry"
@@ -265,9 +270,7 @@ class PaperRuntime:
                             "The original strategy ATR stop is already breached or unavailable"
                         )
                     amount = int(
-                        Decimal(self.ledger.pnl(marks)["nav_usdt"])
-                        * self.params.position_size_pct
-                        / 100
+                        self._entry_size(Decimal(self.ledger.pnl(marks)["nav_usdt"]))
                         * 10**self.ledger.stable.decimals
                     )
                     origin = LibraryOrigin(
@@ -312,6 +315,14 @@ class PaperRuntime:
             results.append(result)
         return results, exiting
 
+    def _entry_size(self, nav: Decimal) -> Decimal:
+        fraction = nav * self.params.position_size_pct / 100
+        return (
+            min(fraction, self.params.position_size_usdt)
+            if self.params.position_size_usdt is not None
+            else fraction
+        )
+
     def _snapshot(self) -> tuple[dict, dict[str, Decimal]]:
         m = self.live.refresh()
         marks = {self.ledger.stable.address.lower(): Decimal(1)}
@@ -332,6 +343,12 @@ class PaperRuntime:
                 "pool": pool.address,
                 "liquidity_raw": pool.active_liquidity_raw,
                 "fee_pips": pool.fee_pips,
+                "sqrt_price_x96": pool.sqrt_price_x96,
+                "tick": pool.tick,
+                "balance0_raw": pool.balance0_raw,
+                "balance1_raw": pool.balance1_raw,
+                "token0": pool.token0,
+                "token1": pool.token1,
             }
         if any(self.live.tokens[a].address.lower() not in marks for a in self.params.target_assets):
             raise DiscoveryError("Selected asset has no verified direct settlement mark")
@@ -408,6 +425,8 @@ class PaperRuntime:
     def tick(self, *, evaluate_entries=True, library: LibrarySnapshot | None = None) -> dict:
         self.tick_count += 1
         self.last_tick_at = int(time.time())
+        prior_events = {e["id"] for e in self.ledger.decisions(100)}
+        prior_fills = {f["id"] for f in self.ledger.fills()}
         try:
             market, marks = self._snapshot()
             self.last_tick_at = int(time.time())
@@ -445,11 +464,39 @@ class PaperRuntime:
             history = self.ledger.observations(120)
             same_block = bool(history and history[-1]["block_hash"] == market["block_hash"])
             signals = []
+            spreads = []
+            if not same_block and library is not None and not library.error:
+                compared = set()
+                for candidate in library.signals:
+                    asset = ASSET_MAP.get(candidate.symbol)
+                    if not asset or asset in compared or asset not in self.params.target_assets:
+                        continue
+                    compared.add(asset)
+                    try:
+                        candidate.guard(int(time.time()), allow_fixture=self.allow_test_connectors)
+                        spread = compare_reference(
+                            self.live,
+                            asset,
+                            candidate.reference_price,
+                            self._entry_size(Decimal(pnl["nav_usdt"])),
+                            self.gateway.connector.terms,
+                        )
+                        spread.update(
+                            reference_source=candidate.source, reference_at=candidate.price_at
+                        )
+                        spreads.append(spread)
+                        self.ledger.record("reference_spread", spread)
+                    except (ValueError, DiscoveryError) as exc:
+                        self.ledger.record(
+                            "reference_spread_unavailable", {"asset": asset, "reason": str(exc)}
+                        )
             library_signals, exiting = self._library(
                 library, marks, entries=evaluate_entries and not same_block, exiting=exiting
             )
             if not same_block:
                 for asset in self.params.target_assets:
+                    if "mean_reversion" not in self.params.active_strategies:
+                        break
                     prices = [
                         Decimal(h["markets"][asset]["price"])
                         for h in history
@@ -457,7 +504,7 @@ class PaperRuntime:
                     ]
                     prices.append(Decimal(market["markets"][asset]["price"]))
                     nav = Decimal(self.ledger.pnl(marks)["nav_usdt"])
-                    size = nav * self.params.position_size_pct / 100
+                    size = self._entry_size(nav)
                     cost = (
                         Decimal(80)
                         + self.gateway.connector.terms.network_fee_usdt
@@ -506,7 +553,11 @@ class PaperRuntime:
                                 else signal.reason,
                             },
                         )
-                cycles = self.live.find_routes(self.ledger.stable, self.ledger.stable)
+                cycles = (
+                    self.live.find_routes(self.ledger.stable, self.ledger.stable)
+                    if "arbitrage" in self.params.active_strategies
+                    else []
+                )
                 self.ledger.record(
                     "arbitrage_scan",
                     {
@@ -519,9 +570,7 @@ class PaperRuntime:
                 for route in cycles:
                     try:
                         amount = int(
-                            Decimal(self.ledger.pnl(marks)["nav_usdt"])
-                            * self.params.position_size_pct
-                            / 100
+                            self._entry_size(Decimal(self.ledger.pnl(marks)["nav_usdt"]))
                             * 10**self.ledger.stable.decimals
                         )
                         quote = self.live.quote_route(route, amount)
@@ -534,6 +583,7 @@ class PaperRuntime:
                             extra_slippage_bps=self.gateway.connector.terms.extra_slippage_bps,
                             network_fee_raw=fee_raw,
                         )
+                        signals.append(cycle.model_dump(mode="json"))
                         self.ledger.record("arbitrage_signal", cycle.model_dump(mode="json"))
                         if (
                             cycle.action == "cycle"
@@ -556,6 +606,27 @@ class PaperRuntime:
                 market, marks = self._snapshot()
             pnl = self.ledger.pnl(marks)
             self._circuit(pnl, market["block_timestamp"])
+            events = [e for e in self.ledger.decisions(100) if e["id"] not in prior_events]
+            new_fills = [f for f in fills if f["id"] not in prior_fills]
+            self.pipeline = build_pipeline(
+                market,
+                [*signals, *library_signals],
+                spreads,
+                events,
+                new_fills,
+                self.params.model_dump(mode="json"),
+                paused=self.halted.is_set(),
+                emergency=self.emergency.is_set(),
+            )
+            self.ledger.record(
+                "closed_loop",
+                {
+                    "pipeline": self.pipeline,
+                    "block_number": market["block_number"],
+                    "mode": "paper",
+                    "reason": self.pipeline[-1]["summary"],
+                },
+            )
             self.latest = {
                 **market,
                 "observed_at": self.last_tick_at,
@@ -565,12 +636,15 @@ class PaperRuntime:
                 "library_signals": library_signals,
                 "library_catalog": library.catalog if library else [],
                 "library_error": library.error if library else None,
+                "pipeline": self.pipeline,
+                "spreads": spreads,
             }
             if not same_block:
                 self.ledger.observe(self.latest)
             return self.view()
         except (DiscoveryError, RiskRejected, LedgerError, ValueError) as exc:
             self.last_error = str(exc)
+            self.pipeline = unavailable(self.last_error)
             self.ledger.record(
                 "data_unavailable", {"reason": self.last_error, "action": "no new fill"}
             )
@@ -614,6 +688,8 @@ class PaperRuntime:
             "positions": latest.get("positions", []),
             "valuation_fresh": fresh,
             "signals": latest.get("signals", []),
+            "spreads": latest.get("spreads", []),
+            "pipeline": self.pipeline,
             "library_signals": latest.get("library_signals", []),
             "library_catalog": latest.get("library_catalog", []),
             "library_selection": self.library_selection,
@@ -657,6 +733,17 @@ class PaperRuntime:
                 "PAPER settings refused: "
                 + "; ".join(f"{e['loc'][0]}: {e['msg']}" for e in exc.errors())
             ) from None
+        if "position_size_usdt" in patch and candidate.position_size_usdt is not None:
+            state = self.view()
+            if not state["valuation_fresh"] or not state["pnl"]:
+                raise ValueError(
+                    "PAPER: refresh verified prices before setting a USDT position budget"
+                )
+            cap = Decimal(state["pnl"]["nav_usdt"]) * candidate.position_size_pct / 100
+            if candidate.position_size_usdt > cap:
+                raise ValueError(
+                    f"PAPER: requested USDT size exceeds the {candidate.position_size_pct}% NAV cap ({dec(cap)} USDT). No settings changed."
+                )
         values = candidate.model_dump(mode="json")
         changes = {
             k: {"before": previous[k], "after": v} for k, v in values.items() if v != previous[k]

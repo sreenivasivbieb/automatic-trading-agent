@@ -11,6 +11,8 @@ export type AegisView =
   | "settings";
 export type Params = {
   position_size_pct: string;
+  position_size_usdt?: string | null;
+  active_strategies?: string[];
   max_trades_per_hour: number;
   risk_level: string;
   target_assets: string[];
@@ -28,6 +30,7 @@ export type Position = {
   unrealized_pnl_usdt: string;
   stop_price: string;
   take_profit_price: string;
+  value_usdt?: string;
   strategy_id?: string;
   strategy_stop_price?: string;
 };
@@ -75,6 +78,20 @@ export type AegisState = {
   block_timestamp: number | null;
   tick_count: number;
   last_tick_at: number | null;
+  ai_engine?: {
+    status: string;
+    provider: string | null;
+    configured_providers: string[];
+    label: string;
+  };
+  pipeline?: {
+    step: number;
+    label: string;
+    status: string;
+    summary: string;
+    evidence?: Record<string, unknown>;
+  }[];
+  spreads?: Record<string, unknown>[];
   params: Params;
   params_version: number;
   pnl: Pnl | null;
@@ -94,7 +111,14 @@ export type AegisState = {
   trades_today: number;
   markets: Record<
     string,
-    { price: string; pool: string; fee_pips: number; liquidity_raw: string }
+    {
+      price: string;
+      pool: string;
+      fee_pips: number;
+      liquidity_raw: string;
+      sqrt_price_x96?: string;
+      tick?: number;
+    }
   >;
   risk: { daily_loss_pct?: string; drawdown_pct?: string };
   equity_curve: (Pnl & { at: number })[];
