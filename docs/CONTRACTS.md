@@ -37,6 +37,19 @@ That command explicitly reports local hash verification only. Once a confirmed d
 
 ## Prepare a real testnet deployment
 
+The turnkey runner now wraps the same plan, Foundry script, recorder and restricted signing gateway:
+
+```bash
+make hsk-deployment-status
+# Export distinct public AEGIS_OWNER_ADDRESS / AEGIS_AGENT_ADDRESS and a funded
+# local AEGIS_DEPLOYER_ACCOUNT (or supply --keystore / --password-file).
+make deploy-hsk-testnet ARGS='--broadcast'
+# After owner-authorized native funding/wrapping and agent gas funding:
+make prove-hsk-testnet ARGS='--broadcast --agent-keystore /PRIVATE/PATH/hsk-agent'
+```
+
+`scripts/deploy_and_verify_hsk.py` writes [public deployment evidence](evidence/hsk-onchain-deployment.json), including real address/receipt links only after successful verification. `status` never broadcasts. No address/signing configuration is currently available, so the artifact correctly contains empty contracts and transactions. The proof executes commit → bounded stable exit → exact reveal through the production gateway, then verifies the reveal. An independent canonical read-only call must fail with the exact `TradeLimit()` error for an oversized amount. This is risk-limit enforcement, not a mined loss-circuit event. A persisted broadcast marker prevents automatic redeployment after uncertainty; use the manual recorder below to reconcile an existing attempt. Mainnet targets additionally require `--i-understand-live`. Runtime-bytecode checks do not publish explorer source code.
+
 Use the user's actual public receive address and a separate agent public address. Never substitute a guessed address or send a recovery phrase. `prepare-deployment` is read-only and writes constructor parameters to ignored runtime storage:
 
 ```bash

@@ -20,6 +20,7 @@ from aegis.connectors.rpc import ReadOnlyRpc
 from aegis.data import HSKSwapData, load_network
 from aegis.deploy import make_plan, record_deployment
 from aegis.execution.live import LiveExecutionGateway
+from aegis.execution.proof import prove_trade_limit
 from aegis.execution.vault_client import VaultClient
 from aegis.verify_decision import verify_reveal
 
@@ -134,6 +135,7 @@ def main():
         )
         quote = connector.get_quote(connector.tokens["WHSK"], connector.tokens["USDT"], 5 * 10**15)
         gateway = LiveExecutionGateway(connector, client)
+        risk_proof = prove_trade_limit(client, quote.route)
         execution = gateway.execute(
             "local-fork-proof", quote, rationale="Bounded stable exit on isolated local fork"
         )
@@ -169,6 +171,7 @@ def main():
             "chain_id": 133,
             "execution": execution,
             "exact_reveal_verification": verified,
+            "risk_limit": risk_proof,
             "idempotent_replay": True,
             "agent_nonce_after_replay": nonce,
             "agent_received_output": False,

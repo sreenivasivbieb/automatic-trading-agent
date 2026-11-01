@@ -52,3 +52,19 @@ verify-paper-flow:
 
 verify-signed-fork:
 	$(PYTHON) -m scripts.verify_aegis_fork_flow
+
+.PHONY: deploy-hsk-testnet deploy-hsk-mainnet prove-hsk-testnet prove-hsk-mainnet hsk-deployment-status
+deploy-hsk-testnet:
+	$(PYTHON) -m scripts.deploy_and_verify_hsk deploy --network testnet $(ARGS)
+
+deploy-hsk-mainnet:
+	$(PYTHON) -m scripts.deploy_and_verify_hsk deploy --network mainnet $(ARGS)
+
+prove-hsk-testnet:
+	$(PYTHON) -m scripts.deploy_and_verify_hsk prove --network testnet $(ARGS)
+
+prove-hsk-mainnet:
+	$(PYTHON) -m scripts.deploy_and_verify_hsk prove --network mainnet $(ARGS)
+
+hsk-deployment-status:
+	$(PYTHON) -m scripts.deploy_and_verify_hsk status --network $(DEPLOY_NETWORK) $(ARGS)
