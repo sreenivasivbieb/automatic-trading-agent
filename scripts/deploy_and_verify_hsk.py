@@ -1,12 +1,13 @@
 """Deploy verified AEGIS modules, or prove a funded deployment through the signing gateway.
 
-Default: status only. No owner key is accepted. Foundry uses a local deployer keystore;
-the separate AEGIS_AGENT_KEY is consumed only by the restricted swap gateway.
+Default: status only. Raw owner keys are never accepted. Foundry unlocks local
+keystores interactively; the separate agent signs only through the restricted gateway.
 """
 
 from __future__ import annotations
 
 import argparse
+import copy
 import getpass
 import json
 import os
@@ -29,12 +30,31 @@ from aegis.execution.live import LiveExecutionGateway
 from aegis.execution.proof import prove_trade_limit
 from aegis.execution.vault_client import VaultClient
 from aegis.verify_decision import verify_reveal
+from scripts.hsk_testnet_setup import TestnetSetupBlocked, fund_vault, preflight, verify_deployer
 
 EVIDENCE = ROOT / "docs/evidence/hsk-onchain-deployment.json"
 
 
 class DeploymentBlocked(ValueError):
     """Operator-readable local precondition. Never contains a remote response or key."""
+
+
+def local_password_file(stack, supplied, directory, prompt):
+    if supplied is not None:
+        return supplied
+    if not sys.stdin.isatty():
+        raise DeploymentBlocked(
+            "Non-interactive deployment requires a private --password-file; passwords are never accepted in chat or command arguments"
+        )
+    password = getpass.getpass(prompt)
+    secret_dir = Path(
+        stack.enter_context(tempfile.TemporaryDirectory(prefix="unlock-", dir=directory))
+    )
+    path = secret_dir / "password"
+    descriptor = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+    with os.fdopen(descriptor, "w") as secret:
+        secret.write(password)
+    return path
 
 
 def write_evidence(path: Path, network: str, report: dict) -> None:
@@ -99,21 +119,9 @@ def deploy(args, network) -> dict:
     environment["AEGIS_I_UNDERSTAND_LIVE"] = str(args.i_understand_live).lower()
     # Keep detailed compiler/provider output private; it may contain endpoint metadata.
     with ExitStack() as stack:
-        password_file = args.password_file
-        if password_file is None:
-            if not sys.stdin.isatty():
-                raise DeploymentBlocked(
-                    "Non-interactive deployment requires a private --password-file; passwords are never accepted in chat or command arguments"
-                )
-            password = getpass.getpass("Local deployer keystore password: ")
-            secret_dir = Path(
-                stack.enter_context(tempfile.TemporaryDirectory(prefix="unlock-", dir=directory))
-            )
-            password_file = secret_dir / "password"
-            descriptor = os.open(password_file, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
-            with os.fdopen(descriptor, "w") as secret:
-                secret.write(password)
-            del password
+        password_file = local_password_file(
+            stack, args.password_file, directory, "Local deployer keystore password: "
+        )
         command += ["--password-file", str(password_file)]
         log = stack.enter_context((directory / "forge.log").open("w"))
         os.chmod(directory / "forge.log", 0o600)
@@ -241,10 +249,61 @@ def prove(args, network) -> dict:
         client.close()
 
 
+def run_testnet(args, network) -> dict:
+    require_broadcast(args)
+    if not args.owner or not args.agent or args.owner.lower() == args.agent.lower():
+        raise DeploymentBlocked("Supply distinct public owner and agent addresses")
+    print(
+        "Checking chain, owner/deployer funding and agent gas before any broadcast...", flush=True
+    )
+    balances = preflight(network, args)
+    directory = ROOT / ".runtime/hsk-deploy-133"
+    directory.mkdir(parents=True, exist_ok=True)
+    working = copy.copy(args)
+    with ExitStack() as stack:
+        working.password_file = local_password_file(
+            stack, args.password_file, directory, "Local owner/deployer keystore password: "
+        )
+        verify_deployer(
+            working
+        )  # Local cast unlocks it; the Python/web signer never receives the owner key.
+        registry = ROOT / "deployments/133.json"
+        if not registry.exists():
+            print("Deploying the paused Vault, Oracle and DecisionLog...", flush=True)
+            write_evidence(args.output, "testnet", deploy(working, network))
+        deployment = json.loads(registry.read_text())
+        print(
+            f"Funding/wrapping at most {args.fund_hsk} HSK in the verified vault, then proving a {args.amount_whsk} WHSK stable exit...",
+            flush=True,
+        )
+        setup = fund_vault(network, deployment, working)
+        result = prove(working, network)
+        result.update(owner_setup=setup, preflight=balances)
+        return result
+
+
+def apply_testnet_profile(args) -> None:
+    # Public signer identities only. deployments/133.json remains receipt-created, never prefilled.
+    path = ROOT / "config/hsk-testnet-deployment.json"
+    if args.network == "testnet" and path.exists():
+        profile = json.loads(path.read_text())
+        if profile.get("chain_id") != 133:
+            raise DeploymentBlocked("Testnet deployment profile reports a different chain")
+        args.owner = args.owner or profile["owner"]
+        args.agent = args.agent or profile["agent"]
+        if not args.account and not args.keystore:
+            args.account = profile["deployer_account"]
+        args.agent_keystore = args.agent_keystore or Path(profile["agent_keystore"])
+    for field in ["keystore", "password_file", "agent_keystore", "agent_password_file"]:
+        path = getattr(args, field)
+        if path is not None:
+            setattr(args, field, Path(path).expanduser())
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
-        "operation", nargs="?", choices=["status", "deploy", "prove"], default="status"
+        "operation", nargs="?", choices=["status", "deploy", "prove", "run"], default="status"
     )
     parser.add_argument("--network", choices=["testnet", "mainnet"], default="testnet")
     parser.add_argument("--broadcast", action="store_true")
@@ -260,6 +319,9 @@ def main() -> int:
     )
     parser.add_argument("--amount-whsk", default="0.005")
     parser.add_argument(
+        "--fund-hsk", help="Explicit testnet-only owner deposit/wrap; maximum 0.1 HSK"
+    )
+    parser.add_argument(
         "--agent-keystore", type=Path, default=os.getenv("AEGIS_AGENT_KEYSTORE") or None
     )
     parser.add_argument(
@@ -269,6 +331,7 @@ def main() -> int:
     args = parser.parse_args()
     network = load_network(args.network)
     try:
+        apply_testnet_profile(args)
         if args.operation == "status":
             path = ROOT / f"deployments/{network.chain_id}.json"
             if path.exists():
@@ -281,8 +344,11 @@ def main() -> int:
                     "contracts": {},
                     "transactions": {},
                     "blockers": [
-                        "Public owner and agent addresses, funded local deployer keystore, agent gas and owner-authorized vault funding are required"
+                        "No confirmed public deployment exists; the configured local signer must be funded before deployment and owner-authorized vault setup"
                     ],
+                    "configured_owner": args.owner,
+                    "configured_agent": args.agent,
+                    "deployer_account": args.account,
                     "public_transactions_sent_by_this_run": 0,
                 }
             # Preserve stronger evidence when a status check follows a successful lifecycle.
@@ -294,16 +360,22 @@ def main() -> int:
                 print("Existing verified evidence retained; use prove to recheck the chain")
                 return 0
         else:
-            report = deploy(args, network) if args.operation == "deploy" else prove(args, network)
+            report = (
+                run_testnet(args, network)
+                if args.operation == "run"
+                else deploy(args, network)
+                if args.operation == "deploy"
+                else prove(args, network)
+            )
         write_evidence(args.output, args.network, report)
         print(json.dumps(report, indent=2))
-    except DeploymentBlocked as exc:
+    except (DeploymentBlocked, TestnetSetupBlocked) as exc:
         print(f"HSK operation stopped: {exc}")
         return 1
     except Exception as exc:
         # Never echo RPC/provider errors or secret-bearing subprocess output.
         print(
-            f"HSK operation stopped ({type(exc).__name__}). No success evidence was written. Check local configuration and private logs."
+            f"HSK operation incomplete ({type(exc).__name__}). Inspect recorded registry/receipts and private logs before retrying; do not rebroadcast blindly."
         )
         return 1
     return 0

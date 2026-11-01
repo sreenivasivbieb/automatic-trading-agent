@@ -5,12 +5,14 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import secrets
 import socket
 import subprocess
 import tempfile
 import time
 from datetime import UTC, datetime
 from pathlib import Path
+from types import SimpleNamespace
 
 from eth_account import Account
 from web3 import HTTPProvider, Web3
@@ -23,6 +25,7 @@ from aegis.execution.live import LiveExecutionGateway
 from aegis.execution.proof import prove_trade_limit
 from aegis.execution.vault_client import VaultClient
 from aegis.verify_decision import verify_reveal
+from scripts.hsk_testnet_setup import fund_vault
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -112,22 +115,34 @@ def main():
             address=deployment["contracts"]["AegisVault"]["address"],
             abi=deployment["contracts"]["AegisVault"]["abi"],
         )
-        tx = w3.eth.send_transaction(
-            {
-                "from": owner.address,
-                "to": vault.address,
-                "value": 10**17,
-                "gas": 150000,
-                "gasPrice": 2_000_000_000,
-            }
-        )
-        assert w3.eth.wait_for_transaction_receipt(tx)["status"] == 1
-        tx = vault.functions.wrapNative(10**17).transact(
-            {"from": owner.address, "gas": 300000, "gasPrice": 2_000_000_000}
-        )
-        assert w3.eth.wait_for_transaction_receipt(tx)["status"] == 1
+        # Exercise the production local-keystore funding path with dev keys ONLY.
+        password = secrets.token_urlsafe(24)
+        keyfile, passwordfile = directory / "dev-owner-keystore.json", directory / "dev-password"
+        keyfile.write_text(json.dumps(Account.encrypt(owner.key, password)))
+        passwordfile.write_text(password)
+        keyfile.chmod(0o600)
+        passwordfile.chmod(0o600)
+        try:
+            owner_setup = fund_vault(
+                n,
+                deployment,
+                SimpleNamespace(
+                    owner=owner.address,
+                    agent=agent.address,
+                    fund_hsk="0.1",
+                    amount_whsk="0.005",
+                    account=None,
+                    keystore=keyfile,
+                    password_file=passwordfile,
+                ),
+                journal=directory / "owner-setup.json",
+                public_chain=False,
+            )
+        finally:
+            keyfile.unlink(missing_ok=True)
+            passwordfile.unlink(missing_ok=True)
         time.sleep(3)
-        client = VaultClient(n, deployment, agent.key.hex(), directory / "signer.sqlite3", web3=w3)
+        client = VaultClient(n, deployment, agent.key.hex(), directory / "signer.sqlite3")
         connector = HSKSwapConnector(
             n,
             vault_address=vault.address,
@@ -172,6 +187,8 @@ def main():
             "execution": execution,
             "exact_reveal_verification": verified,
             "risk_limit": risk_proof,
+            "owner_setup": owner_setup,
+            "testnet_signing_transport": "curl; local cast keystore funding/wrapping",
             "idempotent_replay": True,
             "agent_nonce_after_replay": nonce,
             "agent_received_output": False,

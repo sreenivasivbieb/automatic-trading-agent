@@ -1,6 +1,6 @@
 # AEGIS contracts and deployment
 
-Local contract and fork checks are recorded below. Public testnet deployment is pending owner/agent addresses and a funded deployer. There is no `deployments/133.json`, public AEGIS transaction hash or on-chain verification badge yet. Mainnet broadcasting requires the user's separate explicit confirmation.
+Local contract and fork checks are recorded below. Distinct testnet owner/agent identities and keystore references are configured. Public deployment still requires a funded, successful interactive run; [wallet/RPC readiness](evidence/hsk-testnet-readiness.json) records the latest observed balances. There is no `deployments/133.json`, public AEGIS transaction hash or on-chain verification badge yet. Mainnet broadcasting requires the user's separate explicit confirmation.
 
 ## Reproduce local checks
 
@@ -37,6 +37,14 @@ That command explicitly reports local hash verification only. Once a confirmed d
 
 ## Prepare a real testnet deployment
 
+The supplied testnet owner/deployer and distinct agent are configured in `config/hsk-testnet-deployment.json` (`hsk-owner` / `hsk-agent`). For local interactive deployment, owner funding/wrapping and the guarded proof in one invocation:
+
+```bash
+.venv/bin/python -m scripts.deploy_and_verify_hsk run --network testnet --broadcast --fund-hsk 0.1
+```
+
+The command requires the explicit 0.1-HSK funding choice, checks current balances before any password/broadcast, then uses the local encrypted owner keystore via Foundry. It prompts separately for the agent password and uses the restricted Python gateway for commit/swap/reveal. Testnet RPC reads and Web3 calls use curl to avoid the TLS block; thirdweb is a chain-checked fallback, not an assumed-success endpoint. A private owner-step journal prevents duplicate funding after uncertain submissions. The public registry is still written only after real canonical receipts. This combined owner setup is unavailable on mainnet.
+
 The turnkey runner now wraps the same plan, Foundry script, recorder and restricted signing gateway:
 
 ```bash
@@ -56,7 +64,7 @@ Use the user's actual public receive address and a separate agent public address
 make prepare-deployment ARGS='--owner 0xOWNER_PUBLIC_ADDRESS --agent 0xAGENT_PUBLIC_ADDRESS'
 ```
 
-The plan selects verified direct USDT markets and fresh on-chain anchor prices. It expires after 300 seconds in the deployment script. Review owner, agent, chain, market addresses and all limits before signing. A third account funds deployment and can use an existing local keystore; the owner key stays in the user's wallet.
+The plan selects verified direct USDT markets and fresh on-chain anchor prices. It expires after 300 seconds in the deployment script. Review owner, agent, chain, market addresses and all limits before signing. An optional third account can fund deployment through a local keystore; the supplied testnet profile instead signs deployment locally with `hsk-owner`. The owner raw key never enters the web agent.
 
 After real addresses and a separate funded signer are available, simulate the deployment from the root:
 

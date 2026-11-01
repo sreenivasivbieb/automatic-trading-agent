@@ -1,0 +1,7 @@
+{
+  "chain_id": 133,
+  "owner": "0xAc85C4d3129cB1773c473Cc6A766aF9Af738fdE8",
+  "agent": "0x372bd66F76Ff5802Ee640690f2D8373f47AF6750",
+  "deployer_account": "hsk-owner",
+  "agent_keystore": "~/.foundry/keystores/hsk-agent"
+}

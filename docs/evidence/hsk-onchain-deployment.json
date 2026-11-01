@@ -2,16 +2,24 @@
   "schema_version": 1,
   "networks": {
     "testnet": {
-      "observed_at": "2026-11-01T13:25:58.958957+00:00",
+      "observed_at": "2026-11-01T14:20:17.877570+00:00",
       "chain_id": 133,
       "status": "BLOCKED_NOT_DEPLOYED",
       "environment": "PUBLIC_HSK_CHAIN",
       "contracts": {},
       "transactions": {},
       "blockers": [
-        "Public owner and agent addresses, funded local deployer keystore, agent gas and owner-authorized vault funding are required"
+        "Owner/deployer must have enough native testnet HSK for deployment and the explicit vault funding amount; interactive local keystore passwords are required."
       ],
-      "public_transactions_sent_by_this_run": 0
+      "public_transactions_sent_by_this_run": 0,
+      "configured_owner": "0xAc85C4d3129cB1773c473Cc6A766aF9Af738fdE8",
+      "configured_agent": "0x372bd66F76Ff5802Ee640690f2D8373f47AF6750",
+      "deployer_account": "hsk-owner",
+      "balances_hsk": {
+        "owner": "0",
+        "agent": "0.1"
+      },
+      "readiness_report": "hsk-testnet-readiness.json"
     },
     "mainnet": {
       "observed_at": "2026-11-01T13:25:58.959772+00:00",

@@ -1,0 +1,40 @@
+{
+  "observed_at": "2026-11-01T14:20:17.877570+00:00",
+  "chain_id": 133,
+  "block_number": 35178077,
+  "rpc_transport": "curl -sS; TLS verification enabled",
+  "rpc_urls": [
+    "https://testnet.hsk.xyz",
+    "https://133.rpc.thirdweb.com",
+    "https://testnet02.hashkeychain.net"
+  ],
+  "public_addresses": {
+    "owner": "0xAc85C4d3129cB1773c473Cc6A766aF9Af738fdE8",
+    "agent": "0x372bd66F76Ff5802Ee640690f2D8373f47AF6750"
+  },
+  "keystore_metadata_matched": true,
+  "balances_hsk": {
+    "owner": "0",
+    "agent": "0.1"
+  },
+  "status": "BLOCKED_OWNER_FUNDING",
+  "funding_hsk": "0.1",
+  "proof_swap_whsk": "0.005",
+  "owner_minimum_hsk_including_reserve": "0.13",
+  "public_transactions_sent": 0,
+  "public_registry_written": false,
+  "python_tests": "308 passed, 1 skipped, 10 subtests passed",
+  "thirdweb_scope": "Chain ID returned 133; balance/block requests returned provider errors during the initial check. Fallback success is never assumed.",
+  "command": ".venv/bin/python -m scripts.deploy_and_verify_hsk run --network testnet --broadcast --fund-hsk 0.1",
+  "local_fork_validation": {
+    "environment": "ISOLATED_LOCAL_ANVIL_FORK",
+    "status": "PASSED",
+    "owner_deposit_and_wrap": "CONFIRMED using generated dev encrypted keystore",
+    "agent_gateway_execution": "reconciled",
+    "exact_reveal_verified": true,
+    "risk_limit": "TradeLimit()",
+    "idempotent_replay": true,
+    "public_transactions_sent": 0,
+    "scope": "Actual Foundry/cast funding and curl-backed Python signing on a loopback fork. Public user keystores stayed locked; these are not public testnet transactions."
+  }
+}

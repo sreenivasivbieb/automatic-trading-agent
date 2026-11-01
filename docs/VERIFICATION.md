@@ -2,6 +2,8 @@
 
 ## Hackathon upgrade: current evidence
 
+The subsequent [testnet curl/setup readiness check](evidence/hsk-testnet-readiness.json) passes **308 Python tests** and an actual signed local-fork funding/wrapping/proof run. The owner/agent identities are now configured; public deployment is awaiting sufficient observed owner funds and interactive signing. The 15-checkpoint upgrade report below preserves its earlier snapshot and test counts.
+
 [Full upgrade report and every changed file](evidence/hackathon-upgrade-validation.json), [actual mainnet data and built UI](evidence/hsk-judge-live-data.json), [signed local-fork proof](evidence/hsk-signed-fork-proof.json), and [public deployment status](evidence/hsk-onchain-deployment.json) keep local, paper and public-chain evidence separate.
 
 The final upgrade suite passes **295 Python tests** plus ten subtests (one opt-in live test skipped), **57 Solidity tests** (one opt-in live fork test skipped), **28 Chromium workflows**, Ruff, strict frontend types/build, production restart checks, and **19 optional platform tests**. The explicit signed-fork runner separately executes actual router bytecode locally. Live UI checks use three HSKSwap markets, actual reference inputs and two indicative spreads; no public transactions or paid model requests were sent.

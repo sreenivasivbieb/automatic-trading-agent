@@ -14,6 +14,8 @@ import httpx
 from eth_abi import decode, encode
 from web3 import Web3
 
+from aegis.connectors.curl_rpc import CurlTransport
+
 LOG = logging.getLogger(__name__)
 READ_METHODS = frozenset(
     {
@@ -24,6 +26,7 @@ READ_METHODS = frozenset(
         "eth_getStorageAt",
         "eth_getTransactionReceipt",
         "eth_getTransactionByHash",
+        "eth_getBalance",
         "eth_gasPrice",
         "eth_call",
     }
@@ -81,7 +84,16 @@ class ReadOnlyRpc:
         self.urls = urls
         self.attempts = attempts
         self.retry_delay = retry_delay
-        self.client = httpx.Client(timeout=timeout, transport=transport, follow_redirects=False)
+        selected_transport = (
+            transport
+            if transport is not None
+            else CurlTransport(timeout)
+            if chain_id == 133
+            else None
+        )
+        self.client = httpx.Client(
+            timeout=timeout, transport=selected_transport, follow_redirects=False
+        )
         self.sequence = 0
         self._cache: dict[tuple[str, str, str], Any] = {}
         self._stopping = threading.Event()

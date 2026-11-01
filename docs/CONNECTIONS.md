@@ -24,7 +24,7 @@ Changing only an RPC URL is insufficient. The registry selects chain-specific co
 
 No public AEGIS deployment is registered. Deployment requires actual owner/agent addresses and a funded deployer. Funding controls remain disabled until a verified deployment is recorded.
 
-Use three accounts: the device-held owner, a separate funded deployer keystore, and a minimally funded agent hot key. A separately funded keeper is optional but needed for independent safety-exit availability. Follow [CONTRACTS.md](CONTRACTS.md) to prepare, simulate, broadcast to testnet and verify canonical deployment receipts. Only the recorder may create `deployments/133.json` after real code/ownership/binding checks. Local fork addresses never belong in that public registry. Mainnet deployment requires the user's separate explicit approval.
+Keep owner and agent addresses distinct. The supplied testnet profile uses local `hsk-owner` as owner/deployer and `hsk-agent` as the separate hot agent; a third deployer account is also supported. Owner signing stays in the local interactive Foundry process. A separately funded keeper is optional but needed for independent safety-exit availability. Follow [CONTRACTS.md](CONTRACTS.md) to prepare, simulate, broadcast to testnet and verify canonical deployment receipts. Only the recorder may create `deployments/133.json` after real code/ownership/binding checks. Local fork addresses never belong in that public registry. Mainnet deployment requires the user's separate explicit approval.
 
 ## 4. Connect and fund from the owner device
 

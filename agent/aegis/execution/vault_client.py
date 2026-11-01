@@ -13,6 +13,7 @@ from eth_account import Account
 from hexbytes import HexBytes
 from web3 import HTTPProvider, Web3
 
+from aegis.connectors.curl_rpc import CurlHTTPProvider
 from aegis.connectors.rpc import DiscoveryError, ReadOnlyRpc
 from aegis.execution.fees import LiveFees
 
@@ -50,8 +51,11 @@ class VaultClient:
             raise ValueError("The owner key must never be used by this server-side client")
         if role == "agent" and self.account.address.lower() != deployment["agent"].lower():
             raise ValueError("Hot key does not match the registered vault agent")
+        self._owns_web3 = web3 is None
         self.w3 = web3 or Web3(
-            HTTPProvider(
+            CurlHTTPProvider(network.chain_id, network.rpc_urls)
+            if network.chain_id == 133
+            else HTTPProvider(
                 network.rpc_urls[0],
                 request_kwargs={"timeout": 10},
                 exception_retry_configuration=None,
@@ -116,6 +120,8 @@ class VaultClient:
             return
         self._closed = True
         self.rpc.close()
+        if self._owns_web3 and hasattr(self.w3.provider, "close"):
+            self.w3.provider.close()
         if self.db is not None:
             self.db.close()
         fcntl.flock(self.lock, fcntl.LOCK_UN)

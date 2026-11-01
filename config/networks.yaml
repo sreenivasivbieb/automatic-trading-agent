@@ -73,6 +73,7 @@ networks:
     chain_id: 133
     rpc_urls:
     - https://testnet.hsk.xyz
+    - https://133.rpc.thirdweb.com
     - https://testnet02.hashkeychain.net
     explorer: https://testnet-explorer.hskchain.net
     subgraph: https://graphnode-testnet.hashkeychain.net/subgraphs/name/hskdex-subgraph-testnet
