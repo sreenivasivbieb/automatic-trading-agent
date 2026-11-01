@@ -1,0 +1,318 @@
+{
+  "schema_version": 1,
+  "observed_at": "2026-11-01T13:43:30.493218+00:00",
+  "status": "LOCAL_UPGRADE_VERIFIED_PUBLIC_DEPLOYMENT_BLOCKED",
+  "base_commit": "fea8768a706f84bb006133f49964b46e4df1b756",
+  "audit_summary": {
+    "total": 15,
+    "verified_with_stated_scope": 13,
+    "blocked_public": 2
+  },
+  "checkpoints": [
+    {
+      "id": 1,
+      "checkpoint": "Verified networks and V3 identities",
+      "status": "PASS",
+      "scope": "Actual mainnet registry/code/metadata checks, 3 live settlement markets"
+    },
+    {
+      "id": 2,
+      "checkpoint": "Turnkey deployment and broadcast gates",
+      "status": "PASS_LOCAL",
+      "scope": "Unit tests and actual isolated Foundry deployment; no public broadcast"
+    },
+    {
+      "id": 3,
+      "checkpoint": "Public GuardVault, Oracle and DecisionLog",
+      "status": "BLOCKED",
+      "scope": "No actual distinct owner/agent addresses or funded local deployer supplied"
+    },
+    {
+      "id": 4,
+      "checkpoint": "Public commit/swap/reveal and explorer proof",
+      "status": "BLOCKED",
+      "scope": "Requires public modules, owner-authorized funding and agent gas"
+    },
+    {
+      "id": 5,
+      "checkpoint": "Guard custody, risk limits and circuit behavior",
+      "status": "PASS_LOCAL",
+      "scope": "57 Solidity tests; exact TradeLimit eth_call rejection on local fork"
+    },
+    {
+      "id": 6,
+      "checkpoint": "Typed portfolio and PnL tools",
+      "status": "PASS",
+      "scope": "Virtual balances, realized/unrealized PnL, win rate, risk state, freshness"
+    },
+    {
+      "id": 7,
+      "checkpoint": "Immediate bounded strategy updates",
+      "status": "PASS",
+      "scope": "Atomic USDT size, interval, risk, targets and strategy filters; 25 USDT correctly refused on 100 NAV"
+    },
+    {
+      "id": 8,
+      "checkpoint": "Multi-provider fallback without mutation replay",
+      "status": "PASS_PROTOCOL_TESTS",
+      "scope": "Anthropic fixtures, OpenAI HTTP transport fixture, Bedrock Converse fixture; no live model calls"
+    },
+    {
+      "id": 9,
+      "checkpoint": "Human close confirmation and panic safety",
+      "status": "PASS",
+      "scope": "Separate expiring confirmation, latched emergency stop, selected prompt-injection refusals"
+    },
+    {
+      "id": 10,
+      "checkpoint": "On-chain analysis and five-stage pipeline",
+      "status": "PASS_READ_ONLY_LIVE",
+      "scope": "Actual slot0/tick/liquidity/fees in UI; EVM integers retained as strings in audit payloads"
+    },
+    {
+      "id": 11,
+      "checkpoint": "Arbitrage and spread cost accounting",
+      "status": "PASS",
+      "scope": "Closed-route same-settlement math; LP fees counted once; live indicative reference spreads do not authorize trades"
+    },
+    {
+      "id": 12,
+      "checkpoint": "Autonomous paper loop, stops and persistence",
+      "status": "PASS_LOCAL",
+      "scope": "Scheduler tests, replay stop exit, production restart; no new one-hour soak claimed"
+    },
+    {
+      "id": 13,
+      "checkpoint": "Frontend and original strategies preserved",
+      "status": "PASS",
+      "scope": "28 Chromium workflows, actual live-data desktop/mobile views; unchanged strategy and Guard sources"
+    },
+    {
+      "id": 14,
+      "checkpoint": "Judge-facing documentation and evidence",
+      "status": "PASS",
+      "scope": "Requirement traceability, architecture, demo script, genuine empty public-deployment state"
+    },
+    {
+      "id": 15,
+      "checkpoint": "Regression and publication checks",
+      "status": "PASS",
+      "scope": "295 Python tests + 10 subtests, 57 Solidity, 28 E2E, Ruff/build/restart, 19 platform tests, bounded secret/path scan"
+    }
+  ],
+  "validation": {
+    "python": {
+      "passed": 295,
+      "subtests_passed": 10,
+      "skipped": 1,
+      "warnings": 2,
+      "command": ".venv/bin/python -m pytest backend/tests agent/tests legacy_tests/test_regime_detection.py legacy_tests/test_backtest_engine.py legacy_tests/test_portfolio_intelligence.py -q",
+      "output": "295 passed, 1 skipped, 2 warnings, 10 subtests passed in 10.30s"
+    },
+    "solidity": {
+      "passed": 57,
+      "skipped_opt_in_fork": 1,
+      "command": "make contracts-test",
+      "output": "Ran 2 test suites in 37.81ms (41.36ms CPU time): 57 tests passed, 0 failed, 1 skipped (58 total tests)"
+    },
+    "browser": {
+      "passed": 28,
+      "command": "npm run test:e2e",
+      "output": "  28 passed (1.6m)"
+    },
+    "ruff": "PASS: .venv/bin/ruff check backend scripts agent",
+    "production_build": "PASS: npm run build",
+    "production_restart": "PASS: python -m scripts.production_smoke; simulation balance persisted and entries paused",
+    "optional_platform": {
+      "tests_passed": 19,
+      "type_check": "PASS; does not validate an AWS account deployment"
+    },
+    "publication_scan": "PASS: bounded credential patterns/private paths; not a complete security audit"
+  },
+  "live_data": {
+    "report": "hsk-judge-live-data.json",
+    "chain_id": 177,
+    "observed_block": 29596655,
+    "markets": [
+      "WHSK",
+      "WETH",
+      "WBTC"
+    ],
+    "reference_spreads": [
+      "WBTC",
+      "WETH"
+    ],
+    "final": {
+      "paused": true,
+      "data_status": "LIVE",
+      "block": 29596662,
+      "fills": 0,
+      "pnl": {
+        "mode": "paper",
+        "initial_cash_usdt": "100",
+        "nav_usdt": "100",
+        "net_pnl_usdt": "0",
+        "realized_pnl_usdt": "0",
+        "unrealized_pnl_usdt": "0",
+        "fills": 0,
+        "valuation_assumption": "USDT is the accounting numeraire; no independent USD peg is asserted."
+      }
+    },
+    "engine": {
+      "status": "deterministic",
+      "provider": null,
+      "configured_providers": [],
+      "label": "AI Engine: Deterministic Fallback"
+    }
+  },
+  "signed_local_fork": {
+    "report": "hsk-signed-fork-proof.json",
+    "environment": "ISOLATED_LOCAL_ANVIL_FORK",
+    "risk_limit": "VERIFIED_ETH_CALL_REVERT",
+    "public_transactions_sent": 0,
+    "note": "Fork report contains its own exact source hashes; its transaction hashes do not exist on public testnet."
+  },
+  "public_deployment": {
+    "report": "hsk-onchain-deployment.json",
+    "deployed": false,
+    "public_transactions_sent": 0
+  },
+  "not_established": [
+    "Public AEGIS deployment or signed public trades",
+    "Live paid LLM provider or Telegram delivery",
+    "Sustained profitability",
+    "Independent security audit",
+    "A new one-hour soak on the final upgrade"
+  ],
+  "unchanged_strategy_safety_and_original_ui_sources": [
+    "backend/strategies.py",
+    "backend/strategy_registry.py",
+    "backend/selection.py",
+    "contracts/src/AegisVault.sol",
+    "contracts/src/BandedTwapOracle.sol",
+    "contracts/src/DecisionLog.sol",
+    "frontend/src/styles.css",
+    "frontend/src/theme.css",
+    "frontend/src/brand.tsx",
+    "frontend/src/workspaces.tsx"
+  ],
+  "changed_files": [
+    ".env.example",
+    "Makefile",
+    "README.md",
+    "SECURITY.md",
+    "agent/aegis/connectors/base.py",
+    "agent/aegis/connectors/hskswap_v3.py",
+    "agent/aegis/execution/proof.py",
+    "agent/aegis/nl/agent.py",
+    "agent/aegis/nl/providers.py",
+    "agent/aegis/nl/tools.py",
+    "agent/aegis/risk/policy.py",
+    "agent/aegis/runtime.py",
+    "agent/aegis/service.py",
+    "agent/aegis/strategy/arbitrage.py",
+    "agent/aegis/strategy/pipeline.py",
+    "agent/aegis/strategy/spreads.py",
+    "agent/tests/test_hsk_proof.py",
+    "agent/tests/test_pipeline.py",
+    "agent/tests/test_strategy_control.py",
+    "docs/ARCHITECTURE.md",
+    "docs/CONNECTIONS.md",
+    "docs/CONTRACTS.md",
+    "docs/DEMO_SCRIPT.md",
+    "docs/VERIFICATION.md",
+    "docs/evidence/hackathon-upgrade-validation.json",
+    "docs/evidence/hsk-judge-live-data.json",
+    "docs/evidence/hsk-onchain-deployment.json",
+    "docs/evidence/hsk-signed-fork-proof.json",
+    "docs/evidence/screenshots/judge-aegis-desktop.png",
+    "docs/evidence/screenshots/judge-aegis-mobile.png",
+    "e2e/judge-flow.spec.ts",
+    "frontend/src/AegisDesk.tsx",
+    "frontend/src/aegis.css",
+    "frontend/src/aegis/Chat.tsx",
+    "frontend/src/aegis/Pipeline.tsx",
+    "frontend/src/aegis/types.ts",
+    "scripts/deploy_and_verify_hsk.py",
+    "scripts/verify_aegis_fork_flow.py",
+    "scripts/verify_frontend.mjs"
+  ],
+  "changed_source_sha256": {
+    "agent/aegis/connectors/base.py": "7834a4bf10424bee44deb4ee83b5415bf9c64d98c6f9ca832a751be365d1fbd5",
+    "agent/aegis/connectors/hskswap_v3.py": "69fe4c836cbe9f8fe8cda7af1a67308ae4d8b6d1d0dfd53f220bc74750414b78",
+    "agent/aegis/execution/proof.py": "d0d152cd058d3cfb62494c929e974fecc8ebc236217cbb19aa4635ac25cc8e65",
+    "agent/aegis/nl/agent.py": "8ea7a0f52fcb84b553711752ee59f92b848244fd710558b48da8f286b22c74d2",
+    "agent/aegis/nl/providers.py": "022d9efa326d15877bdbd767eb80ac8362bb0938b60e91e5fe8e334475372583",
+    "agent/aegis/nl/tools.py": "ae9f9806d3b5f32fe42551c43d29e9b7c43a2e5a73761ecee6dbf1da79cdcb16",
+    "agent/aegis/risk/policy.py": "a316020803d435a431f3012b0fb3dbc060416dab25f80a0b537eba0eb2999494",
+    "agent/aegis/runtime.py": "c5a92f3ddd41b897ecb0a9ac8b6eb1924ae30c54269686c221fa08de62f62508",
+    "agent/aegis/service.py": "8f477360cfb398d4e8e2ab8813c15c4f4e0089358c013206f70415b826b08c3b",
+    "agent/aegis/strategy/arbitrage.py": "0a9782c9111a3149dec4cb572e904f6dbd44affe0a221bdb757911012b098a54",
+    "agent/aegis/strategy/pipeline.py": "5111ea92bc7ed5ea7bf2c8b7d49a203523156e9fd43e9abd605f63deeac0eab7",
+    "agent/aegis/strategy/spreads.py": "ae18aaae77bbdf7a64aafc8e69d868a654f3f064b98df954b458a212ea9b7ce6",
+    "agent/tests/test_hsk_proof.py": "f9147b2caad3fe0d0e8006bbaeb06aefbcf80cf1d2135da3cf2cf485e7ffd734",
+    "agent/tests/test_pipeline.py": "0e169c0e0190abd03e090c0239216cf7b9083dd843cfca65ec180e7a58e9e98c",
+    "agent/tests/test_strategy_control.py": "241cae65a0cc11cfbe8c9121c0899dc686dcc97e5beecce1e8c384bd2ebc806e",
+    "e2e/judge-flow.spec.ts": "5430f3b563b60aa414d3b840d84e6f0ce23e9688e6cc8206ba9411cfe43d42af",
+    "frontend/src/AegisDesk.tsx": "6700f6b6d7078b3bd12627c4fb9bffaacc6628953aa7599b844b058364bbd4ae",
+    "frontend/src/aegis.css": "42cf8e0aaf46232fa14548c9e32676fdbcdd4c50215f4a7ba93fe5340f84b2e4",
+    "frontend/src/aegis/Chat.tsx": "ce972d47823e92ad5671e50d4bcbd7cc73c5e7db2e76784aade9a2a3d489dbb2",
+    "frontend/src/aegis/Pipeline.tsx": "b76cc302be159ed91b61fde3dd02f750555991f887eddd69bfd8955fbd03c9ec",
+    "frontend/src/aegis/types.ts": "0018c93b40f9a8c6c291832ac07671471702c4d3b6c7673894753391270bd2ba",
+    "scripts/deploy_and_verify_hsk.py": "0be6dfb658a091251fbf3377c833f960016fbc9f19f345e8d51beb8e33d3d7b8",
+    "scripts/verify_aegis_fork_flow.py": "4b6a7f9713dc6447f48c11eff6555ce97cb88abf81e81df6d8fb62eac8f0764f",
+    "scripts/verify_frontend.mjs": "853e8456787e46216b729757651a48c879b8e5d7d019534c088cfbc154ea3ef4"
+  },
+  "file_changes": {
+    ".env.example": "Document opt-in AI provider fallback and separate local deployment/agent credentials.",
+    "Makefile": "Add testnet/mainnet deployment, proof and read-only status targets.",
+    "README.md": "Judge-facing hero, requirement traceability, architecture, demo, provider and honest deployment instructions.",
+    "SECURITY.md": "State provider replay boundaries, bounded USDT budgets and entry-filter safety semantics.",
+    "agent/aegis/connectors/base.py": "Expose tick and browser-exact on-chain audit snapshots.",
+    "agent/aegis/connectors/hskswap_v3.py": "Carry actual pool tick into typed quote state.",
+    "agent/aegis/execution/proof.py": "Verify the exact deployed TradeLimit custom error through canonical eth_call.",
+    "agent/aegis/nl/agent.py": "Unify provider tool loops, fallback order, typed schemas and truthful engine state.",
+    "agent/aegis/nl/providers.py": "Normalize OpenAI-compatible named tools and Bedrock Converse into the bounded control agent.",
+    "agent/aegis/nl/tools.py": "Add typed portfolio/config/latest-decision/panic/close tools and parse judge commands atomically.",
+    "agent/aegis/risk/policy.py": "Validate USDT budgets and active-strategy filters while retaining percentage and frequency caps.",
+    "agent/aegis/runtime.py": "Apply entry budgets/filters, preserve safety exits, persist pool/spread/five-stage evidence.",
+    "agent/aegis/service.py": "Project actual control-agent engine status into shared API state.",
+    "agent/aegis/strategy/arbitrage.py": "Record same-settlement route, fee, impact, slippage/network and net-edge calculations.",
+    "agent/aegis/strategy/pipeline.py": "Build structured public monitor/analysis/signal/risk/execution evidence and blocked failure stages.",
+    "agent/aegis/strategy/spreads.py": "Compare executable V3 buy/sell quotes to reference tickers without authorizing unverified arbitrage.",
+    "agent/tests/test_hsk_proof.py": "Test broadcast/live gates, exact revert proof, evidence and uncertain-redeployment refusal.",
+    "agent/tests/test_pipeline.py": "Test exact slot0 evidence, fee accounting, entry filters, stop exits and stale-data blocking.",
+    "agent/tests/test_strategy_control.py": "Test four demo prompts, atomic bounds, confirmation/panic and provider protocols/no replay.",
+    "docs/ARCHITECTURE.md": "Describe shared multi-provider tools, engine badges and exact audit values.",
+    "docs/CONNECTIONS.md": "Explain provider setup and bounded conversational runtime controls.",
+    "docs/CONTRACTS.md": "Document turnkey deployment/proof and explicit public/fork risk-proof boundaries.",
+    "docs/DEMO_SCRIPT.md": "Update the three-minute judging flow with the pipeline, prompt chips and real proof commands.",
+    "docs/VERIFICATION.md": "Publish the 15-checkpoint table with 13 scoped passes and two public-chain blockers.",
+    "docs/evidence/hackathon-upgrade-validation.json": "Record this upgrade, validation scopes, unchanged source invariants and every changed file.",
+    "docs/evidence/hsk-judge-live-data.json": "Capture actual mainnet data, reference inputs, pipeline and built-UI outcomes.",
+    "docs/evidence/hsk-onchain-deployment.json": "Record genuine undeployed testnet/mainnet status with no invented addresses/hashes.",
+    "docs/evidence/hsk-signed-fork-proof.json": "Retain actual signed local-fork lifecycle, exact reveal, replay and risk-limit proof.",
+    "docs/evidence/screenshots/judge-aegis-desktop.png": "Capture the built desktop UI with actual mainnet data.",
+    "docs/evidence/screenshots/judge-aegis-mobile.png": "Capture the built mobile UI with actual mainnet data.",
+    "e2e/judge-flow.spec.ts": "Exercise pipeline, four prompt chips, bounded accepted/refused changes and unchanged original strategies.",
+    "frontend/src/AegisDesk.tsx": "Integrate compact status, runtime preferences and recorded pipeline badges.",
+    "frontend/src/aegis.css": "Extend the existing theme with responsive pipeline and summary styles.",
+    "frontend/src/aegis/Chat.tsx": "Show actual engine state and the four requested judging prompts.",
+    "frontend/src/aegis/Pipeline.tsx": "Render chain/block/PnL/exposure/risk and expandable five-stage evidence.",
+    "frontend/src/aegis/types.ts": "Type the new runtime preferences, engine, pipeline and pool metadata.",
+    "scripts/deploy_and_verify_hsk.py": "Wrap verified deployment/recording and bounded public gateway proof with local keystore unlock and broadcast safety.",
+    "scripts/verify_aegis_fork_flow.py": "Extend the actual signed fork lifecycle with exact TradeLimit enforcement proof.",
+    "scripts/verify_frontend.mjs": "Check actual slot0 and five-stage evidence in the built live-data browser run."
+  },
+  "implementation_commits": [
+    "59840ad",
+    "ac089b2"
+  ],
+  "local_development_restart": {
+    "health_status": 200,
+    "available": true,
+    "mode": "paper",
+    "paused": true,
+    "live_enabled": false
+  }
+}

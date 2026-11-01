@@ -1,5 +1,31 @@
 # Verification
 
+## Hackathon upgrade: current evidence
+
+[Full upgrade report and every changed file](evidence/hackathon-upgrade-validation.json), [actual mainnet data and built UI](evidence/hsk-judge-live-data.json), [signed local-fork proof](evidence/hsk-signed-fork-proof.json), and [public deployment status](evidence/hsk-onchain-deployment.json) keep local, paper and public-chain evidence separate.
+
+The final upgrade suite passes **295 Python tests** plus ten subtests (one opt-in live test skipped), **57 Solidity tests** (one opt-in live fork test skipped), **28 Chromium workflows**, Ruff, strict frontend types/build, production restart checks, and **19 optional platform tests**. The explicit signed-fork runner separately executes actual router bytecode locally. Live UI checks use three HSKSwap markets, actual reference inputs and two indicative spreads; no public transactions or paid model requests were sent.
+
+| #   | Audit checkpoint                                                 | Result / evidence scope                                                                                         |
+| --- | ---------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| 1   | Chain IDs, verified V3 contracts, token decimals and live pools  | **Pass:** registry/code/metadata checks and actual mainnet reads                                                |
+| 2   | Turnkey deployment, canonical recorder and broadcast gates       | **Pass locally:** runner tests; isolated Foundry deployment; separate mainnet acknowledgement                   |
+| 3   | Public GuardVault, Oracle and DecisionLog deployments            | **Blocked:** distinct actual owner/agent addresses and funded deployer not supplied                             |
+| 4   | Public commit → guarded swap → reveal with explorer links        | **Blocked:** requires checkpoint 3, owner-authorized vault funding and agent gas                                |
+| 5   | Guard custody, caps, slippage, stop/circuit and owner exits      | **Pass locally:** 57 Solidity tests and exact TradeLimit rejection on a fork                                    |
+| 6   | Portfolio, P&L, virtual balances, win rate and risk tools        | **Pass:** typed handlers and API/browser tests; stale valuations masked                                         |
+| 7   | Immediate sizing, frequency, risk, targets and strategy updates  | **Pass:** atomic validation/diffs; 25 USDT correctly refused on 100 NAV; accepted bounded example               |
+| 8   | Anthropic / OpenAI-compatible / Bedrock fallback                 | **Pass in protocol tests:** same tools; no replay after tool start; actual providers require credentials        |
+| 9   | Human confirmation, panic and selected injection refusals        | **Pass:** separate one-use confirmation, latched stops and schema restrictions                                  |
+| 10  | On-chain analysis and five-stage pipeline                        | **Pass:** actual slot0/tick/liquidity/fees in live UI and durable observations                                  |
+| 11  | Arbitrage and reference-spread cost math                         | **Pass:** same-settlement net-cost tests, route scans, two live indicative spreads; no profitable cycle claimed |
+| 12  | Autonomous paper loop, stop exits and restart recovery           | **Pass:** scheduler, replayed stop and production persistence checks; no new one-hour soak claimed              |
+| 13  | Frontend integration and original UI/strategy preservation       | **Pass:** 28 desktop/mobile browser workflows; original strategy source and Guard contracts unchanged           |
+| 14  | Judge README, traceability, architecture and deployment evidence | **Pass:** linked implementation paths, demo flow and explicit deployment state                                  |
+| 15  | Required regression and publication checks                       | **Pass:** Python, Ruff, build, contracts, browser, production restart and bounded secret/path scan              |
+
+**13 checkpoints are verified within the stated local/read-only scopes; two public-chain checkpoints remain blocked.** Actual LLM/Telegram delivery, independent security audit and sustained profitability are not established by these checks. [Desktop](evidence/screenshots/judge-aegis-desktop.png) and [mobile](evidence/screenshots/judge-aegis-mobile.png) show the preserved theme and integrated status panel.
+
 ## Local checks
 
 Run setup from the root README, then:

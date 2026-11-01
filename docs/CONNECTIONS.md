@@ -36,9 +36,13 @@ Owner withdrawals always pay the registered owner. Native withdrawal uses unwrap
 
 Actual funded Trust Wallet signing is pending public deployment and funds. Browser tests use a labeled wallet fixture; Python transaction encoding and receipt matching are separately tested.
 
-## 5. Optional Claude and Telegram
+## 5. Optional AI providers and Telegram
 
 Copy `.env.example` to an ignored `.env` if needed. For Claude set `AEGIS_LLM_PROVIDER=anthropic`, your local `AEGIS_ANTHROPIC_API_KEY` and an explicit model ID available to your account in `AEGIS_ANTHROPIC_MODEL`. Restart `make demo`. The floating assistant button or Ctrl/Cmd+K opens the same assistant from every HSKSwap screen; **Strategies** shows the resulting validated preferences. Provider failures are reported honestly; a failure after a tool mutation does not repeat that mutation. No model credentials means the explicitly labeled deterministic language router is used. See the [official Python SDK](https://github.com/anthropics/anthropic-sdk-python) and [tool schema documentation](https://platform.claude.com/docs/en/agents-and-tools/tool-use/define-tools).
+
+The same validated tools also support OpenAI-compatible Chat Completions (`AEGIS_LLM_PROVIDER=openai`, `OPENAI_API_KEY`, explicit `AEGIS_OPENAI_MODEL`, optional `AEGIS_OPENAI_BASE_URL`) and AWS Bedrock Converse (`AEGIS_LLM_PROVIDER=bedrock`, `AEGIS_BEDROCK_MODEL`, `AEGIS_BEDROCK_REGION`, local AWS credential chain). Set `AEGIS_LLM_FALLBACKS=openai,bedrock` for ordered fallback, or opt in to `auto` to try configured Anthropic, OpenAI and Bedrock providers. Failover is permitted only before a tool starts; validation refusals and uncertain mutations are never retried at another provider. The badge says Ready until an actual validated model tool runs, Active afterward, and Deterministic Fallback when no provider is active. These adapters have protocol tests; credential-backed delivery remains unverified.
+
+`get_portfolio_and_pnl`, `update_strategy_config`, `explain_latest_decision`, `trigger_emergency_panic` and `request_close_all` share runtime state with the UI. Position budget changes require fresh NAV and remain within 10%. The default 100-USDT ledger refuses the 25-USDT chip atomically; 8 USDT is a valid example. Frequency changes polling (15–300 seconds), without increasing the six-trades/hour cap. Active-strategy filters preserve original rules and safety exits. A close request only prepares a preview; the model cannot confirm it.
 
 For Telegram, create a bot through Telegram's official BotFather, configure its token and your positive private-chat user ID in `AEGIS_TELEGRAM_BOT_TOKEN` / `AEGIS_TELEGRAM_CHAT_ID`, and set a strong `TERMINAL_API_TOKEN` for the local API. Restart the backend with that token. Start the separate bridge with environment variables loaded:
 

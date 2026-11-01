@@ -23,7 +23,7 @@ flowchart TD
 
 ## Local runtime
 
-`backend/api.py` authenticates requests, checks origin/CSRF and validates typed input. Decimal financial values serialize as strings. The UI and optional Telegram bridge use the same bounded controls. Claude can explain retrieved state and request validated tools; it cannot receive keys, build transactions or confirm its own close-all preview.
+`backend/api.py` authenticates requests, checks origin/CSRF and validates typed input. Decimal financial values and on-chain audit integers serialize as strings. The UI and optional Telegram bridge share bounded portfolio/P&L, strategy-update, latest-decision, panic and close-preview tools. Anthropic, OpenAI-compatible and Bedrock adapters normalize provider requests into that same control agent. Failover stops once any tool starts. Models cannot receive keys, build transactions or confirm their own close previews. Engine badges distinguish configured readiness, actual tool use and deterministic fallback.
 
 `backend/aegis_bridge.py` reuses the original strategy rules and selector with fresh reference-market inputs. BTC/ETH map to verified WBTC/WETH; SOL is blocked. `agent/aegis/runtime.py` combines those signals with native pool mean reversion and closed-route scanning. Signal presence never bypasses risk, quote, control or liquidity checks. See [strategy connection](STRATEGY_CONNECTION.md).
 
