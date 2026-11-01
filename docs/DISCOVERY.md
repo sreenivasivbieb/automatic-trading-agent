@@ -165,7 +165,7 @@ The **22 data tests** exercise decimal scaling, zero price rejection, chain mism
 
 No browser surface was connected to the session. A rendered comparison of WHSK/USDT, WETH/USDT and WBTC/USDT against HSKSwap was **not performed**; no screenshot or UI-tolerance result has been invented. After the user asked to proceed without this requirement, implementation continued using the exact same-block source checks above. A later visual check remains useful but does not block the connector or paper execution work. Match pool mid prices to pool mid prices; a swap widget's output additionally includes the fee and size impact.
 
-The verified registry and ABIs support the implemented V3 connector, quote-backed paper gateway, strategy/risk loop and dashboard. See the [paper flow](AEGIS_FLOWS.md), [strategy adapter](STRATEGY_CONNECTION.md) and [contracts](CONTRACTS.md). Public deployment and funded execution remain pending; the discovery snapshots above retain their original observation dates.
+The verified registry and ABIs support the implemented V3 connector, quote-backed paper gateway, strategy/risk loop and dashboard. See the [paper flow](AEGIS_FLOWS.md), [strategy adapter](STRATEGY_CONNECTION.md) and [contracts](CONTRACTS.md). Public deployment and a guarded stable-exit lifecycle are now verified on testnet (133), with exact receipts linked in the contract guide. The discovery snapshots above retain their original observation dates.
 
 ## Consequences for the next phases
 

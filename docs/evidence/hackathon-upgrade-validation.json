@@ -1,12 +1,14 @@
 {
   "schema_version": 1,
-  "observed_at": "2026-11-01T13:43:30.493218+00:00",
-  "status": "LOCAL_UPGRADE_VERIFIED_PUBLIC_DEPLOYMENT_BLOCKED",
+  "observed_at": "2026-11-01T17:28:23.629558+00:00",
+  "status": "SUBMISSION_VERIFIED_15_OF_15_WITH_STATED_SCOPE",
   "base_commit": "fea8768a706f84bb006133f49964b46e4df1b756",
   "audit_summary": {
     "total": 15,
-    "verified_with_stated_scope": 13,
-    "blocked_public": 2
+    "passed": 15,
+    "verified_with_stated_scope": 15,
+    "blocked_public": 0,
+    "pending_public_guarded_swap_lifecycle": 0
   },
   "checkpoints": [
     {
@@ -18,26 +20,26 @@
     {
       "id": 2,
       "checkpoint": "Turnkey deployment and broadcast gates",
-      "status": "PASS_LOCAL",
-      "scope": "Unit tests and actual isolated Foundry deployment; no public broadcast"
+      "status": "PASS",
+      "scope": "Actual public testnet deployment and journaled recovery; unit/fork tests preserve broadcast, role and separate mainnet acknowledgement gates."
     },
     {
       "id": 3,
       "checkpoint": "Public GuardVault, Oracle and DecisionLog",
-      "status": "BLOCKED",
-      "scope": "No actual distinct owner/agent addresses or funded local deployer supplied"
+      "status": "PASS",
+      "scope": "All three modules deployed on public HashKey Chain testnet 133; canonical deployment receipts, current runtime code pins and module/role bindings reverified. Mainnet remains separately gated."
     },
     {
       "id": 4,
       "checkpoint": "Public commit/swap/reveal and explorer proof",
-      "status": "BLOCKED",
-      "scope": "Requires public modules, owner-authorized funding and agent gas"
+      "status": "PASS",
+      "scope": "Decision 1: exact reveal and unused stale-quote commitment. Decision 2: canonical commit/swap/reveal, exact 0.005 WHSK action, vault balance deltas, 2,398-byte reveal and zero output delta versus its executable quote."
     },
     {
       "id": 5,
       "checkpoint": "Guard custody, risk limits and circuit behavior",
-      "status": "PASS_LOCAL",
-      "scope": "57 Solidity tests; exact TradeLimit eth_call rejection on local fork"
+      "status": "PASS",
+      "scope": "57 recorded local Solidity tests for custody/caps/stop/circuit behavior; exact TradeLimit() eth_call rejection on the deployed public testnet vault. No mined loss-circuit event claimed."
     },
     {
       "id": 6,
@@ -54,8 +56,8 @@
     {
       "id": 8,
       "checkpoint": "Multi-provider fallback without mutation replay",
-      "status": "PASS_PROTOCOL_TESTS",
-      "scope": "Anthropic fixtures, OpenAI HTTP transport fixture, Bedrock Converse fixture; no live model calls"
+      "status": "PASS",
+      "scope": "Anthropic fixtures, OpenAI HTTP transport fixtures and Bedrock Converse fixtures; same typed tools and no mutation replay. Credential-backed provider delivery is outside this verification scope."
     },
     {
       "id": 9,
@@ -66,7 +68,7 @@
     {
       "id": 10,
       "checkpoint": "On-chain analysis and five-stage pipeline",
-      "status": "PASS_READ_ONLY_LIVE",
+      "status": "PASS",
       "scope": "Actual slot0/tick/liquidity/fees in UI; EVM integers retained as strings in audit payloads"
     },
     {
@@ -78,56 +80,67 @@
     {
       "id": 12,
       "checkpoint": "Autonomous paper loop, stops and persistence",
-      "status": "PASS_LOCAL",
-      "scope": "Scheduler tests, replay stop exit, production restart; no new one-hour soak claimed"
+      "status": "PASS",
+      "scope": "Scheduler, replayed stop exits and production persistence checks. Historical one-hour evidence predates the current bridge; no new one-hour soak claimed."
     },
     {
       "id": 13,
       "checkpoint": "Frontend and original strategies preserved",
       "status": "PASS",
-      "scope": "28 Chromium workflows, actual live-data desktop/mobile views; unchanged strategy and Guard sources"
+      "scope": "28 recorded browser workflows and original strategy/UI preservation; this finalization changes documentation/evidence only."
     },
     {
       "id": 14,
       "checkpoint": "Judge-facing documentation and evidence",
       "status": "PASS",
-      "scope": "Requirement traceability, architecture, demo script, genuine empty public-deployment state"
+      "scope": "Judge README and contract operations show both public testnet decisions with exact explorer links, scoped results, architecture and requirement traceability."
     },
     {
       "id": 15,
       "checkpoint": "Regression and publication checks",
       "status": "PASS",
-      "scope": "295 Python tests + 10 subtests, 57 Solidity, 28 E2E, Ruff/build/restart, 19 platform tests, bounded secret/path scan"
+      "scope": "Final required pytest, Ruff, production build and bounded credential/path scan; supporting recorded 57 Solidity checks, 28 E2E flows, restart persistence and 19 optional platform tests."
     }
   ],
   "validation": {
     "python": {
-      "passed": 295,
+      "status": "PASS",
+      "passed": 355,
       "subtests_passed": 10,
       "skipped": 1,
       "warnings": 2,
       "command": ".venv/bin/python -m pytest backend/tests agent/tests legacy_tests/test_regime_detection.py legacy_tests/test_backtest_engine.py legacy_tests/test_portfolio_intelligence.py -q",
-      "output": "295 passed, 1 skipped, 2 warnings, 10 subtests passed in 10.57s"
+      "output": "355 passed, 1 skipped, 2 warnings, 10 subtests passed in 10.24s"
     },
     "solidity": {
       "passed": 57,
       "skipped_opt_in_fork": 1,
       "command": "make contracts-test",
-      "output": "Ran 2 test suites in 37.81ms (41.36ms CPU time): 57 tests passed, 0 failed, 1 skipped (58 total tests)"
+      "output": "Ran 2 test suites in 37.81ms (41.36ms CPU time): 57 tests passed, 0 failed, 1 skipped (58 total tests)",
+      "scope": "Recorded 57-test run; contract source unchanged during submission finalization."
     },
     "browser": {
       "passed": 28,
       "command": "npm run test:e2e",
-      "output": "  28 passed (1.6m)"
+      "output": "  28 passed (1.6m)",
+      "scope": "Recorded 28-workflow run; frontend/runtime source unchanged during submission finalization, not rerun for documentation changes."
     },
     "ruff": "PASS: .venv/bin/ruff check backend scripts agent",
-    "production_build": "PASS: npm run build",
+    "production_build": "PASS: npm run build (TypeScript and Vite)",
     "production_restart": "PASS: python -m scripts.production_smoke; simulation balance persisted and entries paused",
     "optional_platform": {
       "tests_passed": 19,
-      "type_check": "PASS; does not validate an AWS account deployment"
+      "type_check": "PASS; does not validate an AWS account deployment",
+      "scope": "Previously recorded; not rerun for documentation-only finalization and not proof of an AWS deployment."
     },
-    "publication_scan": "PASS: bounded credential patterns/private paths; not a complete security audit"
+    "publication_scan": {
+      "status": "PASS",
+      "command": ".venv/bin/python -m scripts.public_audit",
+      "files_checked": 554,
+      "issues": [],
+      "scope": "Git-tracked and unignored candidate files; bounded credential patterns and runtime-path policy. Not a complete security audit."
+    },
+    "finalization_verified_at": "2026-11-01T17:31:20.402178+00:00"
   },
   "live_data": {
     "report": "hsk-judge-live-data.json",
@@ -167,12 +180,20 @@
   },
   "public_deployment": {
     "report": "hsk-onchain-deployment.json",
-    "deployed": false,
-    "public_transactions_sent": 0
+    "chain_id": 133,
+    "deployed": true,
+    "public_lifecycle_verified": true,
+    "public_decisions": 2,
+    "public_proof_transactions": 5,
+    "guarded_swap_transactions": 1,
+    "swap_transaction": "0x608bf3356bc586488b815b41d73bfad1db06c5c858517b27aaabf6b46f0a1a26",
+    "swap_explorer": "https://testnet-explorer.hskchain.net/tx/0x608bf3356bc586488b815b41d73bfad1db06c5c858517b27aaabf6b46f0a1a26",
+    "public_transactions_sent_by_finalization": 0,
+    "scope": "Public testnet deployment and guarded stable exit; no mainnet execution claim."
   },
   "not_established": [
-    "Public AEGIS deployment or signed public trades",
-    "Live paid LLM provider or Telegram delivery",
+    "Mainnet AEGIS deployment or signed mainnet trading",
+    "Live credential-backed LLM provider or Telegram delivery",
     "Sustained profitability",
     "Independent security audit",
     "A new one-hour soak on the final upgrade"
@@ -196,7 +217,12 @@
     "SECURITY.md",
     "agent/aegis/connectors/base.py",
     "agent/aegis/connectors/hskswap_v3.py",
+    "agent/aegis/connectors/rpc.py",
+    "agent/aegis/data.py",
+    "agent/aegis/execution/fees.py",
+    "agent/aegis/execution/live.py",
     "agent/aegis/execution/proof.py",
+    "agent/aegis/execution/vault_client.py",
     "agent/aegis/nl/agent.py",
     "agent/aegis/nl/providers.py",
     "agent/aegis/nl/tools.py",
@@ -209,15 +235,19 @@
     "agent/tests/test_hsk_proof.py",
     "agent/tests/test_pipeline.py",
     "agent/tests/test_strategy_control.py",
+    "docs/AEGIS_FLOWS.md",
     "docs/ARCHITECTURE.md",
     "docs/CONNECTIONS.md",
     "docs/CONTRACTS.md",
     "docs/DEMO_SCRIPT.md",
+    "docs/DISCOVERY.md",
+    "docs/RISK.md",
     "docs/VERIFICATION.md",
     "docs/evidence/hackathon-upgrade-validation.json",
     "docs/evidence/hsk-judge-live-data.json",
     "docs/evidence/hsk-onchain-deployment.json",
     "docs/evidence/hsk-signed-fork-proof.json",
+    "docs/evidence/hsk-testnet-resume.json",
     "docs/evidence/screenshots/judge-aegis-desktop.png",
     "docs/evidence/screenshots/judge-aegis-mobile.png",
     "e2e/judge-flow.spec.ts",
@@ -233,7 +263,12 @@
   "changed_source_sha256": {
     "agent/aegis/connectors/base.py": "7834a4bf10424bee44deb4ee83b5415bf9c64d98c6f9ca832a751be365d1fbd5",
     "agent/aegis/connectors/hskswap_v3.py": "69fe4c836cbe9f8fe8cda7af1a67308ae4d8b6d1d0dfd53f220bc74750414b78",
-    "agent/aegis/execution/proof.py": "d0d152cd058d3cfb62494c929e974fecc8ebc236217cbb19aa4635ac25cc8e65",
+    "agent/aegis/connectors/rpc.py": "c5e39e4d902f67025f7239ca22bdfb805fe9f6a32dc3e759b98f94d76e5e6787",
+    "agent/aegis/data.py": "570b97070b6d6f2bb3a24e1f33d41c3446ec13954bc5eaba045e86da55d2345f",
+    "agent/aegis/execution/fees.py": "69cddae9e71b5c7fc577524be6cafcaca7b9d1636fab659d704492b05f2e1b7c",
+    "agent/aegis/execution/live.py": "dee34a6bbffb849c75cfddea4bab5afcdde03dc14639833b1fce20d389c88588",
+    "agent/aegis/execution/proof.py": "1f72bd48ade02e324436ace1356ca1f1141577af999f59012302349a6e87fcc9",
+    "agent/aegis/execution/vault_client.py": "540316a2c17a340535dc1cffc6432ef1c9abdde6e4c93d1451ea59f240323ce3",
     "agent/aegis/nl/agent.py": "5b905f53dd78f874e7f508652aabc18e2bd5704f56c09e50905238fa6b5ff01f",
     "agent/aegis/nl/providers.py": "022d9efa326d15877bdbd767eb80ac8362bb0938b60e91e5fe8e334475372583",
     "agent/aegis/nl/tools.py": "ae9f9806d3b5f32fe42551c43d29e9b7c43a2e5a73761ecee6dbf1da79cdcb16",
@@ -252,15 +287,15 @@
     "frontend/src/aegis/Chat.tsx": "ce972d47823e92ad5671e50d4bcbd7cc73c5e7db2e76784aade9a2a3d489dbb2",
     "frontend/src/aegis/Pipeline.tsx": "b76cc302be159ed91b61fde3dd02f750555991f887eddd69bfd8955fbd03c9ec",
     "frontend/src/aegis/types.ts": "0018c93b40f9a8c6c291832ac07671471702c4d3b6c7673894753391270bd2ba",
-    "scripts/deploy_and_verify_hsk.py": "0be6dfb658a091251fbf3377c833f960016fbc9f19f345e8d51beb8e33d3d7b8",
-    "scripts/verify_aegis_fork_flow.py": "4b6a7f9713dc6447f48c11eff6555ce97cb88abf81e81df6d8fb62eac8f0764f",
+    "scripts/deploy_and_verify_hsk.py": "3f0c29cd9ed5fb9c928a6c73328503f227c75a2f75029f2666748852d1baa637",
+    "scripts/verify_aegis_fork_flow.py": "b0eb1c098b6fc5a9ed4ed60550f272538696b88d3db10c800ec9cf9e0c262273",
     "scripts/verify_frontend.mjs": "853e8456787e46216b729757651a48c879b8e5d7d019534c088cfbc154ea3ef4"
   },
   "file_changes": {
     ".env.example": "Document opt-in AI provider fallback and separate local deployment/agent credentials.",
     "Makefile": "Add testnet/mainnet deployment, proof and read-only status targets.",
-    "README.md": "Judge-facing hero, requirement traceability, architecture, demo, provider and honest deployment instructions.",
-    "SECURITY.md": "State provider replay boundaries, bounded USDT budgets and entry-filter safety semantics.",
+    "README.md": "Finalize 15/15 scoped submission evidence and both independently verified public testnet decisions.",
+    "SECURITY.md": "Remove stale undeployed/pending claims and link the verified public testnet decisions while retaining mode, custody and validation boundaries.",
     "agent/aegis/connectors/base.py": "Expose tick and browser-exact on-chain audit snapshots.",
     "agent/aegis/connectors/hskswap_v3.py": "Carry actual pool tick into typed quote state.",
     "agent/aegis/execution/proof.py": "Verify the exact deployed TradeLimit custom error through canonical eth_call.",
@@ -276,14 +311,14 @@
     "agent/tests/test_hsk_proof.py": "Test broadcast/live gates, exact revert proof, evidence and uncertain-redeployment refusal.",
     "agent/tests/test_pipeline.py": "Test exact slot0 evidence, fee accounting, entry filters, stop exits and stale-data blocking.",
     "agent/tests/test_strategy_control.py": "Test four demo prompts, atomic bounds, confirmation/panic and provider protocols/no replay.",
-    "docs/ARCHITECTURE.md": "Describe shared multi-provider tools, engine badges and exact audit values.",
-    "docs/CONNECTIONS.md": "Explain provider setup and bounded conversational runtime controls.",
-    "docs/CONTRACTS.md": "Document turnkey deployment/proof and explicit public/fork risk-proof boundaries.",
-    "docs/DEMO_SCRIPT.md": "Update the three-minute judging flow with the pipeline, prompt chips and real proof commands.",
-    "docs/VERIFICATION.md": "Publish the 15-checkpoint table with 13 scoped passes and two public-chain blockers.",
-    "docs/evidence/hackathon-upgrade-validation.json": "Record this upgrade, validation scopes, unchanged source invariants and every changed file.",
+    "docs/ARCHITECTURE.md": "Remove stale undeployed/pending claims and link the verified public testnet decisions while retaining mode, custody and validation boundaries.",
+    "docs/CONNECTIONS.md": "Remove stale undeployed/pending claims and link the verified public testnet decisions while retaining mode, custody and validation boundaries.",
+    "docs/CONTRACTS.md": "Finalize 15/15 scoped submission evidence and both independently verified public testnet decisions.",
+    "docs/DEMO_SCRIPT.md": "Remove stale undeployed/pending claims and link the verified public testnet decisions while retaining mode, custody and validation boundaries.",
+    "docs/VERIFICATION.md": "Finalize 15/15 scoped submission evidence and both independently verified public testnet decisions.",
+    "docs/evidence/hackathon-upgrade-validation.json": "Finalize 15/15 scoped submission evidence and both independently verified public testnet decisions.",
     "docs/evidence/hsk-judge-live-data.json": "Capture actual mainnet data, reference inputs, pipeline and built-UI outcomes.",
-    "docs/evidence/hsk-onchain-deployment.json": "Record genuine undeployed testnet/mainnet status with no invented addresses/hashes.",
+    "docs/evidence/hsk-onchain-deployment.json": "Finalize 15/15 scoped submission evidence and both independently verified public testnet decisions.",
     "docs/evidence/hsk-signed-fork-proof.json": "Retain actual signed local-fork lifecycle, exact reveal, replay and risk-limit proof.",
     "docs/evidence/screenshots/judge-aegis-desktop.png": "Capture the built desktop UI with actual mainnet data.",
     "docs/evidence/screenshots/judge-aegis-mobile.png": "Capture the built mobile UI with actual mainnet data.",
@@ -295,9 +330,19 @@
     "frontend/src/aegis/types.ts": "Type the new runtime preferences, engine, pipeline and pool metadata.",
     "scripts/deploy_and_verify_hsk.py": "Wrap verified deployment/recording and bounded public gateway proof with local keystore unlock and broadcast safety.",
     "scripts/verify_aegis_fork_flow.py": "Extend the actual signed fork lifecycle with exact TradeLimit enforcement proof.",
-    "scripts/verify_frontend.mjs": "Check actual slot0 and five-stage evidence in the built live-data browser run."
+    "scripts/verify_frontend.mjs": "Check actual slot0 and five-stage evidence in the built live-data browser run.",
+    "docs/evidence/hsk-testnet-resume.json": "Finalize 15/15 scoped submission evidence and both independently verified public testnet decisions.",
+    "docs/RISK.md": "Replace stale public-deployment pending statements with the verified testnet proof, preserving paper/live boundaries and historical measurement dates.",
+    "docs/DISCOVERY.md": "Replace stale public-deployment pending statements with the verified testnet proof, preserving paper/live boundaries and historical measurement dates.",
+    "docs/AEGIS_FLOWS.md": "Replace stale public-deployment pending statements with the verified testnet proof, preserving paper/live boundaries and historical measurement dates."
   },
-  "implementation_commits": ["59840ad", "ac089b2"],
+  "implementation_commits": [
+    "59840ad",
+    "ac089b2",
+    "df486e8",
+    "0e5df6e",
+    "104d586"
+  ],
   "local_development_restart": {
     "health_status": 200,
     "available": true,
@@ -307,11 +352,106 @@
   },
   "provider_badge_failure_state": "Unavailable (Tool Result Retained) after any tool starts; fallback is never claimed or replayed for that mutation.",
   "latest_public_recovery": {
-    "observed_at": "2026-11-01T16:39:15.466062+00:00",
+    "observed_at": "2026-11-01T17:24:38.879029+00:00",
     "report": "hsk-testnet-resume.json",
     "total": 15,
-    "verified_with_stated_scope": 14,
-    "pending_public_guarded_swap_lifecycle": 1,
-    "scope": "Original upgrade snapshot above is retained. Public deployment now passes; the signed public guarded swap is the remaining checkpoint."
+    "passed": 15,
+    "verified_with_stated_scope": 15,
+    "blocked_public": 0,
+    "pending_public_guarded_swap_lifecycle": 0,
+    "status": "PUBLIC_LIFECYCLE_VERIFIED",
+    "scope": "Both public decisions independently reverified on the primary testnet RPC; exact actions, receipts, payloads and vault balance deltas match the completed journal."
+  },
+  "verification_history": [
+    {
+      "observed_at": "2026-11-01T13:43:30.493218+00:00",
+      "verified_checkpoints": 13,
+      "python_tests": 295,
+      "scope": "Original upgrade snapshot; full previous records remain in Git history.",
+      "evidence_snapshot_commit": "104d586"
+    },
+    {
+      "observed_at": "2026-11-01T16:39:15.466062+00:00",
+      "verified_checkpoints": 14,
+      "python_tests": 355,
+      "scope": "Recovery was verified before the owner completed the public proof.",
+      "evidence_snapshot_commit": "104d586"
+    }
+  ],
+  "submission_parent_commit": "104d586",
+  "public_decisions": [
+    {
+      "decision_id": 1,
+      "status": "PASS",
+      "outcome": "skipped",
+      "consumed_by_vault": false,
+      "payload_bytes": 2398,
+      "transactions": {
+        "commit": "0x6b72b4d84d48f9dde5dc3b9e44ff4114fa8587ed2333a2a92b25c5a52fd9f77c",
+        "reveal": "0x614e6ff788e6c5e70aa1201b3e1dd31815bb515b0d337cfc71c0d11b781835a8"
+      },
+      "canonical_evidence": "hsk-onchain-deployment.json#/networks/testnet/decisions/0"
+    },
+    {
+      "decision_id": 2,
+      "status": "PASS",
+      "outcome": "reconciled",
+      "consumed_by_vault": true,
+      "payload_bytes": 2398,
+      "transactions": {
+        "commit": "0x2feb12eef781e1c261b93b29331bbc3fcc3715eeaf82c161519f790d05ac27ea",
+        "swap": "0x608bf3356bc586488b815b41d73bfad1db06c5c858517b27aaabf6b46f0a1a26",
+        "reveal": "0x2a23302898edd33571f08f5759c4f3fc20fa529f4345a622188e603dff6adf93"
+      },
+      "canonical_evidence": "hsk-onchain-deployment.json#/networks/testnet/decisions/1",
+      "output_delta_raw": "0"
+    }
+  ],
+  "finalization_checks": {
+    "python": {
+      "status": "PASS",
+      "passed": 355,
+      "subtests_passed": 10,
+      "skipped": 1,
+      "warnings": 2,
+      "command": ".venv/bin/python -m pytest backend/tests agent/tests legacy_tests/test_regime_detection.py legacy_tests/test_backtest_engine.py legacy_tests/test_portfolio_intelligence.py -q",
+      "output": "355 passed, 1 skipped, 2 warnings, 10 subtests passed in 10.24s"
+    },
+    "ruff": {
+      "status": "PASS",
+      "command": ".venv/bin/ruff check backend scripts agent",
+      "output": "All checks passed!"
+    },
+    "production_build": {
+      "status": "PASS",
+      "command": "npm run build",
+      "scope": "TypeScript no-emit check and Vite production build."
+    },
+    "publication_scan": {
+      "status": "PASS",
+      "command": ".venv/bin/python -m scripts.public_audit",
+      "files_checked": 554,
+      "issues": [],
+      "scope": "Git-tracked and unignored candidate files; bounded credential patterns and runtime-path policy. Not a complete security audit."
+    }
+  },
+  "submission_changes": {
+    "scope": "Documentation and evidence only; runtime, frontend, strategy and Guard contract sources unchanged.",
+    "files": [
+      "README.md",
+      "SECURITY.md",
+      "docs/AEGIS_FLOWS.md",
+      "docs/ARCHITECTURE.md",
+      "docs/CONNECTIONS.md",
+      "docs/CONTRACTS.md",
+      "docs/DEMO_SCRIPT.md",
+      "docs/DISCOVERY.md",
+      "docs/RISK.md",
+      "docs/VERIFICATION.md",
+      "docs/evidence/hackathon-upgrade-validation.json",
+      "docs/evidence/hsk-onchain-deployment.json",
+      "docs/evidence/hsk-testnet-resume.json"
+    ],
+    "public_transactions_sent_by_finalization": 0
   }
 }

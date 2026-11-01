@@ -1,10 +1,10 @@
 # AEGIS risk semantics
 
-The autonomous paper loop and its software policy are connected to the dashboard/API. The separate signing gateway and independent keeper use the Guard and exact-byte decision log; signed gateway execution is verified on a local HashKey fork. No public AEGIS deployment exists. Neither paper results nor local fork checks establish sustained profitability.
+The autonomous paper loop and its software policy are connected to the dashboard/API. The separate signing gateway and independent keeper use the Guard and exact-byte decision log. Signed gateway execution is verified on a local HashKey fork and by a bounded public testnet stable exit; all three public modules are deployed. [Both public decisions](CONTRACTS.md#both-public-decisions) show the unused stale-quote skip and the consumed guarded swap. Paper results, fork checks and this bounded testnet proof do not establish sustained profitability.
 
 ## Contract caps
 
-The reviewed deployment defaults are defined in `agent/aegis/deploy.py`; they are constructor parameters rather than an already deployed policy.
+The reviewed constructor defaults are defined in `agent/aegis/deploy.py`; the submitted testnet constructor limits are recorded in `deployments/133.json`. Live execution rechecks the actual on-chain limits, which the owner can only tighten.
 
 | Rule                               | Default                                 | Contract behavior                                                                                                 |
 | ---------------------------------- | --------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
@@ -43,7 +43,7 @@ The paper runtime defaults to a 5% position, 10% per-fill ceiling, three concurr
 
 The live gateway rechecks deployed limits and oracle marks, quote liquidity/impact, NAV sizing, estimated L1/L2 gas and hot-key funding. Entry fee estimates must be below 25% of forecast profit. Contract simulation follows the earlier-block commitment and precedes signing. Receipt status alone is never a fill. The journal retains every replacement/cancellation hash and blocks fresh nonces while a transaction is unresolved. Operator-fee and fee-oracle code/implementation changes fail closed. Missing receipt L1-fee fields remain unknown rather than being counted as zero. Public P&L accounting must include the agent's separate gas balance.
 
-Software portfolio preferences currently govern the web PAPER runtime. There is no public autonomous live-entry scheduler or live chat mode switch. The independent keeper CLI is implemented and defaults to read-only; enabling its real transactions requires a registered deployment and a separate funded hot key. These boundaries remain visible until public deployment and funded validation are completed.
+Software portfolio preferences currently govern the web PAPER runtime. There is no public autonomous live-entry scheduler or live chat mode switch. The independent keeper CLI is implemented and defaults to read-only; enabling its real transactions requires a registered deployment and a separate funded hot key. The completed public testnet proof used the restricted agent CLI; the web runtime continues in PAPER mode with these boundaries explicit.
 
 Stale/RPC failures expose unavailable current valuation and block fills; they never substitute estimated prices. Reorgs and uncertain submissions require reconciliation. A stop is a trigger to attempt a bounded exit, not a guaranteed fill: liquidity, oracle bands, minimum outputs, gas funding, RPC and independent keeper availability still matter. Circuit pause is preserved on a real contract observation; an `eth_call` cannot persist that state.
 

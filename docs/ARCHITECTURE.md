@@ -41,7 +41,7 @@ The optional AWS platform uses Cognito, tenant-aware storage and isolated simula
 
 `AegisVault`, `BandedTwapOracle` and `DecisionLog` enforce bounded authority and exact committed actions. Owner operations are prepared by the backend and signed on the owner's device. Swap recipients remain the vault. The separate signer journals nonces/intents, simulates the committed action and reconciles canonical confirmed receipts and balances. The keeper can execute only contract-triggered safety exits.
 
-Signed commit/swap/reveal execution is verified on a local HashKey fork. Public deployment and funded execution are pending. Paper feed items remain local; public verification badges require registered real contracts and confirmed reveal receipts. See [contracts](CONTRACTS.md), [discovery](DISCOVERY.md) and [security](../SECURITY.md).
+Signed commit/swap/reveal execution is verified on both a local HashKey fork and public HashKey testnet (133). The public registry contains all three deployed modules. Decision #1 reveals an unused stale-quote commitment; decision #2 completes a bounded 0.005 WHSK swap with matching vault balance deltas and a 2,398-byte exact reveal. Paper feed items remain local; public verification badges require the matching registered chain/contracts and confirmed reveal receipts. These testnet receipts do not turn paper records into on-chain decisions. See [contracts and public decision tables](CONTRACTS.md), [discovery](DISCOVERY.md) and [security](../SECURITY.md).
 
 ## Source and operational map
 

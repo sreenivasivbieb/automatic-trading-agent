@@ -2,10 +2,10 @@
   "schema_version": 1,
   "networks": {
     "testnet": {
-      "observed_at": "2026-11-01T16:39:15.466062+00:00",
+      "observed_at": "2026-11-01T17:18:00.131717+00:00",
       "chain_id": 133,
       "environment": "PUBLIC_HSK_CHAIN",
-      "status": "PUBLIC_DEPLOYMENT_WRAP_AND_UNUSED_DECISION_CONFIRMED_SWAP_PENDING",
+      "status": "PUBLIC_LIFECYCLE_VERIFIED",
       "contracts": {
         "BandedTwapOracle": {
           "address": "0x521C86fD6fe77Fee7493dC9e7242BBed271dE73f",
@@ -27,44 +27,275 @@
         }
       },
       "source_verification": "Compiled runtime and immutable bindings checked on-chain. Explorer source publication is separate.",
-      "next": "Existing vault holds 0.05 WHSK. Resume needs only the local hsk-agent password. Decision 1 stays revealed/unused; a fresh bounded attempt must produce a canonical swap before public lifecycle verification passes.",
-      "owner_setup": {
-        "deposit_native": {
-          "status": "CONFIRMED",
-          "expected": {
-            "from": "0xAc85C4d3129cB1773c473Cc6A766aF9Af738fdE8",
-            "to": "0xE14185B7beFeeFF8ab241c3Ffae13bA7Ed61df5d",
-            "data": "0x",
-            "value": "0xb1a2bc2ec50000"
-          },
-          "hash": "0x89bba7756cc3a3fdcb7b149c1bda15cdd6a55494abbf3c3b87dca00b03b5aa5a",
-          "block_number": 35178625,
-          "explorer": "https://testnet-explorer.hskchain.net/tx/0x89bba7756cc3a3fdcb7b149c1bda15cdd6a55494abbf3c3b87dca00b03b5aa5a"
-        },
-        "wrapping_required": false,
-        "wrap_native": {
-          "status": "CONFIRMED",
-          "hash": "0x03e8517979d2e4abc3e384a9e1e06c96bc5b3eacd04ff69484e5ee17b45e5a24",
-          "block_number": 35181336,
-          "explorer": "https://testnet-explorer.hskchain.net/tx/0x03e8517979d2e4abc3e384a9e1e06c96bc5b3eacd04ff69484e5ee17b45e5a24"
-        },
-        "owner_signing_required": false
+      "next": "Inspect public explorer receipts and exact-byte verifier. This bounded exit does not establish sustained profitability.",
+      "risk_limit": {
+        "status": "VERIFIED_ETH_CALL_REVERT",
+        "method": "executeSwap",
+        "error": "TradeLimit()",
+        "selector": "0x8297907d",
+        "block_number": 35183351,
+        "block_hash": "0xe5bdfd95603ef2cc559170f945c639adf44fd9a463125f3ab121a41e43f1e8e3",
+        "attempted_amount_raw": 50000000000000001,
+        "nav_x18": 2709510807485432333,
+        "transaction_sent": false,
+        "scope": "Canonical read-only execution of deployed bytecode; not a mined reverting transaction or a loss-circuit trigger."
       },
+      "execution": {
+        "status": "reconciled",
+        "mode": "testnet",
+        "decision_id": 2,
+        "amount_out_raw": "270119936641739849",
+        "expected_out_raw": "270119936641739849",
+        "output_delta_raw": "0",
+        "commit_tx": "0x2feb12eef781e1c261b93b29331bbc3fcc3715eeaf82c161519f790d05ac27ea",
+        "swap_tx": "0x608bf3356bc586488b815b41d73bfad1db06c5c858517b27aaabf6b46f0a1a26",
+        "reveal_tx": "0x2a23302898edd33571f08f5759c4f3fc20fa529f4345a622188e603dff6adf93",
+        "confirmed_block": 35183394,
+        "fees": {
+          "l2_fee_wei": "695370676000000",
+          "l1_fee_wei": "3869",
+          "total_native_fee_wei": "695370676003869",
+          "complete": true,
+          "note": "Receipt fee components for commit, swap and reveal. Keeper/agent gas is outside vault NAV; absent L1 fields are reported as unknown."
+        },
+        "verification": "Contract-enforced balance delta, matching event, confirmed canonical receipts and exact-byte reveal"
+      },
+      "attempt_key": "public-hsk-micro-proof-v1:attempt:2",
+      "previous_attempts": [
+        {
+          "key": "public-hsk-micro-proof-v1",
+          "status": "skipped",
+          "reason": "Quote is stale or has an invalid timestamp",
+          "decision_id": 1,
+          "commit_tx": "0x6b72b4d84d48f9dde5dc3b9e44ff4114fa8587ed2333a2a92b25c5a52fd9f77c",
+          "reveal_tx": "0x614e6ff788e6c5e70aa1201b3e1dd31815bb515b0d337cfc71c0d11b781835a8",
+          "onchain_consumed": false,
+          "onchain_revealed": true
+        }
+      ],
+      "exact_reveal_verification": {
+        "verified": true,
+        "scope": "Exact revealed payload hash and confirmed canonical receipt; this does not independently establish profit or truthful rationale.",
+        "chain_id": 133,
+        "decision_id": 2,
+        "decision_hash": "0x1f534eaef2ec3b563598bf2ef548f69d3aab91e6de1bf8ebfaa73d220ef971a8",
+        "execution_hash": "0xa98617e956557a0599983ec6d698bc1d7496dbdad0033d1e87dd4ca915892736",
+        "consumed_by_vault": true,
+        "committed_block": 35183377,
+        "revealed_block": 35183405,
+        "revealed_at": 1793553466,
+        "payload_bytes": 2398,
+        "reveal_transaction": "0x2a23302898edd33571f08f5759c4f3fc20fa529f4345a622188e603dff6adf93",
+        "explorer": "https://testnet-explorer.hskchain.net/tx/0x2a23302898edd33571f08f5759c4f3fc20fa529f4345a622188e603dff6adf93"
+      },
+      "transactions": {
+        "commit": {
+          "hash": "0x2feb12eef781e1c261b93b29331bbc3fcc3715eeaf82c161519f790d05ac27ea",
+          "explorer": "https://testnet-explorer.hskchain.net/tx/0x2feb12eef781e1c261b93b29331bbc3fcc3715eeaf82c161519f790d05ac27ea"
+        },
+        "swap": {
+          "hash": "0x608bf3356bc586488b815b41d73bfad1db06c5c858517b27aaabf6b46f0a1a26",
+          "explorer": "https://testnet-explorer.hskchain.net/tx/0x608bf3356bc586488b815b41d73bfad1db06c5c858517b27aaabf6b46f0a1a26"
+        },
+        "reveal": {
+          "hash": "0x2a23302898edd33571f08f5759c4f3fc20fa529f4345a622188e603dff6adf93",
+          "explorer": "https://testnet-explorer.hskchain.net/tx/0x2a23302898edd33571f08f5759c4f3fc20fa529f4345a622188e603dff6adf93"
+        }
+      },
+      "owner_setup": {
+        "identity": {
+          "chain_id": 133,
+          "owner": "0xAc85C4d3129cB1773c473Cc6A766aF9Af738fdE8",
+          "vault": "0xE14185B7beFeeFF8ab241c3Ffae13bA7Ed61df5d",
+          "amount_wei": "50000000000000000"
+        },
+        "steps": {
+          "deposit_native": {
+            "status": "CONFIRMED",
+            "expected": {
+              "from": "0xAc85C4d3129cB1773c473Cc6A766aF9Af738fdE8",
+              "to": "0xE14185B7beFeeFF8ab241c3Ffae13bA7Ed61df5d",
+              "data": "0x",
+              "value": "0xb1a2bc2ec50000"
+            },
+            "hash": "0x89bba7756cc3a3fdcb7b149c1bda15cdd6a55494abbf3c3b87dca00b03b5aa5a",
+            "block_number": 35178625,
+            "explorer": "https://testnet-explorer.hskchain.net/tx/0x89bba7756cc3a3fdcb7b149c1bda15cdd6a55494abbf3c3b87dca00b03b5aa5a"
+          },
+          "wrap_native": {
+            "status": "CONFIRMED",
+            "expected": {
+              "from": "0xAc85C4d3129cB1773c473Cc6A766aF9Af738fdE8",
+              "to": "0xE14185B7beFeeFF8ab241c3Ffae13bA7Ed61df5d",
+              "data": "0x9169d83300000000000000000000000000000000000000000000000000b1a2bc2ec50000",
+              "value": "0x0"
+            },
+            "hash": "0x03e8517979d2e4abc3e384a9e1e06c96bc5b3eacd04ff69484e5ee17b45e5a24",
+            "block_number": 35181336,
+            "explorer": "https://testnet-explorer.hskchain.net/tx/0x03e8517979d2e4abc3e384a9e1e06c96bc5b3eacd04ff69484e5ee17b45e5a24"
+          }
+        }
+      },
+      "resumed_existing_deployment": true,
       "rpc_url": "https://testnet.hsk.xyz",
-      "resume_command": ".venv/bin/python -m scripts.deploy_and_verify_hsk resume --network testnet --broadcast --amount-whsk 0.005",
-      "resume_evidence": "hsk-testnet-resume.json",
-      "unused_decision": {
-        "key": "public-hsk-micro-proof-v1",
-        "status": "skipped",
-        "reason": "Quote is stale or has an invalid timestamp",
-        "decision_id": 1,
-        "commit_tx": "0x6b72b4d84d48f9dde5dc3b9e44ff4114fa8587ed2333a2a92b25c5a52fd9f77c",
-        "reveal_tx": "0x614e6ff788e6c5e70aa1201b3e1dd31815bb515b0d337cfc71c0d11b781835a8",
-        "onchain_consumed": false,
-        "onchain_revealed": true,
-        "explorer_links": {
-          "commit": "https://testnet-explorer.hskchain.net/tx/0x6b72b4d84d48f9dde5dc3b9e44ff4114fa8587ed2333a2a92b25c5a52fd9f77c",
-          "reveal": "https://testnet-explorer.hskchain.net/tx/0x614e6ff788e6c5e70aa1201b3e1dd31815bb515b0d337cfc71c0d11b781835a8"
+      "reverified_at": "2026-11-01T17:24:38.879029+00:00",
+      "decisions": [
+        {
+          "decision_id": 1,
+          "key": "public-hsk-micro-proof-v1",
+          "status": "skipped",
+          "transactions": {
+            "commit": {
+              "hash": "0x6b72b4d84d48f9dde5dc3b9e44ff4114fa8587ed2333a2a92b25c5a52fd9f77c",
+              "explorer": "https://testnet-explorer.hskchain.net/tx/0x6b72b4d84d48f9dde5dc3b9e44ff4114fa8587ed2333a2a92b25c5a52fd9f77c",
+              "status": "CONFIRMED_CANONICAL",
+              "block_number": 35181434,
+              "block_hash": "0xbfb638a56dc13735e16b4d3f8db1c9b157d2da4b9dbf9f42bd697e6b43e121c8",
+              "nonce": 1
+            },
+            "reveal": {
+              "hash": "0x614e6ff788e6c5e70aa1201b3e1dd31815bb515b0d337cfc71c0d11b781835a8",
+              "explorer": "https://testnet-explorer.hskchain.net/tx/0x614e6ff788e6c5e70aa1201b3e1dd31815bb515b0d337cfc71c0d11b781835a8",
+              "status": "CONFIRMED_CANONICAL",
+              "block_number": 35181460,
+              "block_hash": "0x522fe15957b3add76952e5029cadcb2946f22afb7b2107d6d9d7a762f222ccbe",
+              "nonce": 2
+            }
+          },
+          "exact_reveal_verification": {
+            "verified": true,
+            "scope": "Exact revealed payload hash and confirmed canonical receipt; this does not independently establish profit or truthful rationale.",
+            "chain_id": 133,
+            "decision_id": 1,
+            "decision_hash": "0x7595249947ede389d50653806be023c4c8d7b8ea7bee7c662bf476b86b8044ff",
+            "execution_hash": "0x2bb09e4abfd081f308d773c2521dd40a4ba37e57e27427293333ece8ff5d3753",
+            "consumed_by_vault": false,
+            "committed_block": 35181434,
+            "revealed_block": 35181460,
+            "revealed_at": 1793549576,
+            "payload_bytes": 2398,
+            "reveal_transaction": "0x614e6ff788e6c5e70aa1201b3e1dd31815bb515b0d337cfc71c0d11b781835a8",
+            "explorer": "https://testnet-explorer.hskchain.net/tx/0x614e6ff788e6c5e70aa1201b3e1dd31815bb515b0d337cfc71c0d11b781835a8"
+          },
+          "quote_ttl_seconds": 20,
+          "quote_age_at_commit_seconds": 57,
+          "quote_age_at_reveal_seconds": 109,
+          "reason_from_signer_journal": "Quote is stale or has an invalid timestamp",
+          "vault_balances_before_raw": {
+            "WHSK": "50000000000000000",
+            "USDT": "0"
+          },
+          "vault_balances_after_raw": {
+            "WHSK": "50000000000000000",
+            "USDT": "0"
+          },
+          "scope": "Off-chain 20-second TTL rejection recorded in the signer journal; on-chain exact reveal and unused commitment prove that this decision never authorized a vault swap. Agent gas was paid."
+        },
+        {
+          "decision_id": 2,
+          "key": "public-hsk-micro-proof-v1:attempt:2",
+          "status": "reconciled",
+          "transactions": {
+            "commit": {
+              "hash": "0x2feb12eef781e1c261b93b29331bbc3fcc3715eeaf82c161519f790d05ac27ea",
+              "explorer": "https://testnet-explorer.hskchain.net/tx/0x2feb12eef781e1c261b93b29331bbc3fcc3715eeaf82c161519f790d05ac27ea",
+              "status": "CONFIRMED_CANONICAL",
+              "block_number": 35183377,
+              "block_hash": "0x5322361acc91c3eb5bdff09280c1c4ab7349269f73acce1d25e84dbe62918522",
+              "nonce": 3
+            },
+            "swap": {
+              "hash": "0x608bf3356bc586488b815b41d73bfad1db06c5c858517b27aaabf6b46f0a1a26",
+              "explorer": "https://testnet-explorer.hskchain.net/tx/0x608bf3356bc586488b815b41d73bfad1db06c5c858517b27aaabf6b46f0a1a26",
+              "status": "CONFIRMED_CANONICAL",
+              "block_number": 35183394,
+              "block_hash": "0x4e2f612d586ad3e679d4e5a5f05e96e5a3c7537f825e7d8f508f149f18499bb1",
+              "nonce": 4
+            },
+            "reveal": {
+              "hash": "0x2a23302898edd33571f08f5759c4f3fc20fa529f4345a622188e603dff6adf93",
+              "explorer": "https://testnet-explorer.hskchain.net/tx/0x2a23302898edd33571f08f5759c4f3fc20fa529f4345a622188e603dff6adf93",
+              "status": "CONFIRMED_CANONICAL",
+              "block_number": 35183405,
+              "block_hash": "0xac777124aa639470b66b8496de0c9ca6d4cc18bc85cb1391f675d1bedfdb78cc",
+              "nonce": 5
+            }
+          },
+          "exact_reveal_verification": {
+            "verified": true,
+            "scope": "Exact revealed payload hash and confirmed canonical receipt; this does not independently establish profit or truthful rationale.",
+            "chain_id": 133,
+            "decision_id": 2,
+            "decision_hash": "0x1f534eaef2ec3b563598bf2ef548f69d3aab91e6de1bf8ebfaa73d220ef971a8",
+            "execution_hash": "0xa98617e956557a0599983ec6d698bc1d7496dbdad0033d1e87dd4ca915892736",
+            "consumed_by_vault": true,
+            "committed_block": 35183377,
+            "revealed_block": 35183405,
+            "revealed_at": 1793553466,
+            "payload_bytes": 2398,
+            "reveal_transaction": "0x2a23302898edd33571f08f5759c4f3fc20fa529f4345a622188e603dff6adf93",
+            "explorer": "https://testnet-explorer.hskchain.net/tx/0x2a23302898edd33571f08f5759c4f3fc20fa529f4345a622188e603dff6adf93"
+          },
+          "quote_ttl_seconds": 20,
+          "quote_age_at_commit_seconds": 20,
+          "quote_age_at_reveal_seconds": 76,
+          "amount_in_raw": "5000000000000000",
+          "amount_out_raw": "270119936641739849",
+          "expected_out_raw": "270119936641739849",
+          "output_delta_raw": "0",
+          "fees": {
+            "l2_fee_wei": "695370676000000",
+            "l1_fee_wei": "3869",
+            "total_native_fee_wei": "695370676003869",
+            "complete": true,
+            "note": "Receipt fee components for commit, swap and reveal. Keeper/agent gas is outside vault NAV; absent L1 fields are reported as unknown."
+          },
+          "vault_balances_before_raw": {
+            "WHSK": "50000000000000000",
+            "USDT": "0"
+          },
+          "vault_balances_after_raw": {
+            "WHSK": "45000000000000000",
+            "USDT": "270119936641739849"
+          },
+          "scope": "Actual public testnet guarded stable exit. Zero additional output delta versus the recorded executable quote; quoted LP fee/impact and receipt gas remain costs. This is not a profitability or mainnet-execution result."
+        }
+      ],
+      "submission_reverification": {
+        "status": "PUBLIC_LIFECYCLE_VERIFIED",
+        "verified_at": "2026-11-01T17:24:38.879029+00:00",
+        "chain_id": 133,
+        "rpc_url": "https://testnet.hsk.xyz",
+        "block_number": 35183598,
+        "block_hash": "0x50cef9c644b00563b016d159365a072401407d17386753151ae02357936a26cd",
+        "registry_sha256": "491eec21280deb534fa8946b1606cb42478ebcad372bb4d962a6d66a616b94a6",
+        "contracts_verified_against_runtime_pins": true,
+        "decision_count": 2,
+        "pending_agent_decision": 0,
+        "public_transactions_sent_by_finalization": 0,
+        "scope": "Canonical confirmed public receipts, deployed runtime and bindings, exact action/reveal matching, actual vault input/output deltas. No private key, deployment, deposit, wrapping or broadcast is used by this recheck.",
+        "deployment_receipts": {
+          "BandedTwapOracle": {
+            "transaction_hash": "0x1782b833a5d688894483603a3dc6bd3a4c9573ba757ab173eb2a8fc219cfe763",
+            "status": "CONFIRMED_CANONICAL",
+            "block_number": 35178600,
+            "block_hash": "0x863c7f81244d6c290e82b3e7a7e8c6fe886abcccfe08e8e62fbb81861f9e7f1d",
+            "contract_address": "0x521c86fd6fe77fee7493dc9e7242bbed271de73f"
+          },
+          "DecisionLog": {
+            "transaction_hash": "0xd2f1a51211de223e7aed05f319c64d8c27335bc12f9358d8d18674e4adf9eea5",
+            "status": "CONFIRMED_CANONICAL",
+            "block_number": 35178601,
+            "block_hash": "0x2f72640f94c0d9b53c14876fd3592c5eee71859fc9071bdf01a203deb0df14b2",
+            "contract_address": "0xa015aeab0e97857b7ee322c7f7ee98ae98cd9a30"
+          },
+          "AegisVault": {
+            "transaction_hash": "0x550d205f8ea7d80063e3a423ee5f7af32a015dc3bf9f390da9bf8d20173b52da",
+            "status": "CONFIRMED_CANONICAL",
+            "block_number": 35178602,
+            "block_hash": "0x11ef28eb6e9a5e11ebeb12968b77645fcdde1e5ccc90ec1b0862165638265855",
+            "contract_address": "0xe14185b7befeeff8ab241c3ffae13ba7ed61df5d"
+          }
         }
       }
     },
