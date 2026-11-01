@@ -71,6 +71,19 @@ class BlockRef:
             raise DiscoveryError("RPC returned malformed block metadata") from exc
 
 
+def call_read(
+    address: str,
+    signature: str,
+    block: BlockRef,
+    *,
+    types: list[str] | None = None,
+    args: list | None = None,
+) -> tuple[str, list]:
+    """A block-pinned read, shared by the batch prefetch and ABI decoder."""
+    data = "0x" + (Web3.keccak(text=signature)[:4] + encode(types or [], args or [])).hex()
+    return "eth_call", [{"to": Web3.to_checksum_address(address), "data": data}, block.tag]
+
+
 class ReadOnlyRpc:
     def __init__(
         self,
@@ -100,6 +113,8 @@ class ReadOnlyRpc:
         )
         self.sequence = 0
         self._cache: dict[tuple[str, str, str], Any] = {}
+        self._prefetched: dict[str, Any] = {}
+        self._prefetch_hash: str | None = None
         self._stopping = threading.Event()
 
     def cancel_pending(self) -> None:
@@ -131,6 +146,11 @@ class ReadOnlyRpc:
     def request(self, method: str, params: list) -> Any:
         if method not in READ_METHODS:
             raise DiscoveryError("This data client only permits read-only RPC methods")
+        if self._stopping.is_set():
+            raise DiscoveryError("RPC reader is shutting down")
+        cache_key = json.dumps([method, params], sort_keys=True)
+        if cache_key in self._prefetched:
+            return self._prefetched[cache_key]
         failures = []
         for attempt in range(self.attempts):
             for index, url in enumerate(self.urls):
@@ -163,6 +183,82 @@ class ReadOnlyRpc:
                 self._stopping.wait(self.retry_delay * 2**attempt)
         raise DiscoveryError(f"No verified RPC response for {method}: {', '.join(failures)}")
 
+    def prefetch(self, block: BlockRef, reads: list[tuple[str, list]]) -> None:
+        """Batch only pinned contract reads; never cache headers, receipts or pending state.
+
+        The chain check belongs to the same batch. Publish no partial cache on a
+        missing/duplicate response, wrong chain, or contract revert. Callers still
+        decode and validate every code hash, identity and ABI result as before.
+        """
+        if self._prefetch_hash != block.hash:
+            self._prefetched.clear()
+            self._prefetch_hash = block.hash
+        unique = {}
+        for method, params in reads:
+            if (
+                method not in {"eth_call", "eth_getCode", "eth_getStorageAt"}
+                or not params
+                or params[-1] != block.tag
+            ):
+                raise DiscoveryError("Batch accepts only block-pinned contract reads")
+            key = json.dumps([method, params], sort_keys=True)
+            if key not in self._prefetched:
+                unique[key] = (method, params)
+        if not unique:
+            return
+        if len(unique) > 256:
+            raise DiscoveryError("Read batch exceeds the bounded request limit")
+        # HSK testnet's pinned endpoint supports batches. Keep other chains on
+        # their existing serial reads; mainnet's public endpoint rejects batches.
+        if self.chain_id != 133:
+            return
+        self.sequence += 1
+        chain_request_id = self.sequence
+        batch = [{"jsonrpc": "2.0", "id": chain_request_id, "method": "eth_chainId", "params": []}]
+        keys = {}
+        for key, (method, params) in unique.items():
+            self.sequence += 1
+            keys[self.sequence] = key
+            batch.append(
+                {"jsonrpc": "2.0", "id": self.sequence, "method": method, "params": params}
+            )
+        for attempt in range(self.attempts):
+            for url in self.urls:
+                if self._stopping.is_set():
+                    raise DiscoveryError("RPC reader is shutting down")
+                try:
+                    response = self.client.post(url, json=batch)
+                    response.raise_for_status()
+                    payload = response.json()
+                    if not isinstance(payload, list) or len(payload) != len(batch):
+                        raise DiscoveryError("Incomplete RPC batch")
+                    results = {}
+                    for item in payload:
+                        if (
+                            not isinstance(item, dict)
+                            or type(item.get("id")) is not int
+                            or item["id"] in results
+                            or item["id"] not in {chain_request_id, *keys}
+                        ):
+                            raise DiscoveryError("Invalid or duplicate RPC batch response")
+                        if "error" in item:
+                            raise RpcResponseError(int(item["error"]["code"]))
+                        if "result" not in item:
+                            raise DiscoveryError("RPC batch response has no result")
+                        results[item["id"]] = item["result"]
+                    if int(results[chain_request_id], 16) != self.chain_id:
+                        raise DiscoveryError("RPC batch chain mismatch")
+                    self._prefetched.update({key: results[i] for i, key in keys.items()})
+                    return
+                except RpcResponseError as exc:
+                    if exc.code not in {-32005, -32016, -32603}:
+                        raise
+                except (httpx.HTTPError, ValueError, DiscoveryError, TypeError, KeyError):
+                    pass
+            if attempt + 1 < self.attempts:
+                self._stopping.wait(self.retry_delay * 2**attempt)
+        raise DiscoveryError("No complete, chain-verified RPC read batch")
+
     def block(self, *, confirmations: int = 2, max_age_seconds: int = 60) -> BlockRef:
         if confirmations < 0:
             raise ValueError("Confirmations cannot be negative")
@@ -182,6 +278,8 @@ class ReadOnlyRpc:
         self.assert_fresh(block, max_age_seconds)
         # One snapshot per cache lifetime, never an unbounded tick history.
         self._cache.clear()
+        self._prefetched.clear()
+        self._prefetch_hash = None
         return block
 
     @staticmethod
@@ -199,11 +297,14 @@ class ReadOnlyRpc:
             or actual.hash.lower() != block.hash.lower()
         ):
             self._cache.clear()
+            self._prefetched.clear()
+            self._prefetch_hash = None
             raise RpcViewLag(
                 "Snapshot block was reorganized or the RPC view is lagging; retry before accepting it"
             )
 
     def code(self, address: str, block: BlockRef) -> bytes:
+        self._use_block(block)
         address = Web3.to_checksum_address(address)
         key = (block.hash, address, "code")
         if key not in self._cache:
@@ -218,6 +319,7 @@ class ReadOnlyRpc:
         return self._cache[key]
 
     def storage_address(self, address: str, slot: str, block: BlockRef) -> str:
+        self._use_block(block)
         raw = self.request("eth_getStorageAt", [Web3.to_checksum_address(address), slot, block.tag])
         try:
             return decode(["address"], bytes.fromhex(raw[2:]))[0]
@@ -234,8 +336,10 @@ class ReadOnlyRpc:
         types: list[str] | None = None,
         args: list | None = None,
     ) -> tuple:
+        self._use_block(block)
         address = Web3.to_checksum_address(address)
-        data = "0x" + (Web3.keccak(text=signature)[:4] + encode(types or [], args or [])).hex()
+        _, params = call_read(address, signature, block, types=types, args=args)
+        data = params[0]["data"]
         key = (block.hash, address, data)
         if key not in self._cache:
             self._cache[key] = self.request("eth_call", [{"to": address, "data": data}, block.tag])
@@ -243,3 +347,8 @@ class ReadOnlyRpc:
             return decode(outputs, bytes.fromhex(self._cache[key][2:]))
         except Exception as exc:
             raise DiscoveryError(f"Contract returned invalid ABI data for {signature}") from exc
+
+    def _use_block(self, block: BlockRef) -> None:
+        if self._prefetch_hash != block.hash:
+            self._prefetched.clear()
+            self._prefetch_hash = None

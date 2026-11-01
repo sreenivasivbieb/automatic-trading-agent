@@ -10,7 +10,7 @@ import yaml
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 from web3 import Web3
 
-from aegis.connectors.rpc import BlockRef, DiscoveryError, ReadOnlyRpc
+from aegis.connectors.rpc import BlockRef, DiscoveryError, ReadOnlyRpc, call_read
 
 ROOT = Path(__file__).resolve().parents[2]
 Address = Annotated[str, Field(pattern=r"^0x[0-9a-fA-F]{40}$")]
@@ -141,6 +141,60 @@ class HSKSwapData:
     def close(self) -> None:
         self.rpc.close()
 
+    def prefetch_snapshot(self, block: BlockRef) -> None:
+        """Fetch the same verified state in one bounded, block-pinned read batch."""
+        if not isinstance(self.rpc, ReadOnlyRpc):
+            return
+        n = self.network
+        reads = []
+
+        def code(address):
+            reads.append(("eth_getCode", [Web3.to_checksum_address(address), block.tag]))
+
+        def call(address, signature, types=None, args=None):
+            reads.append(call_read(address, signature, block, types=types, args=args))
+
+        for spec in n.contracts.values():
+            code(spec.address)
+        for role in ("router", "quoter"):
+            for signature in ("factory()", "WETH9()"):
+                call(n.contracts[role].address, signature)
+        call(n.contracts["router"].address, "factoryV2()")
+        for token in n.tokens.values():
+            code(token.address)
+            call(token.address, "decimals()")
+            call(token.address, "symbol()")
+            if token.proxy_implementation:
+                proxy = token.proxy_implementation
+                reads.append(
+                    (
+                        "eth_getStorageAt",
+                        [Web3.to_checksum_address(token.address), proxy.storage_slot, block.tag],
+                    )
+                )
+                code(proxy.address)
+        for pool in n.pools:
+            code(pool.address)
+            for signature in (
+                "factory()",
+                "token0()",
+                "token1()",
+                "fee()",
+                "slot0()",
+                "liquidity()",
+            ):
+                call(pool.address, signature)
+            t0, t1 = n.tokens[pool.token0], n.tokens[pool.token1]
+            call(
+                n.contracts["factory"].address,
+                "getPool(address,address,uint24)",
+                ["address", "address", "uint24"],
+                [t0.address, t1.address, pool.fee],
+            )
+            for token in (t0, t1):
+                call(token.address, "balanceOf(address)", ["address"], [pool.address])
+        self.rpc.prefetch(block, reads)
+
     def verify_contracts(self, block: BlockRef) -> None:
         n = self.network
         for role, spec in n.contracts.items():
@@ -247,6 +301,7 @@ class HSKSwapData:
         block = self.rpc.block(
             confirmations=n.confirmations, max_age_seconds=n.max_block_age_seconds
         )
+        self.prefetch_snapshot(block)
         self.verify_contracts(block)
         pools = [self.read_pool(p, block) for p in n.pools]
         self.rpc.assert_canonical(block)

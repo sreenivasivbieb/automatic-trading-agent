@@ -15,7 +15,7 @@ from web3 import HTTPProvider, Web3
 from web3.exceptions import BlockNotFound
 
 from aegis.connectors.curl_rpc import CurlHTTPProvider
-from aegis.connectors.rpc import DiscoveryError, ReadOnlyRpc
+from aegis.connectors.rpc import DiscoveryError, ReadOnlyRpc, call_read
 from aegis.execution.confirmations import consistent_read
 from aegis.execution.fees import LiveFees
 
@@ -139,6 +139,17 @@ class VaultClient:
             confirmations=self.network.confirmations,
             max_age_seconds=self.network.max_block_age_seconds,
         )
+        reads = [
+            ("eth_getCode", [Web3.to_checksum_address(r["address"]), block.tag])
+            for r in self.records.values()
+        ]
+        reads.extend(
+            call_read(self.vault.address, signature, block)
+            for signature in ("owner()", "agent()", "router()", "decisionLog()")
+        )
+        reads.append(call_read(self.log.address, "vault()", block))
+        if isinstance(self.rpc, ReadOnlyRpc):
+            self.rpc.prefetch(block, reads)
         for record in self.records.values():
             if (
                 Web3.keccak(self.rpc.code(record["address"], block)).to_0x_hex().lower()
@@ -173,8 +184,7 @@ class VaultClient:
         self.rpc.assert_canonical(block)
         return block
 
-    def send(self, key: str, function, *, timeout=90, max_native_fee_wei=10**17):
-        self.verify()
+    def send(self, key: str, function, *, timeout=90, max_native_fee_wei=10**17, before_sign=None):
         if (
             function.address.lower() not in self.allowed
             or function.fn_name not in self.allowed[function.address.lower()]
@@ -192,6 +202,7 @@ class VaultClient:
                 raise ReconciliationRequired(
                     "This operation was cancelled; review the intent before continuing"
                 )
+            self.verify()
             return self.confirm(row[1], key, timeout=timeout)
         if self.db.execute("SELECT 1 FROM txs WHERE status='submitted' LIMIT 1").fetchone():
             raise ReconciliationRequired("A prior submitted transaction needs reconciliation")
@@ -221,6 +232,8 @@ class VaultClient:
             "data": data,
             "value": 0,
         }
+        if before_sign is not None:
+            before_sign()
         signed = self.account.sign_transaction(tx)
         tx_hash = signed.hash.to_0x_hex()
         self.db.execute("INSERT INTO txs VALUES(?,?,?,'submitted')", (key, json.dumps(tx), tx_hash))

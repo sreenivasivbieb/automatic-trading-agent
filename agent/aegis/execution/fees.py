@@ -6,7 +6,7 @@ import json
 
 from web3 import Web3
 
-from aegis.connectors.rpc import DiscoveryError
+from aegis.connectors.rpc import DiscoveryError, ReadOnlyRpc, call_read
 from aegis.data import ROOT
 
 
@@ -18,6 +18,33 @@ class LiveFees:
         self.rpc, self.records = rpc, config["networks"][str(chain_id)]
 
     def estimate(self, *, gas: int, gas_price: int, transaction_bytes: int, block) -> int:
+        if isinstance(self.rpc, ReadOnlyRpc):
+            reads = []
+            for record in self.records.values():
+                for address in (record["address"], record["implementation"]):
+                    reads.append(("eth_getCode", [Web3.to_checksum_address(address), block.tag]))
+                reads.append(
+                    (
+                        "eth_getStorageAt",
+                        [
+                            Web3.to_checksum_address(record["address"]),
+                            record["implementation_slot"],
+                            block.tag,
+                        ],
+                    )
+                )
+            for signature in ("operatorFeeScalar()", "operatorFeeConstant()"):
+                reads.append(call_read(self.records["l1_block"]["address"], signature, block))
+            reads.append(
+                call_read(
+                    self.records["gas_oracle"]["address"],
+                    "getL1FeeUpperBound(uint256)",
+                    block,
+                    types=["uint256"],
+                    args=[transaction_bytes + 256],
+                )
+            )
+            self.rpc.prefetch(block, reads)
         for record in self.records.values():
             if (
                 Web3.keccak(self.rpc.code(record["address"], block)).to_0x_hex().lower()
