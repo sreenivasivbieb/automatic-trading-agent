@@ -1,6 +1,6 @@
 # Security and trust boundaries
 
-AEGIS is an experimental hackathon implementation. Local contract tests and a HashKey testnet fork integration pass; no public AEGIS deployment or independent contract audit has been completed. The original Krono workspaces execute in simulation; the connected AEGIS workspace uses live data with virtual PAPER balances. See [contract evidence](docs/evidence/aegis-phase3-validation.json) and the terminal's separate [security notes](docs/SECURITY_AND_LIMITS.md).
+AEGIS is an experimental hackathon implementation. Local contract tests and a HashKey testnet fork integration pass; no public AEGIS deployment or independent contract audit has been completed. The original Krono workspaces execute in simulation; the connected AEGIS workspace uses live data with virtual PAPER balances. See [contract evidence](docs/evidence/aegis-phase3-validation.json) and [architecture](docs/ARCHITECTURE.md).
 
 ## Accounts and authority
 
@@ -25,6 +25,8 @@ Owner price-band maintenance is necessary after large market moves. Oracle failu
 OpenZeppelin 5.0.2 sources and an adapted Uniswap TickMath subset are vendored with notices and package integrity records. Foundry and Solidity downloads are pinned by SHA-256 and installed inside this project. These checks establish the selected artifact identity; they are not an audit of upstream code or of this integration.
 
 ## Operational status
+
+The local terminal is a single-operator service. HttpOnly SameSite sessions, trusted origins and CSRF checks protect browser mutations; configured CLI clients may use a bearer token. Request/configuration schemas and execution limits are enforced server-side. Use one backend worker. Public multi-user hosting needs separately validated identity, TLS and proxy controls. Raw conversation text remains in tab memory; typed tool/configuration events are audited. Logs omit request bodies and credentials, and ambient research tracing is disabled.
 
 The reference-strategy adapter trusts validated Coinbase inputs for analysis and independently verified HSKSwap quotes for execution. Synthetic sources cannot drive the normal paper agent. Reference/DEX basis checks and costs bound execution conditions; they do not establish that a reference signal predicts returns or that USDT maintains a USD peg. SOL has no mapped HSKSwap token. The original rules remain unchanged, and model text cannot create a raw library intent. See [adapter constraints and recovery checks](docs/STRATEGY_CONNECTION.md).
 

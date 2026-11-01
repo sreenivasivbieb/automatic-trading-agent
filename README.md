@@ -1,124 +1,113 @@
-# Krono — an auditable crypto trading workspace
+# Krono
 
-**AEGIS is connected:** run `make setup && make demo`, then open `http://127.0.0.1:5173/#/aegis` for live HSKSwap V3 prices, autonomous paper operation, positions, P&L, bounded chat and a local decision feed. [Connection steps](docs/CONNECTIONS.md) cover networks, owner-device signing and optional Claude/Telegram; [Kavach comparison](docs/KAVACH_COMPARISON.md) explains the reference integration.
+An AI-assisted trading workspace for the HSKSwap AI Agent Trading track on HashKey Chain. AEGIS monitors verified V3 pools, evaluates strategies, applies risk controls and executes eligible paper trades. The existing Krono home, coin artwork and five-strategy library are retained.
 
-The [recorded checkpoint](docs/evidence/aegis-connected-validation.json) includes 256 Python checks, 57 contract checks, 18 browser workflows, a one-hour paper run and signed commit/swap/reveal on a local fork. The one-hour run handled eight unavailable-data events without fallback fills. A forced paper round trip ended 100 → **99.972016 USDT** after modeled costs; it verifies execution, not strategy profit. Public deployment awaits the user's owner address and funded accounts; actual Claude/Telegram delivery and funded wallet signing remain unverified. The web strategy is paper-only. [Discovery](docs/DISCOVERY.md), [connected flows](docs/AEGIS_FLOWS.md), [contract evidence](docs/CONTRACTS.md) and [security boundaries](SECURITY.md) separate local, paper and public proof.
+**Current mode:** live market data with virtual funds. Public vault deployment and funded on-chain trading are pending. Paper results and local fork transactions do not establish profitability or public execution.
 
-![Original Krono home with dimensional coin artwork and reference markets](docs/evidence/screenshots/home-restored-desktop.png)
+![Krono home](docs/evidence/screenshots/compact-home-desktop.png)
 
-**Latest validation:** [272 Python checks and 27 browser workflows](docs/evidence/strategy-library-validation.json), including an original-strategy paper fill in an isolated replay and a built UI check with actual Coinbase/HSKSwap data. Public trades and profitability are unproven.
+[Mobile view](docs/evidence/screenshots/compact-home-mobile.png)
 
-**Strategy connection:** all five original rules and their configured selector now feed the HSKSwap paper loop through a typed adapter. Fresh BTC/ETH reference signals can execute as WBTC/WETH after quote, cost, basis and risk checks. SOL and missing arbitrage routes remain blocked. Original ATR stops and entry deduplication survive restart. [Implementation and supplied-guide review](docs/STRATEGY_CONNECTION.md) explain the data and execution boundaries.
+## Quick start
 
-**Frontend integration:** the original Command center, dimensional coin artwork, BTC/ETH/SOL market watch and original strategy preview remain the home page. HSKSwap is available through **AEGIS · HSKSwap** or `/#/aegis`, with shared backend state across the desk, markets, positions, executions, risk, settings, wallet and assistant. News/research tools and the AWS workspace remain accessible. See [the screen-to-backend mapping](docs/FRONTEND_INTEGRATION.md) and [recorded frontend evidence](docs/evidence/frontend-integration-validation.json). The original strategy implementations and configurations are unchanged.
-
-**KRONO 2.0:** a Cognito/DynamoDB tenant control plane, centralized Bedrock MiniMax provider, conversational agent drafts and isolated ECS runtime infrastructure have been added. Configure your account using [the AWS setup guide](docs/AWS_SETUP.md) and [environment template](deploy/aws/.env.example). Cloud deployment and model access remain pending account configuration; the local simulation terminal still runs independently.
-
-Research → deterministic strategy → independent risk → quote preview → human authorization → simulated execution → reconciled portfolio.
-
-Krono is an independent platform built for the HSKSwap AI Agent Trading hackathon track, extending [AlpacaTradingAgent](https://github.com/vishal88736/alpaca-trading-agent). HSKSwap is the target exchange integration on HSKChain. Python, LangGraph, FastAPI and SQLite power a React/TypeScript/Tailwind terminal. The original trading framework, Dash interface and Alpaca utilities remain in the repository.
-
-**Krono's original workspaces use SIMULATION; the AEGIS workspace uses PAPER with live HSKSwap data.** Their balances and ledgers are separate. Public HSKSwap swaps remain disabled in the web application. No profitable strategy, production readiness or public AEGIS deployment is claimed.
-
-![AEGIS workspace with actual HSKSwap data and virtual paper balances](docs/evidence/screenshots/frontend-overview-desktop.png)
-
-The interface uses self-hosted Inter, brighter charcoal surfaces, lavender controls, a compact icon rail and original dimensional coin artwork. The discovery cards support filtering, sorting, grid/list views, versioned configuration and measured backtests. Reference-price previews are explicitly distinguished from strategy performance. Workspace search opens real markets and application sections. HSKSwap is identified as an exchange integration rather than the platform brand.
-
-## Start locally
-
-Requires Node **22.12+**, `uv`, and Python **3.12**. The commands below keep Python downloads and caches inside this project. Initial setup downloads Python if needed and the locked Python/npm dependencies. No model weights, wallet credentials or API keys are needed for simulation.
+Requires **Node.js 22.12+**, **Python 3.12** and **uv**. Setup installs locked dependencies with project-local Python and caches.
 
 ```bash
-export UV_CACHE_DIR="$PWD/.cache/uv"
-export UV_PYTHON_INSTALL_DIR="$PWD/.python"
-uv sync --frozen --python 3.12
-npm ci
-npm run dev
+git clone https://github.com/vishal88736/automatic-trading-agent.git
+cd automatic-trading-agent
+make setup
+make demo
 ```
 
-Open **http://127.0.0.1:5173**. The API listens on `127.0.0.1:8787`. Stop both development processes with Ctrl+C.
+Open **http://127.0.0.1:5173**. FastAPI runs on **http://127.0.0.1:8787**. Keep the terminal process running; Ctrl+C stops the development servers. After changing backend code, restart `make demo`.
 
-Optional server settings: copy `.env.example` to `.env`, then edit the relevant fields. `npm run dev` loads that file without exposing its contents to Vite's client bundle. Existing shell environment variables take precedence. Never add real credentials to frontend environment variables.
+The basic paper flow needs internet access, but no wallet or model API key. Copy `.env.example` to an ignored `.env` only when configuring optional providers or changing defaults. Server credentials never belong in frontend variables.
 
-To run the built application with one local server:
+## Start automatic paper trading
 
-```bash
-npm run build
-.venv/bin/python -m uvicorn backend.api:app --host 127.0.0.1 --port 8787
+1. Choose **HSKSwap** in the workspace selector, or visit **http://127.0.0.1:5173/#/aegis**.
+2. Click **Refresh HSKSwap data** and inspect the data status and observed block.
+3. Review **Strategies** for sizing, target assets, frequency and stop settings. The original strategy configurations remain in the existing strategy library.
+4. If an emergency is latched, review the ledger and finish any pending unwind before **Review and clear stop** becomes available.
+5. Click **Start paper agent**. **Autonomous paper trading** and **Pause entries** indicate that it is enabled.
+
+New paper ledgers start with **100 virtual USDT**. Fills, positions, fees, preferences and risk baselines persist. Restarts recover with entries paused. **PANIC** blocks entries and requests bounded exits using fresh quotes; unavailable data leaves the unwind pending.
+
+Trades are conditional. Native pool mean reversion needs at least 20 distinct block observations. The original library needs fresh reference tickers and its required closed hourly history. Costs, stale data, liquidity limits, price gaps or missing arbitrage routes can all prevent a fill. Inspect **Trading Desk** and **Agent Observatory** for the actual reason.
+
+## Strategies and data
+
+| Strategy            | Main inputs                                                |
+| ------------------- | ---------------------------------------------------------- |
+| Momentum Trading    | EMA, MACD, RSI and volume agreement                        |
+| Mean reversion      | Bollinger displacement, RSI and range filters              |
+| Trend Following     | EMA slope, long-average alignment and participation        |
+| Breakout Trading    | Prior Donchian channel, ATR buffer and volume              |
+| Arbitrage Detection | Compatible executable routes and cost-inclusive settlement |
+
+The original rules and selector feed the HSKSwap paper gateway through a typed adapter. **BTC maps to WBTC; ETH maps to WETH. SOL has no verified HSKSwap mapping and cannot execute there.** The separate pool strategy monitors WHSK and the verified wrapped assets. Arbitrage requires an actual verified closed route.
+
+Coinbase supplies reference tickers and hourly candles; HSKSwap supplies independent pool state and V3 quotes. Reference candles are not DEX candles or executable prices. Normal library execution requires **Settings → Data providers → Coinbase**; synthetic fixtures are reserved for explicit research demos and isolated tests.
+
+The original **SIMULATION** workspace and AEGIS **PAPER** workspace have separate capital accounts. Their shared strategy configurations do not merge balances. Source, mode, costs and execution status remain visible.
+
+## Features
+
+- Automated monitoring, deterministic signals, final risk checks and an idempotent paper execution gateway.
+- Positions, realized/unrealized P&L, fee accounting, charts and an auditable decision feed.
+- Sizing, exposure, frequency, cooldown, stale-data and liquidity limits; ATR stops, stop-loss, take-profit, trailing and time exits.
+- Bounded web conversation for status, P&L and strategy preferences; close-all requires human confirmation. The default router is deterministic and labeled. Claude tool calling and private-chat Telegram controls are optional.
+- Guard contracts with owner-only recovery, fixed swap recipients, allowlisted routes and on-chain limits. Commit/reveal verification and a separate signing gateway are implemented and tested on a local fork; public deployment is pending.
+- Existing news, backtests, research, manual simulation and optional AWS tenant-agent workspaces.
+
+See [connection instructions](docs/CONNECTIONS.md) for wallet preparation, Claude and Telegram. Owner signing stays on the user's device. Funding controls require a verified deployment; the web agent cannot switch itself into live trading.
+
+## Architecture
+
+The React UI and language controls share an authenticated FastAPI service. A single-writer runtime owns the HSKSwap paper ledger. Strategy signals pass through quote validation and risk checks before an atomic fill. A separate, explicitly configured signing gateway uses the vault and decision log for on-chain execution.
+
+```text
+frontend/       Krono React UI and shared AEGIS state
+backend/        FastAPI, reference feeds, strategy bridge and research graph
+agent/aegis/    V3 connector, monitoring, risk, execution, ledger and language tools
+contracts/      Vault, oracle, decision log, deployment scripts and tests
+config/         Network registry, operational defaults and optional legacy dependencies
+infra/          AWS infrastructure definitions
+deploy/aws/     Optional cloud deployment tooling
+e2e/            Browser workflows with isolated test providers
+docs/           Operational guides, verified contract ABIs and recorded evidence
 ```
 
-Open **http://127.0.0.1:8787**. To load `.env` in this command, use `uv run --frozen --no-sync --env-file .env python -m uvicorn backend.api:app --host 127.0.0.1 --port 8787` instead.
+[Architecture](docs/ARCHITECTURE.md) describes runtime and custody boundaries. [Development](docs/DEVELOPMENT.md) covers entry points, configuration, debugging and optional legacy compatibility.
 
-## A reproducible demo
-
-1. For the deterministic walkthrough, explicitly select **synthetic fixtures** for both providers before trading. Normal startup now uses live reference feeds with simulated execution. Simulation capital comes from `config/runtime.json` (default $10,000), with no owned positions. Fixture prices/stories are not current market reports.
-2. Click **Analyze BTC**. Inspect the real stage records in **Agent Observatory**, including the indicator values, deterministic signals and independent risk decision. With no model configured, the LLM stage says **SKIPPED**.
-3. Open **Execution History**. Review the approved amount, exact input, minimum output, costs, quote age and exit policy. Quotes expire after 20 seconds; refresh an expired preview. A proposal older than 120 seconds needs a new analysis.
-4. Click **Authorize simulated fill**. The ledger records one fill, updates cash/holdings/fees/P&L, and records a `sim:` receipt. There is no blockchain transaction hash.
-5. Inspect **Positions**, **Risk Controls** and **Settings → audit trail**. Repeated authorization cannot create another fill. A manual exit also requires its own preview, risk checks and authorization.
-6. Ask the assistant to **lower maximum trade size to 0.5% of equity**, **disable momentum strategy**, or **pause all new entries**. These are validated server-side tools. The assistant cannot raise exposure limits, sign transactions or bypass the execution pipeline.
-7. Press **E-stop**. The backend latches the stop immediately. Clearing it in Risk Controls leaves entries paused until an explicit resume.
-
-Full walkthrough, including autonomous simulation and restart recovery: [DEMO.md](docs/DEMO.md).
-
-## Implemented and externally blocked
-
-| Capability                                                                             | Evidence / boundary                                                                                                                                                                                                                                                                                                    |
-| -------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Ten terminal workspaces, responsive navigation, candles, volume, EMA and equity charts | Built and exercised with Chromium at desktop and mobile sizes. 1h/4h/1d charts use complete buckets; analysis remains hourly.                                                                                                                                                                                          |
-| Market and news ingestion                                                              | Typed Coinbase reference prices/candles and hosted cryptocurrency.cv news/breaking feeds; bounded concurrency, timeouts, caching and stale/unavailable states.                                                                                                                                                         |
-| Strategy registry                                                                      | Five built-ins: momentum, mean reversion, trend following, breakout and arbitrage detection. Dynamic ranking uses measured inputs; arbitrage remains ineligible without verified executable routes.                                                                                                                    |
-| Upstream framework reuse                                                               | Original regime classifier, Wilder ATR, bull/bear node factories, structured trader schema and provider factory. 220 of 223 preserved upstream files are byte-identical; three small adaptations are documented.                                                                                                       |
-| Optional AI research                                                                   | Actual upstream bull/bear nodes and a structured trader consolidation; bounded, read-only and subordinate to deterministic strategies/risk. Tested with a fixture model; no live LLM provider has been validated in this run.                                                                                          |
-| Independent risk and simulation execution                                              | Decimal amounts, hard caps, fresh-quote validation, explicit authorization, idempotent intents, transaction-state separation and atomic ledger reconciliation.                                                                                                                                                         |
-| Scheduler and audit                                                                    | Single active run, separate pause/stop/emergency controls, safe restart recovery, persistent configuration versions and paginated records. Automatic fills require explicit simulation-only permission.                                                                                                                |
-| Backtests                                                                              | Chronological next-open execution, entry-bar/standing stops, fees, slippage, risk caps and a frozen chronological holdout; assumptions and unavailable metrics are exposed.                                                                                                                                            |
-| Terminal HSKChain read-only integration                                                | Official network references, chain-ID checks, native balance and receipt lookup. The terminal adapter is separate from AEGIS and does not submit swaps.                                                                                                                                                                |
-| Standalone AEGIS integration                                                           | Connected autonomous paper monitor/signals/risk/gateway, persistent ledger, bounded chat and owner-wallet preparation. 57 Guard tests and signed commit/swap/reveal reconciliation on a local HashKey fork pass. Public deployment, funded wallet/live execution and external Claude/Telegram delivery remain pending. |
-| Alpaca compatibility                                                                   | Original adapter and Dash/CLI source preserved, with separate optional paper-account inspection. HSKSwap requests never route to Alpaca. Full legacy provider/UI execution was not tested.                                                                                                                             |
-
-## Data, modes and permissions
-
-New workspaces default to Coinbase reference prices and cryptocurrency.cv news while execution remains SIMULATION. Existing saved provider settings take precedence over environment defaults: select **Settings → Data providers** to change them. **Settings → Feed refresh** configures short ticker caching separately from closed hourly history and news. News search/category/asset filters operate on normalized loaded feeds; they do not pretend to be historical article search. Provider free-tier limits are shown when present. Changing market sources after fills requires a new simulation database to preserve comparable P&L provenance.
-
-Read [Understanding KRONO](docs/codebase/README.md) for the directory/module guide, actual API/source reference, configuration precedence, debugging workflow and backend audit. Public operational defaults live in [config/runtime.json](config/runtime.json); mandatory risk and authorization safeguards remain in trusted code.
-
-Reference symbols such as BTC are distinct from HSKChain tokens such as WBTC. Documented token addresses, chain IDs, decimals and verification status are separate fields. Unknown decimals remain unknown. A read-only wallet connection never establishes cost basis, authenticates ownership or merges real balances into simulated P&L.
-
-SIMULATION never signs. The terminal does not expose a functioning PAPER or LIVE toggle. `TERMINAL_MODE=LIVE` cannot enable execution. The preserved Alpaca paper workflow is separate; it is not HSKSwap paper trading.
-
-The local interface uses an HttpOnly SameSite session, trusted origins and CSRF protection. CLI clients may use a server-configured bearer token. State changes are validated and audited; the UI is not the enforcement boundary. SQLite/runtime files are ignored by Git. Raw chat stays in tab memory; typed tool events are persisted. Ambient LangSmith tracing is disabled around terminal research runs.
-
-Run a single backend process/worker for this local modular monolith. Multi-user hosting, production TLS/identity, external wallet signing, contract audits, live execution and comprehensive legacy dependency validation are outside the verified deployment boundary. See [SECURITY_AND_LIMITS.md](docs/SECURITY_AND_LIMITS.md).
-
-## Validate
+## Validation
 
 ```bash
-.venv/bin/python -m pytest backend/tests legacy_tests/test_regime_detection.py legacy_tests/test_backtest_engine.py legacy_tests/test_portfolio_intelligence.py -q
-.venv/bin/ruff check backend scripts
-.venv/bin/ruff format --check backend scripts
+.venv/bin/python -m pytest backend/tests agent/tests legacy_tests/test_regime_detection.py legacy_tests/test_backtest_engine.py legacy_tests/test_portfolio_intelligence.py -q
+.venv/bin/ruff check backend scripts agent
 npm run build
 npm run test:e2e
 .venv/bin/python -m scripts.production_smoke
-.venv/bin/python -m scripts.public_audit
 ```
 
-Chromium tests use the installed `/usr/bin/chromium` when available. Otherwise install Playwright's browser into the project cache with `PLAYWRIGHT_BROWSERS_PATH="$PWD/.cache/ms-playwright" npx playwright install chromium`, and keep that variable set for the test command. CI installs its own browser and OS dependencies on its disposable runner.
+For local contract checks, first run `make contracts-setup`, then `make contracts-test`. The setup downloads checksum-pinned tools into this project. Browser installation and optional live-data/fork checks are documented in [verification](docs/VERIFICATION.md).
 
-Validation commands and evidence boundaries are recorded in [VERIFICATION.md](docs/VERIFICATION.md). The AWS control-plane suites run with isolated providers and synthesized infrastructure; they do not verify account-level deployment or model access. A third-party LangGraph deprecation warning remains. No test establishes profitability or live trading.
+[Recorded strategy-connection validation](docs/evidence/strategy-library-validation.json) includes **272 Python checks**, **27 browser workflows**, a production restart check, an explicit replay fill and a built UI check with actual Coinbase/HSKSwap data. [Contract evidence](docs/CONTRACTS.md) records **57 local Guard tests** and signed local-fork execution. These records state their source revisions and scope; they do not claim funded wallet execution, actual Claude/Telegram delivery, cloud deployment or sustained profitability.
 
-Public read-only provider probes are opt-in and separate from offline tests:
+## Documentation
 
-```bash
-.venv/bin/python -m scripts.verify_providers --network
-```
+- [Connections and configuration](docs/CONNECTIONS.md)
+- [Autonomous paper flow](docs/AEGIS_FLOWS.md) and [strategy connection](docs/STRATEGY_CONNECTION.md)
+- [Strategy rules](docs/STRATEGIES.md), [risk limits](docs/RISK.md) and [security](SECURITY.md)
+- [HSKSwap discovery and verified ABIs](docs/DISCOVERY.md)
+- [Contracts and deployment](docs/CONTRACTS.md)
+- [Verification and evidence](docs/VERIFICATION.md)
+- [Generated API/source index](docs/SOURCE_REFERENCE.md)
+- [Three-minute demo](docs/DEMO_SCRIPT.md) and [pitch](docs/WHY_AEGIS.md)
+- [Optional AWS setup](docs/AWS_SETUP.md)
 
-## Architecture and provenance
+## Attribution and licenses
 
-- [Architecture and contracts](docs/ARCHITECTURE.md)
-- [Strategy assumptions and inherited strategy reference](docs/STRATEGIES.md)
-- [Verified endpoints, HSKSwap research and missing requirements](docs/INTEGRATIONS.md)
-- [Initial repository audit and implementation plan](docs/IMPLEMENTATION_PLAN.md)
-- [Preserved upstream documentation](docs/upstream/README.md)
+Krono extends the retained AlpacaTradingAgent/TradingAgents framework. Runtime code, prompts, numerical utilities, Dash/CLI compatibility and license notices remain in the repository; separate reference checkouts are not required.
 
-The inherited framework is Apache-2.0 licensed. See [LICENSE](LICENSE) and [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). cryptocurrency.cv is consumed as a hosted API; its service source was not copied or deployed.
+See [LICENSE](LICENSE) and [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for upstream attribution and the component-specific Apache-2.0, MIT and GPL notices.

@@ -1,71 +1,61 @@
-# Verification record
+# Verification
 
-## Backend repair and live-data checks — 2026-10-31
+## Local checks
 
-The running local workspace was inspected through its authenticated API. It had persisted fixture providers; after confirming no fills existed, the provider selection was changed through the versioned settings endpoint. The application was restarted with the repaired backend while retaining its emergency stop. No trade, signing or blockchain submission request was made.
+Run setup from the root README, then:
 
-Current verification:
+```bash
+.venv/bin/ruff check backend scripts agent
+.venv/bin/ruff format --check backend scripts agent
+.venv/bin/python -m scripts.generate_code_reference --check
+.venv/bin/python -m pytest backend/tests agent/tests legacy_tests/test_regime_detection.py legacy_tests/test_backtest_engine.py legacy_tests/test_portfolio_intelligence.py -q
+npm run build
+npm run test:e2e
+.venv/bin/python -m scripts.production_smoke
+.venv/bin/python -m scripts.public_audit
+```
 
-- **159 Python tests and 10 subtests**: preserved numerical suites plus provider refresh/outage behavior, configuration validation, source-bound previews, reference-price changes, scheduler resume, complete financial history, observed drawdown peaks and nested transaction atomicity.
-- **19 platform/infrastructure tests**: adds safe malformed-body/404 errors, concurrent profile initialization and correct DynamoDB cancellation classification to existing tenant/approval/runtime checks.
-- **14 Chromium workflows**: adds saved feed intervals, chart viewport persistence across incoming observations, visible provider allowance and selected breaking-feed polling.
-- Strict frontend/platform types, production frontend build, AWS synthesis, Ruff, Prettier, source-reference consistency and publication checks passed.
-- The built application/restart simulation passed against a separate database. Real Chromium also loaded the running local market/news/settings screens without page errors.
-- A read-only application probe observed AVAILABLE Coinbase BTC/ETH/SOL prices with newer trade timestamps after the configured five-second cache interval, plus AVAILABLE latest/breaking news. The latest endpoint explicitly reported a three-result free-tier limit. [Sanitized application report](evidence/live-application-verification.json).
+The browser suite uses `/usr/bin/chromium` when available. Otherwise install Chromium into the project cache and keep the variable set for the browser test command:
 
-The nine-page [codebase guide](codebase/README.md) contains the directory/module map, generated API and symbol reference, configuration precedence, debugging steps and [audit findings](codebase/08_BACKEND_AUDIT.md). Operational defaults now live in validated `config/runtime.json`; mandatory authorization, ownership and financial hard caps remain trusted code.
+```bash
+export PLAYWRIGHT_BROWSERS_PATH="$PWD/.cache/ms-playwright"
+npx playwright install chromium
+npm run test:e2e
+```
 
-Current provider availability is an observation at the report timestamp, not a service guarantee or verification of the articles' factual accuracy. The upstream aggregate may include macro/general articles; asset relevance remains content-derived and those stories cannot independently authorize trading. Real AWS deployment/model/IAM checks and HSKSwap live execution remain unverified/disabled. CI must be checked for the exact pushed repair commit; the successful implementation run below predates this audit.
+Optional AWS checks use isolated test providers or synthesized infrastructure:
 
-## KRONO 2.0 setup verification — 2026-10-31
+```bash
+npm run check:platform
+npm run test:platform
+npm run aws:synth
+```
 
-These checks ran locally without AWS credentials or live funds. The cloud services use actual AWS SDK integrations and infrastructure definitions; test doubles validate their contracts and failure handling rather than proving an account-level deployment.
+These commands do not validate an AWS account deployment or model entitlement. See [AWS setup](AWS_SETUP.md).
 
-| Check                             | Observed result                                                                                                                                                                                                                                                                                                                           |
-| --------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Python regression suites          | **144 passed**, **10 subtests passed**. Includes five-strategy evaluation/adaptation, independent risk, simulation accounting, runtime lease/checkpoint fencing, model-review freshness and research-opportunity evidence.                                                                                                                |
-| Platform and infrastructure tests | **16 passed**. Includes Cognito JWT cryptographic validation, expired-session logout, tenant isolation, conditional writes, single-use approvals, stable configuration digests, quotas, usage reservations, failed-upgrade recovery, emergency controls and synthesized IAM/network resources.                                            |
-| Chromium workflows                | **12 passed**. Adds Trading Desk chart controls, sizing, persistent alerts, missing-AWS setup state and an authenticated conversational deployment/control/logout workflow using visibly identified test providers. The latter sends no real Cognito, Bedrock or ECS requests.                                                            |
-| Builds and types                  | Frontend production build, strict frontend/control-plane/infrastructure TypeScript and bundled runtime functions passed.                                                                                                                                                                                                                  |
-| Infrastructure                    | `npm run aws:synth` passed with no AWS provisioning. The bootstrap API service has zero desired tasks until an actual immutable image digest is configured.                                                                                                                                                                               |
-| Production simulation restart     | The built frontend was served by Uvicorn; one simulated fill, cash and equity survived restart without a duplicate ledger entry. Scheduler recovered PAUSED. [Current sanitized report](evidence/production-smoke.json).                                                                                                                  |
-| Source and publication checks     | Ruff, Prettier and `git diff --check` passed. Candidate-source audit found no issues; this bounded scan is not a comprehensive security audit.                                                                                                                                                                                            |
-| Dependency advisories             | `npm audit` reports **two moderate entries from one underlying minimatch advisory** bundled with development-only `aws-cdk-lib`; no high or critical entries. npm reports no available CDK fix. Infrastructure tooling is pruned from the API container and checked in CI. [Advisory](https://github.com/advisories/GHSA-g3hv-75wg-m249). |
+## Explicit network and contract checks
 
-Actual Chromium renders of the [Trading Desk](assets/krono-trading-desk.png) and [Agent Platform test fixture](assets/krono-agent-platform-fixture.png) retain their source/test disclosures. No cloud balance, heartbeat or model response is fabricated to fill empty states.
+```bash
+make prices
+.venv/bin/python -m scripts.verify_frontend --i-understand-paper --reference-markets
+make contracts-setup
+make contracts-test
+make contracts-fork-test
+make verify-signed-fork
+```
 
-GitHub Actions passed for implementation commit `6967ac2`, including both deployment container builds, removal of infrastructure tooling from the API image, and the non-root Python worker's imports/writable runtime volume. [Validation run](https://github.com/vishal88736/automatic-trading-agent/actions/runs/41198929313). The local Docker socket was inaccessible. AWS account deployment, email delivery, Bedrock access, real ECS task health, IAM enforcement in AWS and cloud recovery remain **pending operator configuration and acceptance testing**. See [AWS setup and acceptance run](AWS_SETUP.md). HSKSwap live trading remains disabled; exchange PAPER mode is unavailable. No profitability or production-readiness claim is made.
+`make prices` and the frontend check read public data. The frontend check uses a separate virtual ledger, leaves entries paused and makes no paid model calls or public transactions. Fork checks execute actual router bytecode locally; their transaction hashes have no public explorer receipts. Contract setup downloads checksum-pinned tools. See [contracts](CONTRACTS.md) for scope and deployment requirements.
 
-## Historical terminal verification — 2026-10-28 to 2026-10-30
+## Recorded evidence
 
-Initial backend/provider verification completed across 2026-10-28 UTC / 2026-10-29 IST. The discovery-theme UI and browser checks were refreshed on 2026-10-30. The following results are historical; provider observations were not refreshed as part of the AWS setup. This record separates deterministic tests, browser rendering, real read-only provider observations and operations that were not performed.
+| Record                                                           | What it establishes                                                                                                                   |
+| ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| [Strategy connection](evidence/strategy-library-validation.json) | 272 Python checks, 27 browser workflows, 20 focused adapter/API checks, production build/restart and actual Coinbase/HSKSwap UI reads |
+| [Home restoration](evidence/home-restoration-validation.json)    | Original home artwork, layout and source components retained; desktop/mobile home navigation                                          |
+| [Contract tests and fork checks](CONTRACTS.md)                   | 57 local Guard checks, exact-byte commitment/reveal, signed local-fork swaps and reconciliation                                       |
+| [Connected runtime](evidence/aegis-connected-validation.json)    | Earlier connected paper acceptance, including a 3,601-second observation and recovery                                                 |
+| [Discovery](evidence/aegis-data-verification.json)               | Recorded contract, pool, metadata, code and indexed-source comparisons                                                                |
 
-| Check                                                                  | Observed result                                                                                                                                                                                                                                                                                                                                                                                                            |
-| ---------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Backend unit/integration tests plus selected preserved upstream suites | **125 passed**, **10 subtests passed**. Includes typed news/token validation, indicators, strategy rules, risk limits, quote expiry/arithmetic, actual upstream researcher factories with a fixture LLM, idempotency, P&L, CSRF/auth, chat permissions, emergency stop and reopened-database recovery.                                                                                                                     |
-| Chromium end-to-end workflows                                          | **9 passed**: analysis→risk→authorization→ledger/portfolio/audit; configuration/backtest; news provenance; assistant/emergency controls; all ten workspaces on mobile/disconnected wallet; chart aggregation/correlation/insufficient-history display; Krono branding, bundled fonts and responsive readability; discovery filtering/sorting/list views and enabled-state reconciliation; desktop/mobile workspace search. |
-| Frontend                                                               | Strict TypeScript check and Vite production build passed.                                                                                                                                                                                                                                                                                                                                                                  |
-| Source checks                                                          | Ruff checks/formatting, Prettier and `git diff --check` passed after formatting the new code. Preserved upstream whitespace was not globally rewritten.                                                                                                                                                                                                                                                                    |
-| Production build and restart                                           | Real Uvicorn startup served the built frontend. One simulated fill persisted through restart, balances matched, ledger remained unique and scheduler recovered PAUSED. [Sanitized report](evidence/production-smoke.json).                                                                                                                                                                                                 |
-| Real provider probe                                                    | Coinbase reference ticker/300 closed BTC candles, normalized hosted news/breaking feeds, current OpenAPI and official HSKChain RPC returned valid read-only responses. [Timestamped report](evidence/provider-verification.json).                                                                                                                                                                                          |
-| Upstream preservation                                                  | 223 files retained; 220 byte-identical. Only lazy agent exports and optional bull/bear prompt-capture callbacks changed. Original checkout contained no symlinks.                                                                                                                                                                                                                                                          |
-| Publication audit                                                      | Candidate files passed runtime-path, size and bounded credential-pattern checks. `.env`, databases, caches, installed environments and reference downloads are excluded.                                                                                                                                                                                                                                                   |
-| npm dependency audit                                                   | Installation/lockfile synchronization reported zero npm vulnerabilities at that historical verification time. The current dependency result is recorded above. This is not an audit of all optional Python/legacy dependencies.                                                                                                                                                                                            |
+Evidence includes source hashes, modes and limitations. The earlier one-hour run predates the strategy-library adapter. Forced/replayed fills test accounting and control behavior; they are separate from strategy performance. Other files under `docs/evidence/` retain their historical checkpoint scope.
 
-One third-party LangGraph pending-deprecation warning is emitted by its serializer import. It does not represent a failed application check. The original full legacy suite needs broker/LLM/embedding/UI dependencies; it was not all executed. The selected preserved numerical regression suites contributed 74 tests and 10 subtests to the combined result.
-
-Screenshots in `docs/assets/` are actual Chromium renders with labeled fixtures. Desktop shows the fresh simulation; mobile shows one simulated fill and a permitted limit change. The interactive computer-use browser connection was unavailable; no manual connected-wallet browser/signing test was performed.
-
-The current discovery theme bundles Inter locally, uses an original K monogram and a project-local AI-generated coin illustration, and keeps the hero counts tied to backend strategy and portfolio records. Browser checks block external requests while confirming font loading. At widths of 1512, 1280, 768, 390 and 320 pixels, key overview copy remains at least 12 CSS pixels, chart axis labels render at least 12 screen pixels, and the page has no horizontal overflow. Targeted desktop overview copy passes a 4.5:1 contrast check. Closed mobile navigation is excluded from accessibility navigation. Strategy charts show labeled reference prices until an actual backtest produces measured holdout equity; unavailable returns remain unavailable. These focused checks are not a comprehensive accessibility audit.
-
-An additional local Chromium probe served the actual built application through FastAPI with external browser requests blocked. The bundled Inter font and local hero artwork returned HTTP 200 under the backend content-security policy, desktop/mobile previews rendered, and no browser errors occurred. [Sanitized production font report](evidence/krono-browser-production.json).
-
-CI is configured in `.github/workflows/ci.yml`. Its result must be inspected for the exact pushed commit; local test results are not represented as a remote CI success. See the repository's Actions page for the current run.
-
-## Not verified or claimed
-
-No live blockchain swap, approval, private-key import, wallet signature, deployed public website, production multi-user hosting, live LLM response, real Alpaca order or profitable strategy was demonstrated. HSKSwap live execution remains disabled. Receipt lookup code was exercised with distinct mocked pending/reverted/confirmed responses; that does not establish a live swap or reconciled wallet P&L.
-
-## Reproduce
-
-Use the root README commands. `npm run test:e2e` creates a new simulation-only database and overrides provider/research settings. `scripts.production_smoke` creates its own database and never reuses a developer trading environment. Network provider observations are intentionally opt-in via `scripts.verify_providers --network` and are excluded from deterministic CI tests.
+No recorded check proves sustained profitability, a public AEGIS deployment, funded wallet execution or actual Claude/Telegram delivery. The publication scanner checks bounded credential patterns and private paths; it is not a full security audit. See [security](../SECURITY.md) and the public [CI workflow](https://github.com/vishal88736/automatic-trading-agent/actions/workflows/ci.yml).

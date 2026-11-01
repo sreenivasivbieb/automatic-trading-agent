@@ -1,6 +1,6 @@
 # Connected AEGIS paper flow
 
-AEGIS is available inside the existing Krono React application at `/#/aegis`; the root `/` retains the original home page and coin artwork. Its desk, markets, positions, executions, strategy, risk, wallet and settings routes share one frontend state provider; the existing interface and original research strategies are retained. [Frontend mapping and reference review](FRONTEND_INTEGRATION.md) describe the connection. This page reads an authenticated FastAPI service backed by the actual AEGIS ledger and connector. Its strategy uses live mainnet pool data and virtual balances and cannot sign public swaps. The separate owner panel prepares reviewed transactions for signing in the device wallet after a verified deployment is registered. Existing Krono simulation and AWS tenant agents remain separate runtimes and ledgers.
+AEGIS is available inside the existing Krono React application at `/#/aegis`; the root `/` retains the original home page and coin artwork. Its desk, markets, positions, executions, strategy, risk, wallet and settings routes share one frontend state provider; the existing interface and original research strategies are retained. This page reads an authenticated FastAPI service backed by the actual AEGIS ledger and connector. Its strategy uses live mainnet pool data and virtual balances and cannot sign public swaps. The separate owner panel prepares reviewed transactions for signing in the device wallet after a verified deployment is registered. Existing Krono simulation and AWS tenant agents remain separate runtimes and ledgers.
 
 ## Start and inspect
 
@@ -67,28 +67,10 @@ All routes use the existing session/CSRF or bearer boundary. The terminal-wide e
 
 `python -m scripts.verify_aegis_flow --i-understand-paper --duration-seconds 3600` runs a separate real-mainnet-data HTTP check and one-hour unattended paper observation. It records a forced round trip separately from strategy performance, checks the shared ledger and language bounds, then verifies restart recovery. Evidence and screenshots are produced under ignored `artifacts/`; an in-progress run is not a passed acceptance result.
 
-The user-supplied `kavach-main/` folder is retained as an ignored local reference and excluded from deployment contexts. No owner key is required for this paper flow. Actual public deployment, funding and external model/Telegram delivery still require their respective configuration and evidence.
+No owner key is required for this paper flow. Actual public deployment, funding and external model/Telegram delivery still require their respective configuration and evidence.
 
-## Reference integration and demonstration
+## Demo and verification
 
-[Connection instructions](CONNECTIONS.md) cover verified networks, owner-device signing, registration and optional provider/Telegram configuration. [Kavach comparison](KAVACH_COMPARISON.md) records the useful separation of engine/vault/independent keeper and the boundaries not imported. The [three-minute demo script](DEMO_SCRIPT.md) and [one-page pitch](WHY_AEGIS.md) distinguish paper, fixture, local-fork and public evidence.
+[Connection instructions](CONNECTIONS.md) cover networks, owner-device signing, registration and optional providers. The [three-minute demo](DEMO_SCRIPT.md) and [pitch](WHY_AEGIS.md) distinguish paper, fixture, local-fork and public evidence.
 
-## Recorded acceptance checkpoints
-
-[Earlier connected validation](evidence/aegis-connected-validation.json) records 256 Python checks (plus ten subtests), 57 contract checks and 18 browser workflows. The mainnet-data PAPER service ran unattended for 3,601 seconds, observed 88 ticks and recovered its ledger/preferences after restart with entries paused. Eight durable data-unavailable events blocked new fills; zero process crashes does not imply uninterrupted RPC availability. The two forced accounting fills preceded strategy observation and netted −0.027984 virtual USDT.
-
-The one-hour report retains its starting source hashes. Its paper runtime, policy, strategy, gateway and ledger stayed unchanged during the run; transport, optional control adapters and shutdown handling were extended and checked separately. The final entire tree is not claimed to have run unchanged for an hour. A separate shorter HTTP smoke ended stale after an RPC outage without fallback fills; a later independent fresh-price check recovered. See the evidence for both results.
-
-| Phase              | Current acceptance boundary                                                                                                  |
-| ------------------ | ---------------------------------------------------------------------------------------------------------------------------- |
-| Discovery/data     | Verified source/RPC data; external HSKSwap visual matching waived and unverified                                             |
-| Connector/paper    | Real live-quote round trip, decimal/fee accounting, restart and atomic-cycle fixture checks pass                             |
-| Contracts          | Unit and real-router local fork checks pass; public deployment still pending owner/funding                                   |
-| Strategy/risk      | Connected paper loop, replayed stop, risk refusal, emergency and sustained-run checks pass                                   |
-| Language/Telegram  | Bounded tools and credential-gated adapters implemented/tested with transport fixtures; real model/Telegram delivery pending |
-| Dashboard/verifier | Desktop/mobile API flows and refusal of missing public proofs pass; real public verification badge pending deployment        |
-| Public proof       | No public AEGIS transaction has been sent; funded testnet proof and mainnet approval remain outstanding                      |
-
-Actual live-data PAPER screenshots: [desktop](evidence/screenshots/aegis-live-paper-desktop.png) and [mobile](evidence/screenshots/aegis-live-paper-mobile.png). These capture virtual balances and local decisions; they are not funded wallet or public transaction evidence.
-
-The [strategy-library checkpoint](evidence/strategy-library-validation.json) adds the unchanged five-strategy adapter, 272 Python checks and 27 browser workflows. Fresh actual reference inputs and live HSKSwap data reached the built UI; positive entry/ATR-stop behavior was verified separately with explicit replay fixtures. The original home components and 82 inherited source/configuration files remain unchanged. This adapter has not undergone a new one-hour observation or public funded execution.
+[Verification](VERIFICATION.md) lists current commands and recorded evidence, including the strategy connection, earlier one-hour observation and local-fork execution. Each checkpoint retains its own source revision and limits.

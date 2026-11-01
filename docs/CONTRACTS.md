@@ -1,6 +1,6 @@
 # AEGIS contracts and deployment
 
-Phase 3 is locally verified and awaiting public testnet deployment. The user will supply the public owner address later. There is no `deployments/133.json`, public AEGIS transaction hash or on-chain verification badge yet. Mainnet broadcasting requires the user's separate explicit confirmation.
+Local contract and fork checks are recorded below. Public testnet deployment is pending owner/agent addresses and a funded deployer. There is no `deployments/133.json`, public AEGIS transaction hash or on-chain verification badge yet. Mainnet broadcasting requires the user's separate explicit confirmation.
 
 ## Reproduce local checks
 

@@ -6,12 +6,12 @@ import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-TARGET = ROOT / "docs/codebase/07_SOURCE_REFERENCE.md"
+TARGET = ROOT / "docs/SOURCE_REFERENCE.md"
 METHODS = {"get", "post", "put", "patch", "delete"}
 
 
 def link(path, line):
-    return f"../../{path.relative_to(ROOT).as_posix()}#L{line}"
+    return f"../{path.relative_to(ROOT).as_posix()}#L{line}"
 
 
 def symbols(nodes, path, prefix=""):
@@ -42,7 +42,7 @@ def generate():
         "",
         "Generated from the active source. Regenerate with `.venv/bin/python -m scripts.generate_code_reference`; verify with `--check`.",
         "",
-        "This tool reads source only. It does not load environment files, databases, AWS credentials, models or providers. The handwritten module guides explain behavior; this index supplies exact code locations.",
+        "This tool reads source only. It does not load environment files, databases, AWS credentials, models or providers. [Development](DEVELOPMENT.md) explains the module layout; this index supplies exact code locations.",
         "",
         "## Local HTTP routes",
         "",
@@ -107,7 +107,7 @@ def main():
         print("Source reference matches current backend code")
     else:
         TARGET.write_text(content)
-        print("Generated docs/codebase/07_SOURCE_REFERENCE.md")
+        print("Generated docs/SOURCE_REFERENCE.md")
 
 
 if __name__ == "__main__":
