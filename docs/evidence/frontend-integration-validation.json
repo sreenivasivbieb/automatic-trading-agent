@@ -1,0 +1,50 @@
+{
+  "observed_at": "2026-11-01T08:35:17.919597+00:00",
+  "status": "FRONTEND_BACKEND_INTEGRATION_PASSED",
+  "implementation_commit": "4b7ac32c21f4648444b6304dcfd90d6954a34591",
+  "scope": "Existing Krono design with shared HSKSwap screens; all original strategies and additional workspaces preserved.",
+  "checks": {
+    "python": {
+      "passed": 256,
+      "skipped": 1,
+      "subtests": 10,
+      "output": "frontend-python-output.txt"
+    },
+    "browser": {
+      "passed": 25,
+      "output": "frontend-browser-output.txt",
+      "scope": "Authenticated real API with explicitly labeled test connectors/wallet; includes all original research/UI flows"
+    },
+    "built_production_restart": {
+      "status": "PASSED",
+      "output": "frontend-production-output.json"
+    },
+    "live_frontend": {
+      "status": "PASSED",
+      "output": "frontend-live-ui.json",
+      "scope": "Actual HSKSwap mainnet reads; isolated virtual ledger; Claude disabled",
+      "public_transactions_sent": 0,
+      "strategy_configurations_unchanged": 5
+    },
+    "preservation": {
+      "source_files_checked": 82,
+      "changed": [],
+      "hashes": "frontend-preserved-sources.json",
+      "strategy_implementation": "Unchanged",
+      "configuration_comparison": "Five original strategy configurations match before and after workspace use",
+      "visual_framework": "frontend/src/styles.css, theme.css and brand.tsx unchanged"
+    }
+  },
+  "remaining": "Public AEGIS deployment, funded wallet/signing validation and actual Claude/Telegram delivery require external configuration. Profitability is unproven.",
+  "artifacts_sha256": {
+    "frontend-browser-output.txt": "cdfab5dabf6dfc9ebe6858497cbced91b6278425504fa9d2a7e6aa585c520944",
+    "frontend-python-output.txt": "70b6972f299c76622e8d98399c7144cbf8e98ba83185e3b0bf554235bbc2af99",
+    "frontend-production-output.json": "d180ea34f2335b2f5d297f23baf56e96fa840a89ac57425e8aa298c76e94df30",
+    "frontend-live-ui.json": "3e3146da88ce1b41e249add24ef4a8649a211e918e417d81e73fd89a8d861e34",
+    "frontend-preserved-sources.json": "64cc41f41f61c4c0c4f706f24db27310b492be2c35e5ba234af9c686087d3756",
+    "screenshots/frontend-overview-desktop.png": "186fdd7c988247e9af7441fd7a0b6533c91e5621be27711a1b5cb1bcca5a1762",
+    "screenshots/frontend-desk-desktop.png": "8eadc76947688c4b179fe00a97747a0582e2006a75bc64d8f0f9d7ba99f0be1a",
+    "screenshots/frontend-strategy-chat-desktop.png": "73031607909ae65ed3c11892807ccecb0907d81baecb5128018b9c520bf921db",
+    "screenshots/frontend-overview-mobile.png": "c3de19dc330d0411954b2fcb2d3abe57bc4f32eaea2f1a123afcb05bfdd53e08"
+  }
+}

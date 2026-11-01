@@ -4,7 +4,9 @@
 
 The [recorded checkpoint](docs/evidence/aegis-connected-validation.json) includes 256 Python checks, 57 contract checks, 18 browser workflows, a one-hour paper run and signed commit/swap/reveal on a local fork. The one-hour run handled eight unavailable-data events without fallback fills. A forced paper round trip ended 100 → **99.972016 USDT** after modeled costs; it verifies execution, not strategy profit. Public deployment awaits the user's owner address and funded accounts; actual Claude/Telegram delivery and funded wallet signing remain unverified. The web strategy is paper-only. [Discovery](docs/DISCOVERY.md), [connected flows](docs/AEGIS_FLOWS.md), [contract evidence](docs/CONTRACTS.md) and [security boundaries](SECURITY.md) separate local, paper and public proof.
 
-![AEGIS dashboard with actual HSKSwap data and virtual paper balances](docs/evidence/screenshots/aegis-live-paper-desktop-top.png)
+![AEGIS dashboard with actual HSKSwap data and virtual paper balances](docs/evidence/screenshots/frontend-overview-desktop.png)
+
+**Frontend integration:** the current Krono design is retained, with shared HSKSwap state across the desk, markets, positions, executions, risk, settings, wallet and assistant. The original five research strategies, news/research tools and AWS workspace remain available from the existing network/context control. See [the screen-to-backend mapping](docs/FRONTEND_INTEGRATION.md) and [current frontend evidence](docs/evidence/frontend-integration-validation.json). The original strategy implementations and configurations are unchanged.
 
 **KRONO 2.0:** a Cognito/DynamoDB tenant control plane, centralized Bedrock MiniMax provider, conversational agent drafts and isolated ECS runtime infrastructure have been added. Configure your account using [the AWS setup guide](docs/AWS_SETUP.md) and [environment template](deploy/aws/.env.example). Cloud deployment and model access remain pending account configuration; the local simulation terminal still runs independently.
 

@@ -2,7 +2,7 @@
 
 ## 1. Start with live data and virtual funds
 
-Run `make setup && make demo`, then open `http://127.0.0.1:5173/#/aegis`. Refresh HSKSwap data, inspect the block and three pool links, and explicitly start the paper agent. No wallet, browser connection to HSKSwap, API key or faucet is needed for this path. Fresh data failure blocks fills and exposes unavailable valuation. Keep the backend bound to loopback and run one worker.
+Run `make setup && make demo`, then open `http://127.0.0.1:5173/` or `/#/aegis`. The HSKSwap workspace is the default; its navigation uses the same backend session across screens. The existing network area switches to the preserved research simulator or AWS platform. Refresh HSKSwap data, inspect the block and three pool links, and explicitly start the paper agent. No wallet, browser connection to HSKSwap, API key or faucet is needed for this path. Fresh data failure blocks fills and exposes unavailable valuation. Keep the backend bound to loopback and run one worker.
 
 The existing Krono SIMULATION and AEGIS PAPER ledgers are separate. The AWS tenant worker still uses Krono simulation; it does not run AEGIS or accept wallet keys. Do not change its mode/tenant schema to bypass this boundary.
 
@@ -28,7 +28,7 @@ Use three accounts: the device-held owner, a separate funded deployer keystore, 
 
 ## 4. Connect and fund from the owner device
 
-Open the AEGIS owner panel in an EVM wallet browser or enable its browser extension. **Connect owner wallet** requests public account access. The wallet must be on the selected chain, and its account must match the registered owner. A standalone mobile WalletConnect QR integration is not configured or claimed.
+Choose **Wallet** or the header wallet control to open the AEGIS owner panel in an EVM wallet browser or enable its browser extension. **Connect owner wallet** requests public account access. The wallet must be on the selected chain, and its account must match the registered owner. A standalone mobile WalletConnect QR integration is not configured or claimed.
 
 Choose an operation and amount, then **Review owner transaction**. Inspect the fixed recipient and calldata. Confirm each step in the wallet. USDT uses an exact approval followed by a deposit; native HSK uses a native transfer followed by in-vault wrapping. Each step waits for a successful canonical receipt matching account, destination, calldata and value. Earlier successful steps remain if a later one is declined. Pending/uncertain activity survives browser reload and blocks a duplicate submission. An uncertain wallet response can be reconciled using its actual transaction hash.
 
@@ -38,7 +38,7 @@ Actual funded Trust Wallet signing is pending public deployment and funds. Brows
 
 ## 5. Optional Claude and Telegram
 
-Copy `.env.example` to an ignored `.env` if needed. For Claude set `AEGIS_LLM_PROVIDER=anthropic`, your local `AEGIS_ANTHROPIC_API_KEY` and an explicit model ID available to your account in `AEGIS_ANTHROPIC_MODEL`. Restart `make demo`. Provider failures are reported honestly; a failure after a tool mutation does not repeat that mutation. No model credentials means the explicitly labeled deterministic language router is used. See the [official Python SDK](https://github.com/anthropics/anthropic-sdk-python) and [tool schema documentation](https://platform.claude.com/docs/en/agents-and-tools/tool-use/define-tools).
+Copy `.env.example` to an ignored `.env` if needed. For Claude set `AEGIS_LLM_PROVIDER=anthropic`, your local `AEGIS_ANTHROPIC_API_KEY` and an explicit model ID available to your account in `AEGIS_ANTHROPIC_MODEL`. Restart `make demo`. The header assistant button or Ctrl/Cmd+K opens the same assistant from every HSKSwap screen; **Strategies** shows the resulting validated preferences. Provider failures are reported honestly; a failure after a tool mutation does not repeat that mutation. No model credentials means the explicitly labeled deterministic language router is used. See the [official Python SDK](https://github.com/anthropics/anthropic-sdk-python) and [tool schema documentation](https://platform.claude.com/docs/en/agents-and-tools/tool-use/define-tools).
 
 For Telegram, create a bot through Telegram's official BotFather, configure its token and your positive private-chat user ID in `AEGIS_TELEGRAM_BOT_TOKEN` / `AEGIS_TELEGRAM_CHAT_ID`, and set a strong `TERMINAL_API_TOKEN` for the local API. Restart the backend with that token. Start the separate bridge with environment variables loaded:
 

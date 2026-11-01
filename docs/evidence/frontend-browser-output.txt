@@ -1,0 +1,52 @@
+
+> krono-terminal@0.1.0 test:e2e
+> playwright test
+
+[WebServer] (node:118) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:133) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] 5:06:45 AM [vite] http proxy error: /api/health
+[WebServer] Error: connect ECONNREFUSED 127.0.0.1:8791
+[WebServer]     at TCPConnectWrap.afterConnect [as oncomplete] (node:net:2083:16)
+[WebServer] 5:06:45 AM [vite] http proxy error: /api/health
+[WebServer] Error: connect ECONNREFUSED 127.0.0.1:8791
+[WebServer]     at TCPConnectWrap.afterConnect [as oncomplete] (node:net:2083:16)
+[WebServer] /home/vishal/D DRIVE/Automatic trading agent/.venv/lib/python3.12/site-packages/langgraph/cache/base/__init__.py:8: LangChainPendingDeprecationWarning: The default value of `allowed_objects` will change in a future version. Pass an explicit value (e.g., allowed_objects='messages' or allowed_objects='core') to suppress this warning.
+[WebServer]   from langgraph.checkpoint.serde.jsonplus import JsonPlusSerializer
+[WebServer] INFO:     Started server process [132]
+[WebServer] INFO:     Waiting for application startup.
+[WebServer] INFO:     Application startup complete.
+[WebServer] INFO:     Uvicorn running on http://127.0.0.1:8791 (Press CTRL+C to quit)
+
+Running 25 tests using 1 worker
+
+(node:173) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   1 e2e/aegis.spec.ts:3:1 › AEGIS uses shared backend state across strategy, chat, risk, wallet and mobile navigation (2.1s)
+  ✓   2 e2e/aegis.spec.ts:106:1 › AEGIS close-all preview can be cancelled and confirmation unwinds the actual paper ledger (929ms)
+  ✓   3 e2e/aegis.spec.ts:145:1 › AEGIS unavailable API is shown honestly and can recover (424ms)
+  ✓   4 e2e/aegis.spec.ts:172:1 › owner wallet review blocks wrong-chain signing and waits for matched receipts before the next step (wallet fixture) (752ms)
+  ✓   5 e2e/aegis.spec.ts:325:1 › HSKSwap navigation uses one ledger and never loads reference-market endpoints (1.1s)
+  ✓   6 e2e/aegis.spec.ts:375:1 › the existing five strategy configurations and extra workspaces remain accessible and unchanged (704ms)
+  ✓   7 e2e/aegis.spec.ts:421:1 › pool selection, observed price charts and workspace search use real recorded backend observations (770ms)
+  ✓   8 e2e/aegis.spec.ts:452:1 › header emergency stop targets the HSKSwap backend and chat state survives navigation (886ms)
+  ✓   9 e2e/aegis.spec.ts:491:1 › a disconnected state poll masks current valuation and recovers through the same controls (573ms)
+  ✓  10 e2e/aegis.spec.ts:532:1 › HSKSwap screens retain the existing responsive layout and mobile workspace selection (1.1s)
+  ✓  11 e2e/aegis.spec.ts:571:1 › a conservative fractional size set through chat stays valid in the existing strategy form (758ms)
+  ✓  12 e2e/platform-desk.spec.ts:8:1 › Feed settings persist and incoming price observations preserve the chart viewport (2.1s)
+  ✓  13 e2e/platform-desk.spec.ts:41:1 › News shows provider allowance and polls the selected breaking feed (15.9s)
+  ✓  14 e2e/platform-desk.spec.ts:76:1 › Trading Desk charts, validated indicators, alerts and sizing are functional (1.7s)
+  ✓  15 e2e/platform-desk.spec.ts:124:1 › Unconfigured AWS platform shows setup state without invented agents or cloud success (394ms)
+  ✓  16 e2e/platform-desk.spec.ts:155:1 › Platform UI contract: conversation, reviewed deployment, runtime controls and logout isolation (test providers) (15.9s)
+  ✓  17 e2e/terminal.spec.ts:15:1 › complete research, risk, authorization, simulated fill, ledger and audit workflow (1.9s)
+  ✓  18 e2e/terminal.spec.ts:98:1 › strategy configuration is versioned and backtests report measured holdout metrics (2.0s)
+  ✓  19 e2e/terminal.spec.ts:135:1 › news filters and evidence detail preserve source and timestamp provenance (878ms)
+  ✓  20 e2e/terminal.spec.ts:165:1 › assistant lowers allowed risk, emergency stop latches and blocks entries (1.0s)
+  ✓  21 e2e/terminal.spec.ts:202:1 › responsive navigation exposes every workspace and wallet disconnect is honest (2.3s)
+  ✓  22 e2e/terminal.spec.ts:251:1 › chart timeframe aggregation and aligned correlations are inspectable (797ms)
+  ✓  23 e2e/terminal.spec.ts:284:1 › Krono branding and bundled fonts stay readable across desktop and mobile (1.4s)
+  ✓  24 e2e/terminal.spec.ts:432:1 › discovery filters, sorting, measured metrics and view controls use real records (1.2s)
+  ✓  25 e2e/terminal.spec.ts:508:1 › workspace search opens actual markets and remains accessible from mobile navigation (1.1s)
+
+  25 passed (1.0m)

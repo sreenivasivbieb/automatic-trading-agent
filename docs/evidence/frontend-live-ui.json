@@ -1,0 +1,54 @@
+{
+  "status": "PASSED",
+  "mode": "paper",
+  "public_transactions_sent": 0,
+  "source": "Actual HSKSwap mainnet reads; isolated virtual ledger; Claude disabled",
+  "checks": [
+    "Built root UI reads three actual HSKSwap markets and the isolated PAPER ledger",
+    "Trading desk chart and on-chain pool details match stored backend observations",
+    "Natural-language changes update the shared strategy form and preserve the positions ledger",
+    "Header emergency stop is visible from the wallet screen and clears into a paused agent",
+    "Original five strategy configurations unchanged; mobile layout has no overflow; zero browser runtime errors"
+  ],
+  "block": 29587391,
+  "markets": {
+    "WHSK": {
+      "asset": "WHSK",
+      "price": "0.0874114689774240762055207157691881191738373761061718911720458235277610384910307",
+      "pool": "0x4ff515761864e7838b0adb8b5b2b8b7a068905dc",
+      "liquidity_raw": "1475831005908433993",
+      "fee_pips": 3000
+    },
+    "WETH": {
+      "asset": "WETH",
+      "price": "2235.61950192980523792568871308941218035444192506573970708627437357071524099569",
+      "pool": "0xb92b79ed6b370d5cfee2e14b1d0983c258304c16",
+      "liquidity_raw": "1012957283335421",
+      "fee_pips": 3000
+    },
+    "WBTC": {
+      "asset": "WBTC",
+      "price": "76841.0934799108878508692698920646024913018844054175403720194820959662420945163",
+      "pool": "0xd9ea2ce468957ba49ccc38c4758ed6ecd561449a",
+      "liquidity_raw": "1823343427",
+      "fee_pips": 3000
+    }
+  },
+  "strategy_count_preserved": 5,
+  "final": {
+    "paused": true,
+    "data_status": "LIVE",
+    "block": 29587397,
+    "fills": 0,
+    "pnl": {
+      "mode": "paper",
+      "initial_cash_usdt": "100",
+      "nav_usdt": "100",
+      "net_pnl_usdt": "0",
+      "realized_pnl_usdt": "0",
+      "unrealized_pnl_usdt": "0",
+      "fills": 0,
+      "valuation_assumption": "USDT is the accounting numeraire; no independent USD peg is asserted."
+    }
+  }
+}
