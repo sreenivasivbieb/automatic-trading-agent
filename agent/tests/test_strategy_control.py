@@ -112,6 +112,7 @@ def test_fallback_only_before_any_tool_and_never_after_a_mutation(runtime):
     result = agent.respond(runtime, "position size 3%")
     assert runtime.version == before + 1 and result["tool"] == "set_params"
     assert untouched.messages.requests == []
+    assert agent.status()["label"] == "AI Engine: Unavailable (Tool Result Retained)"
 
 
 def test_openai_adapter_round_trip_uses_named_tool_ids(runtime):

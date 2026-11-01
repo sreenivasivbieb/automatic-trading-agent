@@ -111,6 +111,8 @@ class ControlAgent:
             "configured_providers": [p[0] for p in self.providers],
             "label": "AI Engine: Active (Tool-Calling)"
             if active
+            else "AI Engine: Unavailable (Tool Result Retained)"
+            if self.last_status == "unavailable_after_tool"
             else "AI Engine: Ready (Tool-Calling)"
             if self.providers and self.last_status == "configured"
             else "AI Engine: Deterministic Fallback",
@@ -217,6 +219,7 @@ class ControlAgent:
                 self.last_status = "unavailable"
                 if index + 1 < len(self.providers):
                     continue
+        self.last_status = "deterministic"
         result = chat(runtime, message)
         result["response"] = "Configured AI providers are unavailable. " + result["response"]
         result["engine"] = (
@@ -301,7 +304,7 @@ class ControlAgent:
             raise
         except Exception:
             if applied:
-                self.last_status = "unavailable"
+                self.last_status = "unavailable_after_tool"
                 return {
                     "mode": "paper",
                     "response": "PAPER: the validated tool completed, but the model explanation is unavailable. Inspect the attached result.",

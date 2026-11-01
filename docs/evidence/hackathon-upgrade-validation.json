@@ -107,7 +107,7 @@
       "skipped": 1,
       "warnings": 2,
       "command": ".venv/bin/python -m pytest backend/tests agent/tests legacy_tests/test_regime_detection.py legacy_tests/test_backtest_engine.py legacy_tests/test_portfolio_intelligence.py -q",
-      "output": "295 passed, 1 skipped, 2 warnings, 10 subtests passed in 10.30s"
+      "output": "295 passed, 1 skipped, 2 warnings, 10 subtests passed in 10.57s"
     },
     "solidity": {
       "passed": 57,
@@ -241,7 +241,7 @@
     "agent/aegis/connectors/base.py": "7834a4bf10424bee44deb4ee83b5415bf9c64d98c6f9ca832a751be365d1fbd5",
     "agent/aegis/connectors/hskswap_v3.py": "69fe4c836cbe9f8fe8cda7af1a67308ae4d8b6d1d0dfd53f220bc74750414b78",
     "agent/aegis/execution/proof.py": "d0d152cd058d3cfb62494c929e974fecc8ebc236217cbb19aa4635ac25cc8e65",
-    "agent/aegis/nl/agent.py": "8ea7a0f52fcb84b553711752ee59f92b848244fd710558b48da8f286b22c74d2",
+    "agent/aegis/nl/agent.py": "5b905f53dd78f874e7f508652aabc18e2bd5704f56c09e50905238fa6b5ff01f",
     "agent/aegis/nl/providers.py": "022d9efa326d15877bdbd767eb80ac8362bb0938b60e91e5fe8e334475372583",
     "agent/aegis/nl/tools.py": "ae9f9806d3b5f32fe42551c43d29e9b7c43a2e5a73761ecee6dbf1da79cdcb16",
     "agent/aegis/risk/policy.py": "a316020803d435a431f3012b0fb3dbc060416dab25f80a0b537eba0eb2999494",
@@ -252,7 +252,7 @@
     "agent/aegis/strategy/spreads.py": "ae18aaae77bbdf7a64aafc8e69d868a654f3f064b98df954b458a212ea9b7ce6",
     "agent/tests/test_hsk_proof.py": "f9147b2caad3fe0d0e8006bbaeb06aefbcf80cf1d2135da3cf2cf485e7ffd734",
     "agent/tests/test_pipeline.py": "0e169c0e0190abd03e090c0239216cf7b9083dd843cfca65ec180e7a58e9e98c",
-    "agent/tests/test_strategy_control.py": "241cae65a0cc11cfbe8c9121c0899dc686dcc97e5beecce1e8c384bd2ebc806e",
+    "agent/tests/test_strategy_control.py": "735840510986a8932ed0fbcc9c1ebb5d379d966bc5608a2dd74ed3216c14a528",
     "e2e/judge-flow.spec.ts": "5430f3b563b60aa414d3b840d84e6f0ce23e9688e6cc8206ba9411cfe43d42af",
     "frontend/src/AegisDesk.tsx": "6700f6b6d7078b3bd12627c4fb9bffaacc6628953aa7599b844b058364bbd4ae",
     "frontend/src/aegis.css": "42cf8e0aaf46232fa14548c9e32676fdbcdd4c50215f4a7ba93fe5340f84b2e4",
@@ -314,5 +314,6 @@
     "mode": "paper",
     "paused": true,
     "live_enabled": false
-  }
+  },
+  "provider_badge_failure_state": "Unavailable (Tool Result Retained) after any tool starts; fallback is never claimed or replayed for that mutation."
 }
