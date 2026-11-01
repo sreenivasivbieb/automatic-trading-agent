@@ -6,7 +6,6 @@ import {
   Bot,
   CheckCircle2,
   ChevronDown,
-  CircleHelp,
   Command,
   FlaskConical,
   Globe2,
@@ -53,7 +52,7 @@ import type {
   Run,
   Status,
 } from "./types";
-import { StatusBadge } from "./ui";
+import { Panel, StatusBadge } from "./ui";
 import {
   Executions,
   Markets,
@@ -90,6 +89,14 @@ const NAV: { id: Page; name: string; icon: LucideIcon; group?: string }[] = [
   { id: "settings", name: "Settings", icon: Settings2 },
 ];
 const CLOUD_PLATFORM = import.meta.env.VITE_KRONO_PLATFORM === "true";
+const PRIMARY_PAGES: Page[] = [
+  "overview",
+  "desk",
+  "strategies",
+  "positions",
+  "risk",
+  "settings",
+];
 const focusPlatform = () =>
   document
     .querySelector<HTMLTextAreaElement>(".platform-composer textarea")
@@ -530,10 +537,13 @@ function AppContent({
           openIntent,
         }
       : null;
-  const navItems = isAegis
+  const workspacePages = isAegis
     ? NAV.filter((n) => AEGIS_VIEWS.includes(n.id as AegisView))
     : NAV.filter((n) => !CLOUD_PLATFORM || n.id === "platform");
-  const nav = navItems.find((n) => n.id === page) || navItems[0];
+  const navItems = workspacePages.filter(
+    (n) => CLOUD_PLATFORM || PRIMARY_PAGES.includes(n.id),
+  );
+  const nav = workspacePages.find((n) => n.id === page) || workspacePages[0];
   const titles = isAegis ? AEGIS_TITLES[page as AegisView] : TITLES[page];
   const agentActive = isAegis
     ? aegis.state?.available && !aegis.state.paused && !aegis.state.emergency
@@ -586,7 +596,9 @@ function AppContent({
             >
               <option value="aegis">HSKSwap · AEGIS paper</option>
               <option value="research">Research · simulation</option>
-              <option value="platform">Agent platform · AWS</option>
+              {page === "platform" && (
+                <option value="platform">Agent platform · AWS</option>
+              )}
             </select>
           </label>
         )}
@@ -648,26 +660,6 @@ function AppContent({
                     : "LLM research unconfigured"}
               </small>
             </div>
-          </div>
-          <a
-            className="sidebar-docs"
-            href="https://github.com/vishal88736/automatic-trading-agent#readme"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <CircleHelp size={15} />
-            Docs & integration status
-            <ArrowRight size={13} />
-          </a>
-          <div className="sidebar-profile">
-            <span>
-              <ShieldCheck size={17} />
-            </span>
-            <div>
-              <strong>Local operator</strong>
-              <small>Human authorization enabled</small>
-            </div>
-            <ShieldCheck size={16} />
           </div>
         </div>
       </aside>
@@ -734,7 +726,9 @@ function AppContent({
                 >
                   <option value="aegis">HSKSwap · 177 · PAPER</option>
                   <option value="research">Research · SIMULATION</option>
-                  <option value="platform">Agent platform · AWS</option>
+                  {page === "platform" && (
+                    <option value="platform">Agent platform · AWS</option>
+                  )}
                 </select>
               </label>
             )}
@@ -754,17 +748,18 @@ function AppContent({
               <FlaskConical size={12} />
               {isAegis ? "PAPER" : "SIMULATION"}
             </span>
-            {page !== "platform" && (
-              <button
-                className="button secondary header-wallet"
-                onClick={() => navigate("wallet")}
-              >
-                <Wallet size={13} />
-                {(isAegis ? aegis.ownerAccount : account)
-                  ? `${(isAegis ? aegis.ownerAccount : account)!.slice(0, 6)}…${(isAegis ? aegis.ownerAccount : account)!.slice(-4)}`
-                  : "Connect wallet"}
-              </button>
-            )}
+            {page !== "platform" &&
+              !!(isAegis ? aegis.ownerAccount : account) && (
+                <button
+                  className="button secondary header-wallet"
+                  onClick={() => navigate("wallet")}
+                >
+                  <Wallet size={13} />
+                  {(isAegis ? aegis.ownerAccount : account)
+                    ? `${(isAegis ? aegis.ownerAccount : account)!.slice(0, 6)}…${(isAegis ? aegis.ownerAccount : account)!.slice(-4)}`
+                    : "Connect wallet"}
+                </button>
+              )}
             <button
               className="emergency-button"
               onClick={() =>
@@ -785,7 +780,7 @@ function AppContent({
               aria-label="Emergency stop"
             >
               <ShieldOff size={14} />
-              <span>E-stop</span>
+              <span>{isAegis ? "PANIC" : "E-stop"}</span>
             </button>
           </div>
         </header>
@@ -815,22 +810,24 @@ function AppContent({
                 <p>{titles[1]}</p>
               </div>
               <div className="page-actions">
-                <button
-                  className="button secondary assistant-shortcut"
-                  onClick={() =>
-                    page === "platform"
-                      ? focusPlatform()
-                      : isAegis
-                        ? aegis.setChatOpen(true)
-                        : setChat(true)
-                  }
-                >
-                  <MessageSquare size={14} />
-                  Ask agent
-                  <kbd>
-                    <Command size={10} />K
-                  </kbd>
-                </button>
+                {page === "platform" && (
+                  <button
+                    className="button secondary assistant-shortcut"
+                    onClick={() =>
+                      page === "platform"
+                        ? focusPlatform()
+                        : isAegis
+                          ? aegis.setChatOpen(true)
+                          : setChat(true)
+                    }
+                  >
+                    <MessageSquare size={14} />
+                    Ask agent
+                    <kbd>
+                      <Command size={10} />K
+                    </kbd>
+                  </button>
+                )}
                 {page !== "platform" && !isAegis && (
                   <>
                     <select
@@ -842,18 +839,6 @@ function AppContent({
                         <option key={s}>{s}</option>
                       ))}
                     </select>
-                    <button
-                      className="button primary analyze-button"
-                      disabled={busy || !data}
-                      onClick={analyze}
-                    >
-                      {busy ? (
-                        <LoaderCircle size={14} className="spin" />
-                      ) : (
-                        <Activity size={14} />
-                      )}
-                      <span>{busy ? "Processing…" : "Run analysis"}</span>
-                    </button>
                   </>
                 )}
               </div>
@@ -890,6 +875,67 @@ function AppContent({
                 <ArrowRight size={13} />
               </button>
             </div>
+          )}
+          {page === "settings" && !CLOUD_PLATFORM && (
+            <Panel
+              title="Workspace setup"
+              subtitle="Secondary tools and integrations"
+            >
+              <div className="aegis-risk">
+                <details className="json-details">
+                  <summary>More tools and setup</summary>
+                  <div className="settings-form">
+                    {workspacePages
+                      .filter((item) => !PRIMARY_PAGES.includes(item.id))
+                      .map((item) => (
+                        <a
+                          key={item.id}
+                          className="text-button"
+                          href={`#${routeHash(item.id === "platform" ? "platform" : item.id === "aegis" ? "aegis" : route.workspace, item.id === "aegis" ? "overview" : item.id)}`}
+                          onClick={(event) => {
+                            event.preventDefault();
+                            navigate(item.id);
+                          }}
+                        >
+                          {item.name}
+                        </a>
+                      ))}
+                    {isAegis && (
+                      <a
+                        className="text-button"
+                        href="#/settings"
+                        onClick={(event) => {
+                          event.preventDefault();
+                          switchWorkspace("research", "settings");
+                        }}
+                      >
+                        Data providers
+                      </a>
+                    )}
+                    {isAegis && (
+                      <a
+                        className="text-button"
+                        href="#/platform"
+                        onClick={(event) => {
+                          event.preventDefault();
+                          switchWorkspace("platform");
+                        }}
+                      >
+                        Agent Platform
+                      </a>
+                    )}
+                    <a
+                      className="text-button"
+                      href="https://github.com/vishal88736/automatic-trading-agent#readme"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      Documentation
+                    </a>
+                  </div>
+                </details>
+              </div>
+            </Panel>
           )}
           {page === "platform" ? (
             <PlatformWorkspace />
@@ -986,7 +1032,7 @@ function AppContent({
       {isAegis && <AegisConfirmations />}
       {search && isAegis && (
         <AegisSearch
-          pages={navItems}
+          pages={workspacePages}
           close={() => setSearch(false)}
           navigate={navigate}
         />

@@ -10,7 +10,9 @@ export function AegisMarketAnalysis() {
   const assets = Object.keys(state.markets);
   const asset = assets.includes(selectedAsset) ? selectedAsset : assets[0];
   const market = state.markets[asset];
-  const signals = [...state.signals, ...(state.library_signals || [])];
+  const signals = [...state.signals, ...(state.library_signals || [])].filter(
+    (signal) => signal.asset === asset,
+  );
   const rows = (state.price_history || []).filter(
     (r) => r.prices[asset] && (!range || r.at >= Date.now() / 1000 - range),
   );

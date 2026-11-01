@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { openWorkspace } from "./navigation";
 
 test("home retains the original coin artwork, reference markets and strategy preview", async ({
   page,
@@ -10,6 +11,14 @@ test("home retains the original coin artwork, reference markets and strategy pre
   });
   await expect(home).toBeVisible();
   await expect(page.getByLabel("Active workspace")).toHaveValue("research");
+  await expect(
+    page
+      .getByRole("navigation", { name: "Main navigation" })
+      .getByRole("button"),
+  ).toHaveCount(6);
+  await expect(
+    page.getByRole("heading", { name: "News intelligence", exact: true }),
+  ).toHaveCount(0);
   await expect(
     page.locator('.hero-art img[src="/art/krono-orbit.webp"]'),
   ).toBeVisible();
@@ -30,10 +39,7 @@ test("home retains the original coin artwork, reference markets and strategy pre
   ).toHaveCount(0);
   const strategies = await (await page.request.get("/api/strategies")).json();
   expect(strategies.items).toHaveLength(5);
-  await page
-    .getByRole("navigation")
-    .getByRole("button", { name: "AEGIS · HSKSwap", exact: true })
-    .click();
+  await openWorkspace(page, "AEGIS · HSKSwap");
   await expect(
     page.getByRole("heading", { name: "AEGIS on HSKSwap", exact: true }),
   ).toBeVisible();
@@ -79,10 +85,7 @@ test("AEGIS uses shared backend state across strategy, chat, risk, wallet and mo
   await expect(
     page.getByText("No open paper positions", { exact: true }),
   ).toBeVisible();
-  await page
-    .getByRole("navigation")
-    .getByRole("button", { name: "Strategies", exact: true })
-    .click();
+  await openWorkspace(page, "Strategies");
   await expect(page).toHaveURL(/#\/aegis\/strategies$/);
   await page.getByLabel("AEGIS position size").fill("3");
   await page.getByRole("button", { name: "Save AEGIS preferences" }).click();
@@ -108,7 +111,9 @@ test("AEGIS uses shared backend state across strategy, chat, risk, wallet and mo
       .getByRole("main")
       .getByText("Autonomous paper trading", { exact: true }),
   ).toBeVisible();
-  await page.getByRole("button", { name: "PANIC", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Emergency stop", exact: true })
+    .click();
   await expect(
     page.getByText("Emergency stop latched", { exact: true }),
   ).toBeVisible();
@@ -117,10 +122,7 @@ test("AEGIS uses shared backend state across strategy, chat, risk, wallet and mo
   ).toBeDisabled();
   await page.getByRole("button", { name: "Review and clear stop" }).click();
   await expect(page.getByText("Entries paused", { exact: true })).toBeVisible();
-  await page
-    .getByRole("navigation")
-    .getByRole("button", { name: "Agent Observatory", exact: true })
-    .click();
+  await openWorkspace(page, "Agent Observatory");
   await expect(
     page.getByRole("heading", { name: "Decision feed", exact: true }),
   ).toBeVisible();
@@ -135,9 +137,7 @@ test("AEGIS uses shared backend state across strategy, chat, risk, wallet and mo
   await expect(
     page.getByText("Verified on-chain ✓", { exact: true }),
   ).toHaveCount(0);
-  await page
-    .getByRole("button", { name: "Connect wallet", exact: true })
-    .click();
+  await openWorkspace(page, "Wallet");
   await expect(page).toHaveURL(/#\/aegis\/wallet$/);
   await expect(
     page.getByRole("button", { name: "Review owner transaction" }),
@@ -148,15 +148,12 @@ test("AEGIS uses shared backend state across strategy, chat, risk, wallet and mo
   ).toBeVisible();
   await page.setViewportSize({ width: 390, height: 844 });
   await page.getByRole("button", { name: "Toggle navigation" }).click();
-  await page
-    .getByRole("navigation")
-    .getByRole("button", { name: "Positions", exact: true })
-    .click();
+  await openWorkspace(page, "Positions");
   await expect(
     page.getByRole("heading", { name: "HSKSwap positions & P&L" }),
   ).toBeVisible();
   await expect(
-    page.getByRole("button", { name: "PANIC", exact: true }),
+    page.getByRole("button", { name: "Emergency stop", exact: true }),
   ).toBeVisible();
   expect(
     await page.evaluate(
@@ -364,10 +361,7 @@ test("owner wallet review blocks wrong-chain signing and waits for matched recei
           .walletFixture.sends,
     ),
   ).toBe(1);
-  await page
-    .getByRole("navigation")
-    .getByRole("button", { name: "Positions", exact: true })
-    .click();
+  await openWorkspace(page, "Positions");
   await expect(
     page
       .getByRole("banner")
@@ -381,8 +375,8 @@ test("owner wallet review blocks wrong-chain signing and waits for matched recei
   await expect(
     page
       .getByRole("banner")
-      .getByRole("button", { name: "Connect wallet", exact: true }),
-  ).toBeVisible();
+      .getByRole("button", { name: "0x1111…1111", exact: true }),
+  ).toHaveCount(0);
 });
 
 test("HSKSwap navigation uses one ledger and never loads reference-market endpoints", async ({
@@ -399,6 +393,14 @@ test("HSKSwap navigation uses one ledger and never loads reference-market endpoi
     page.getByRole("heading", { name: "AEGIS on HSKSwap" }),
   ).toBeVisible();
   await expect(page.getByLabel("Active workspace")).toHaveValue("aegis");
+  await expect(
+    page
+      .getByRole("navigation", { name: "Main navigation" })
+      .getByRole("button"),
+  ).toHaveCount(6);
+  await expect(
+    page.getByRole("button", { name: "Emergency stop", exact: true }),
+  ).toHaveCount(1);
   await page.getByRole("button", { name: "Refresh HSKSwap data" }).click();
   await expect(
     page.getByRole("main").getByText("TEST_FIXTURE", { exact: true }),
@@ -414,10 +416,7 @@ test("HSKSwap navigation uses one ledger and never loads reference-market endpoi
     ["Agent Observatory", "HSKSwap decision feed"],
     ["Settings", "HSKSwap agent settings"],
   ]) {
-    await page
-      .getByRole("navigation")
-      .getByRole("button", { name: nav, exact: true })
-      .click();
+    await openWorkspace(page, nav);
     await expect(
       page.getByRole("heading", { name: heading, exact: true }),
     ).toBeVisible();
@@ -462,14 +461,11 @@ test("the existing five strategy configurations and extra workspaces remain acce
       page.getByRole("heading", { name, exact: true }),
     ).toBeVisible();
   await expect(page.getByLabel("Active workspace")).toHaveValue("research");
-  await page
-    .getByRole("navigation")
-    .getByRole("button", { name: "News Intelligence", exact: true })
-    .click();
+  await openWorkspace(page, "News Intelligence");
   await expect(
     page.getByRole("heading", { name: "News intelligence", exact: true }),
   ).toBeVisible();
-  await page.getByLabel("Active workspace").selectOption("platform");
+  await openWorkspace(page, "Agent Platform");
   await expect(
     page.getByRole("heading", { name: "Agent platform", exact: true }),
   ).toBeVisible();
@@ -525,18 +521,12 @@ test("header emergency stop targets the HSKSwap backend and chat state survives 
   await expect(
     page.getByRole("dialog", { name: "AEGIS trading assistant" }),
   ).toContainText("total net P&L since paper funding");
-  await page
-    .getByRole("navigation")
-    .getByRole("button", { name: "Positions", exact: true })
-    .click();
+  await openWorkspace(page, "Positions");
   await expect(
     page.getByRole("dialog", { name: "AEGIS trading assistant" }),
   ).toContainText("How am I doing today?");
   await page.getByRole("button", { name: "Close AEGIS assistant" }).click();
-  await page
-    .getByRole("navigation")
-    .getByRole("button", { name: "Wallet", exact: true })
-    .click();
+  await openWorkspace(page, "Wallet");
   await page
     .getByRole("button", { name: "Emergency stop", exact: true })
     .click();
@@ -610,10 +600,7 @@ test("HSKSwap screens retain the existing responsive layout and mobile workspace
     ["Wallet", "Owner wallet & funding"],
   ]) {
     await page.getByRole("button", { name: "Toggle navigation" }).click();
-    await page
-      .getByRole("navigation")
-      .getByRole("button", { name: nav, exact: true })
-      .click();
+    await openWorkspace(page, nav);
     await expect(
       page.getByRole("heading", { name: heading, exact: true }),
     ).toBeVisible();

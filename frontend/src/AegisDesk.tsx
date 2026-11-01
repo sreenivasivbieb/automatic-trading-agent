@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { LoaderCircle, Pause, Play, RefreshCw, ShieldOff } from "lucide-react";
+import { LoaderCircle, Pause, Play, RefreshCw } from "lucide-react";
 import { api } from "./api";
 import { AegisWallet } from "./AegisWallet";
 import { AegisVerifier } from "./AegisVerifier";
@@ -207,18 +207,6 @@ export function AegisDesk({
             {active ? <Pause size={14} /> : <Play size={14} />}
             {active ? "Pause entries" : "Start paper agent"}
           </button>
-          <button
-            className="emergency-button"
-            onClick={() =>
-              void act(
-                () => control("panic"),
-                "Entries blocked. Bounded stable unwind will run when verified data is available.",
-              )
-            }
-          >
-            <ShieldOff size={14} />
-            PANIC
-          </button>
         </div>
       </div>
       {state.emergency && (
@@ -406,7 +394,7 @@ export function AegisDesk({
           </Panel>
         </>
       )}
-      {show("strategies", "risk", "settings") && (
+      {show("strategies") && (
         <>
           <div className="aegis-columns">
             <Panel
@@ -548,7 +536,7 @@ export function AegisDesk({
           </div>
         </>
       )}
-      {show("overview", "desk", "observatory") && (
+      {show("desk", "observatory") && (
         <>
           <Panel
             title="Decision feed"
@@ -579,7 +567,7 @@ export function AegisDesk({
           </Panel>
         </>
       )}
-      {show("executions") && (
+      {show("desk", "executions") && (
         <>
           <Panel
             title="Paper execution ledger"

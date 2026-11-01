@@ -29,8 +29,25 @@ const errors = [],
   };
 page.on("pageerror", (e) => errors.push(e.message));
 const state = async () => (await page.request.get("/api/aegis/state")).json();
-const nav = (name) =>
-  page.getByRole("navigation").getByRole("button", { name, exact: true });
+const nav = (name) => ({
+  click: async () => {
+    const navigation = page.getByRole("navigation", {
+      name: "Main navigation",
+    });
+    if (!(await navigation.isVisible()))
+      await page.getByRole("button", { name: "Toggle navigation" }).click();
+    const primary = navigation.getByRole("button", { name, exact: true });
+    if (await primary.count()) {
+      await primary.click();
+      return;
+    }
+    await navigation
+      .getByRole("button", { name: "Settings", exact: true })
+      .click();
+    await page.locator("summary", { hasText: "More tools and setup" }).click();
+    await page.getByRole("link", { name, exact: true }).click();
+  },
+});
 try {
   await page.goto(url);
   await expect(

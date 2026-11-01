@@ -11,7 +11,6 @@ import {
   ExternalLink,
   Filter,
   FlaskConical,
-  Link2,
   LockKeyhole,
   LayoutGrid,
   List,
@@ -438,7 +437,6 @@ export function Overview(
     openIntent,
     detail,
   } = props;
-  const [article, setArticle] = useState<Article | null>(null);
   const pending = data.executions.items.find(
     (i) => i.state === "AWAITING_AUTHORIZATION",
   );
@@ -641,46 +639,9 @@ export function Overview(
               <ArrowRight size={13} />
             </button>
           </Panel>
-          <div className="network-note">
-            <Link2 size={16} />
-            <div>
-              <strong>HSKSwap integration</strong>
-              <p>
-                HSKChain 177 · live routes locked.
-                <br />
-                No wallet signing in simulation.
-              </p>
-            </div>
-            <LockKeyhole size={14} />
-          </div>
         </div>
       </div>
-      <div className="bottom-grid">
-        <Panel
-          title="News intelligence"
-          subtitle={`${data.news.source} · ${data.news.status}`}
-          action={
-            <button className="text-button" onClick={() => navigate("news")}>
-              Open workstation
-              <ArrowRight size={13} />
-            </button>
-          }
-        >
-          {data.news.articles.length ? (
-            <NewsRows
-              articles={data.news.articles.slice(0, 3)}
-              open={setArticle}
-              compact
-            />
-          ) : (
-            <Empty
-              title="News unavailable"
-              description={
-                data.news.error ?? "No normalized stories are available."
-              }
-            />
-          )}
-        </Panel>
+      <div className="section-gap">
         <Panel
           title="Execution queue"
           subtitle="Proposals remain separate from authorized fills"
@@ -714,19 +675,10 @@ export function Overview(
             <Empty
               title="No pending authorization"
               description="Run an analysis to produce a candidate. Only approved, quoted proposals appear here."
-              action={
-                <button className="text-button" onClick={analyze}>
-                  Run analysis
-                  <ArrowRight size={13} />
-                </button>
-              }
             />
           )}
         </Panel>
       </div>
-      {article && (
-        <ArticleDetail article={article} close={() => setArticle(null)} />
-      )}
     </>
   );
 }

@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { openWorkspace } from "./navigation";
 import { mkdirSync } from "node:fs";
 
 test.describe.configure({ mode: "serial" });
@@ -33,10 +34,7 @@ test("complete research, risk, authorization, simulated fill, ledger and audit w
   await expect(
     page.getByRole("button", { name: "Review trade preview" }),
   ).toBeVisible();
-  await page
-    .getByRole("navigation")
-    .getByRole("button", { name: "Agent Observatory", exact: true })
-    .click();
+  await openWorkspace(page, "Agent Observatory");
   await expect(
     page.getByRole("heading", { name: "Agent observatory", exact: true }),
   ).toBeVisible();
@@ -48,10 +46,7 @@ test("complete research, risk, authorization, simulated fill, ledger and audit w
     path: "artifacts/terminal-observatory.png",
     fullPage: true,
   });
-  await page
-    .getByRole("navigation")
-    .getByRole("button", { name: "Execution History", exact: true })
-    .click();
+  await openWorkspace(page, "Execution History");
   await expect(
     page.getByRole("heading", { name: "Transaction preview", exact: true }),
   ).toBeVisible();
@@ -69,10 +64,7 @@ test("complete research, risk, authorization, simulated fill, ledger and audit w
     path: "artifacts/terminal-execution.png",
     fullPage: true,
   });
-  await page
-    .getByRole("navigation")
-    .getByRole("button", { name: "Positions", exact: true })
-    .click();
+  await openWorkspace(page, "Positions");
   await expect(
     page.getByRole("heading", { name: "Owned simulation inventory" }),
   ).toBeVisible();
@@ -98,10 +90,7 @@ test("complete research, risk, authorization, simulated fill, ledger and audit w
 test("strategy configuration is versioned and backtests report measured holdout metrics", async ({
   page,
 }) => {
-  await page
-    .getByRole("navigation")
-    .getByRole("button", { name: "Strategies", exact: true })
-    .click();
+  await openWorkspace(page, "Strategies");
   const card = page.locator(".strategy-card").filter({
     has: page.getByRole("heading", { name: "Momentum Trading", exact: true }),
   });
@@ -135,10 +124,7 @@ test("strategy configuration is versioned and backtests report measured holdout 
 test("news filters and evidence detail preserve source and timestamp provenance", async ({
   page,
 }) => {
-  await page
-    .getByRole("navigation")
-    .getByRole("button", { name: "News Intelligence", exact: true })
-    .click();
+  await openWorkspace(page, "News Intelligence");
   await page.getByLabel("Filter news asset").selectOption("BTC");
   await page.getByLabel("Search headlines").fill("adoption");
   await expect(page.locator(".news-row")).toHaveCount(1);
@@ -184,10 +170,7 @@ test("assistant lowers allowed risk, emergency stop latches and blocks entries",
   expect(status.scheduler.emergency).toBe(true);
   const risk = await (await page.request.get("/api/risk")).json();
   expect(Number(risk.config.max_equity_per_trade)).toBe(0.005);
-  await page
-    .getByRole("navigation")
-    .getByRole("button", { name: "Risk Controls", exact: true })
-    .click();
+  await openWorkspace(page, "Risk Controls");
   await page.getByLabel("I reviewed the incident").check();
   await page
     .getByRole("button", { name: "Clear emergency latch", exact: true })
@@ -217,10 +200,7 @@ test("responsive navigation exposes every workspace and wallet disconnect is hon
   ];
   for (const [nav, heading] of labels) {
     await page.getByRole("button", { name: "Toggle navigation" }).click();
-    await page
-      .getByRole("navigation")
-      .getByRole("button", { name: nav, exact: true })
-      .click();
+    await openWorkspace(page, nav);
     await expect(
       page.getByRole("heading", { name: heading, exact: true }),
     ).toBeVisible();
@@ -236,10 +216,7 @@ test("responsive navigation exposes every workspace and wallet disconnect is hon
   });
   await page.screenshot({ path: "artifacts/krono-discovery-mobile.png" });
   await page.getByRole("button", { name: "Toggle navigation" }).click();
-  await page
-    .getByRole("navigation")
-    .getByRole("button", { name: "Wallet", exact: true })
-    .click();
+  await openWorkspace(page, "Wallet");
   await page
     .getByRole("button", { name: "Connect read-only wallet", exact: true })
     .click();
@@ -251,10 +228,7 @@ test("responsive navigation exposes every workspace and wallet disconnect is hon
 test("chart timeframe aggregation and aligned correlations are inspectable", async ({
   page,
 }) => {
-  await page
-    .getByRole("navigation")
-    .getByRole("button", { name: "Markets", exact: true })
-    .click();
+  await openWorkspace(page, "Markets");
   await page.getByLabel("Chart candle timeframe").selectOption("4h");
   await expect(
     page.getByRole("img", { name: /Four-hour candlestick/ }),
@@ -308,9 +282,10 @@ test("Krono branding and bundled fonts stay readable across desktop and mobile",
   );
   expect(fonts).toContain("Inter Variable");
   await expect(page.locator("body")).not.toContainText(/HSK\s*AGENT/i);
+  await expect(page.getByLabel("Active workspace")).toHaveValue("research");
   await expect(
-    page.getByText("HSKSwap integration", { exact: true }),
-  ).toBeVisible();
+    page.getByLabel("Active workspace").locator('option[value="aegis"]'),
+  ).toHaveCount(1);
 
   for (const width of [1512, 1280, 768, 390, 320]) {
     await page.setViewportSize({ width, height: 982 });
@@ -441,10 +416,7 @@ test("discovery filters, sorting, measured metrics and view controls use real re
       .locator(".hero-art img")
       .evaluate((image) => (image as HTMLImageElement).naturalWidth),
   ).toBeGreaterThan(0);
-  await page
-    .getByRole("navigation")
-    .getByRole("button", { name: "Strategies", exact: true })
-    .click();
+  await openWorkspace(page, "Strategies");
   await expect(page.locator(".strategy-card")).toHaveCount(5);
   await expect(
     page

@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { openWorkspace } from "./navigation";
 
 test("the original strategy library reaches the HSKSwap paper ledger and existing screens", async ({
   page,
@@ -33,10 +34,7 @@ test("the original strategy library reaches the HSKSwap paper ledger and existin
   const state = await (await page.request.get("/api/aegis/state")).json();
   expect(state.fills[0].origin.strategy_id).toBe("momentum_v1");
   expect(state.positions[0].strategy_id).toBe("momentum_v1");
-  await page
-    .getByRole("navigation")
-    .getByRole("button", { name: "Strategies", exact: true })
-    .click();
+  await openWorkspace(page, "Strategies");
   for (const name of [
     "Momentum Trading",
     "Mean reversion",
@@ -45,10 +43,8 @@ test("the original strategy library reaches the HSKSwap paper ledger and existin
     "Arbitrage Detection",
   ])
     await expect(page.getByText(name, { exact: true })).toBeVisible();
-  await page
-    .getByRole("navigation")
-    .getByRole("button", { name: "Trading Desk", exact: true })
-    .click();
+  await openWorkspace(page, "Trading Desk");
+  await page.getByLabel("HSKSwap analysis asset").selectOption("WBTC");
   await expect(
     page.getByText("Momentum Trading · WBTC / USDT", { exact: true }),
   ).toBeVisible();
@@ -56,7 +52,9 @@ test("the original strategy library reaches the HSKSwap paper ledger and existin
   await expect(
     page.getByRole("main").getByText("TEST_FIXTURE", { exact: true }),
   ).toBeVisible();
-  await page.getByRole("button", { name: "PANIC", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Emergency stop", exact: true })
+    .click();
   await page
     .getByRole("button", { name: "Refresh HSKSwap data", exact: true })
     .click();
