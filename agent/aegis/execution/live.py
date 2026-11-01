@@ -7,10 +7,12 @@ import time
 from decimal import Decimal
 
 from web3 import Web3
+from web3.exceptions import ContractLogicError
 from web3.logs import DISCARD
 
 from aegis.connectors.base import Quote
 from aegis.connectors.hskswap_v3 import encode_path
+from aegis.connectors.rpc import ReadOnlyRpc, call_read
 from aegis.execution.decision_log_client import DecisionLogClient, decision_bytes
 from aegis.execution.vault_client import ReconciliationRequired, TransactionReverted
 from aegis.risk.engine import PaperLimits, RiskEngine, RiskRejected
@@ -26,14 +28,33 @@ class LiveExecutionGateway:
         self.connector, self.client = connector, client
         self.log = DecisionLogClient(client)
 
-    def _preflight(self, quote: Quote, *, exit_only: bool, expected_edge_bps: Decimal):
+    def _preflight(
+        self, quote: Quote, *, exit_only: bool, expected_edge_bps: Decimal, committed=False
+    ) -> Quote:
         block = self.client.verify()
         vault = self.client.vault
-        limits = vault.functions.limits().call()
         oracle_address = self.client.records["BandedTwapOracle"]["address"]
+        rpc = self.client.rpc
+        native_token = self.connector.tokens[self.client.network.wrapped_native]
+        tokens = {t.address.lower(): t for t in (*quote.route.tokens, native_token)}
+        if isinstance(rpc, ReadOnlyRpc):
+            reads = [
+                call_read(vault.address, signature, block) for signature in ("limits()", "nav()")
+            ]
+            reads.extend(
+                call_read(
+                    oracle_address, "price(address)", block, types=["address"], args=[t.address]
+                )
+                for t in tokens.values()
+            )
+            rpc.prefetch(block, reads)
+        limits = rpc.call(
+            vault.address, "limits()", ["uint16"] * 10 + ["uint32", "uint32", "uint8"], block
+        )
         marks = {}
-        for token in quote.route.tokens:
-            price = self.client.rpc.call(
+        prices_raw = {}
+        for token in tokens.values():
+            price = rpc.call(
                 oracle_address,
                 "price(address)",
                 ["uint256"],
@@ -41,42 +62,52 @@ class LiveExecutionGateway:
                 types=["address"],
                 args=[token.address],
             )[0]
+            prices_raw[token.address.lower()] = price
             marks[token.address.lower()] = Decimal(price) / 10**18
         risk = RiskEngine(
             PaperLimits(max_trade_bps=limits[0], allowed_assets=tuple(self.connector.tokens))
         )
-        risk.check(quote, marks)
-        amount_value = (
-            Decimal(quote.amount_in_raw)
-            / 10 ** quote.route.tokens[0].decimals
-            * marks[quote.route.tokens[0].address.lower()]
+        if not committed:
+            risk.check(quote, marks)
+        first = quote.route.tokens[0]
+        input_value_raw = (
+            quote.amount_in_raw * prices_raw[first.address.lower()] // 10**first.decimals
         )
-        nav = Decimal(vault.functions.nav().call()) / 10**18
-        if amount_value * 10000 > nav * limits[0]:
+        nav_raw = rpc.call(vault.address, "nav()", ["uint256"], block)[0]
+        if input_value_raw <= 0 or input_value_raw * 10000 > nav_raw * limits[0]:
             raise RiskRejected("Input exceeds the deployed vault's current NAV cap")
+        amount_value = Decimal(input_value_raw) / 10**18
         gas_price = self.client.w3.eth.gas_price
-        native_fee = self.client.fees.estimate(
+        previous_fee = self.client.fees.estimate(
             gas=quote.gas_estimate + 400000,
             gas_price=gas_price,
             transaction_bytes=4096,
             block=block,
         )
-        native_token = self.connector.tokens[self.client.network.wrapped_native]
-        native_price = self.client.rpc.call(
-            oracle_address,
-            "price(address)",
-            ["uint256"],
-            block,
-            types=["address"],
-            args=[native_token.address],
-        )[0]
-        fee_value = Decimal(native_fee) / 10**18 * Decimal(native_price) / 10**18
+        # Chain/code/fee checks precede the final quote so their RPC latency does
+        # not consume its TTL. The route and input are fixed; risk is rerun on
+        # fresh pool state. After commit the minimum/deadline stay immutable.
+        market = self.connector.refresh()
+        current = self.connector.quote_route(quote.route, quote.amount_in_raw, market=market)
+        risk.check(current, marks)
+        native_fee = max(
+            previous_fee,
+            self.client.fees.estimate(
+                gas=current.gas_estimate + 400000,
+                gas_price=gas_price,
+                transaction_bytes=4096,
+                block=block,
+            ),
+        )
+        fee_value = Decimal(native_fee) / 10**18 * marks[native_token.address.lower()]
         if not exit_only and (
             expected_edge_bps <= 0 or fee_value * 4 > amount_value * expected_edge_bps / 10000
         ):
             raise RiskRejected("Estimated L1/L2 fees exceed 25% of expected profit")
         if self.client.w3.eth.get_balance(self.client.account.address) < native_fee:
             raise RiskRejected("Hot key lacks the estimated commit/swap/reveal gas reserve")
+        risk.check(current, marks)
+        return current
 
     def execute(
         self, key: str, quote: Quote, *, rationale: str, expected_edge_bps=Decimal(0), keeper=False
@@ -105,16 +136,21 @@ class LiveExecutionGateway:
         previous = self.client.db.execute(
             "SELECT packet,state,outcome FROM intents WHERE key=?", (key,)
         ).fetchone()
+        pending_skip = None
         if previous:
             packet = json.loads(previous[0])
             if packet["identity"] != identity:
                 raise ValueError("Trade idempotency key changed its original intent")
             if previous[1] == "complete":
                 return json.loads(previous[2])
+            if previous[1] == "revealing_skip":
+                pending_skip = json.loads(previous[2]) if previous[2] else None
+                if not pending_skip or pending_skip.get("status") != "skipped":
+                    raise ReconciliationRequired("Interrupted skip lacks its durable reason")
             # Recovery must inspect the exact committed quote, never substitute a new caller snapshot.
             quote = Quote.model_validate(json.loads(bytes.fromhex(packet["payload"]))["quote"])
         else:
-            self._preflight(
+            quote = self._preflight(
                 quote, exit_only=exit_only, expected_edge_bps=Decimal(expected_edge_bps)
             )
             minimum = quote.amount_out_raw * 9990 // 10000
@@ -157,6 +193,24 @@ class LiveExecutionGateway:
         payload = bytes.fromhex(packet["payload"])
         action = bytes.fromhex(packet["execution_hash"][2:])
         decision_id, commit_receipt = self.log.commit(key, payload, action)
+        if pending_skip:
+            if (
+                pending_skip.get("decision_id") != decision_id
+                or pending_skip.get("commit_tx") != Hex(commit_receipt["transactionHash"])
+                or self.client.db.execute(
+                    "SELECT 1 FROM txs WHERE key=?", (key + ":swap",)
+                ).fetchone()
+            ):
+                raise ReconciliationRequired(
+                    "Interrupted skip conflicts with its recorded commitment or swap hash"
+                )
+            reveal = self.log.reveal(key, decision_id, payload)
+            result = {**pending_skip, "reveal_tx": Hex(reveal["transactionHash"])}
+            self.client.db.execute(
+                "UPDATE intents SET state='complete',outcome=? WHERE key=?",
+                (json.dumps(result), key),
+            )
+            return result
         self.client.db.execute("UPDATE intents SET state='committed' WHERE key=?", (key,))
         function = (
             self.client.vault.functions.keeperClose
@@ -175,34 +229,40 @@ class LiveExecutionGateway:
                 return self._reverted(key, decision_id, payload, commit_receipt, exc.receipt)
         else:
             try:
-                self._preflight(
+                if packet["deadline"] <= int(time.time()):
+                    raise RiskRejected("Committed trade deadline expired")
+                execution_quote = self._preflight(
                     quote,
                     exit_only=exit_only,
                     expected_edge_bps=Decimal(packet["expected_edge_bps"]),
+                    committed=True,
                 )
-                if packet["deadline"] <= int(time.time()):
-                    raise RiskRejected("Committed trade deadline expired")
+                self._check_committed_quote(execution_quote, packet)
+                packet["execution_quote"] = execution_quote.model_dump(mode="json")
+                self.client.db.execute(
+                    "UPDATE intents SET packet=? WHERE key=?", (json.dumps(packet), key)
+                )
                 simulated = function.call({"from": self.client.account.address})
                 if simulated <= 0:
                     raise RiskRejected("Vault simulation returned a circuit-breaker skip")
-            except (ValueError, RiskRejected) as exc:
-                reveal = self.log.reveal(key, decision_id, payload)
-                result = {
-                    "status": "skipped",
-                    "reason": str(exc)[:300],
-                    "decision_id": decision_id,
-                    "commit_tx": Hex(commit_receipt["transactionHash"]),
-                    "reveal_tx": Hex(reveal["transactionHash"]),
-                }
-                self.client.db.execute(
-                    "UPDATE intents SET state='complete',outcome=? WHERE key=?",
-                    (json.dumps(result), key),
-                )
-                return result
+            except (ValueError, ContractLogicError) as exc:
+                return self._skipped(key, decision_id, payload, commit_receipt, exc)
             try:
-                receipt = self.client.send(key + ":swap", function)
+                receipt = self.client.send(
+                    key + ":swap",
+                    function,
+                    before_sign=lambda: self._check_committed_quote(execution_quote, packet),
+                )
             except TransactionReverted as exc:
                 return self._reverted(key, decision_id, payload, commit_receipt, exc.receipt)
+            except (ValueError, ContractLogicError) as exc:
+                if self.client.db.execute(
+                    "SELECT 1 FROM txs WHERE key=?", (key + ":swap",)
+                ).fetchone():
+                    raise ReconciliationRequired(
+                        "Swap hash exists; reconcile it before revealing or retrying"
+                    ) from exc
+                return self._skipped(key, decision_id, payload, commit_receipt, exc)
         events = self.client.vault.events.SwapExecuted().process_receipt(receipt, errors=DISCARD)
         matching = [e for e in events if e["args"]["decisionId"] == decision_id]
         if len(matching) != 1:
@@ -252,6 +312,51 @@ class LiveExecutionGateway:
             "fees": receipt_fees([commit_receipt, receipt, reveal]),
             "verification": "Contract-enforced balance delta, matching event, confirmed canonical receipts and exact-byte reveal",
         }
+        self.client.db.execute(
+            "UPDATE intents SET state='complete',outcome=? WHERE key=?", (json.dumps(result), key)
+        )
+        return result
+
+    @staticmethod
+    def _check_committed_quote(quote, packet):
+        now = int(time.time())
+        if not quote.created_at <= now < quote.expires_at or now - quote.created_at > 20:
+            raise RiskRejected("Fresh execution quote expired before signing")
+        if now - quote.block_timestamp > 90 or quote.block_timestamp > now + 10:
+            raise RiskRejected("Quote uses stale or future block data")
+        if (
+            quote.route
+            != Quote.model_validate(json.loads(bytes.fromhex(packet["payload"]))["quote"]).route
+            or quote.amount_in_raw != packet["amount"]
+        ):
+            raise RiskRejected("Refreshed quote changed the committed route or input")
+        if quote.amount_out_raw < packet["minimum"]:
+            raise RiskRejected("Fresh output is below the immutable committed minimum")
+        if packet["deadline"] <= now:
+            raise RiskRejected("Committed trade deadline expired")
+
+    def _skipped(self, key, decision_id, payload, commit_receipt, exc):
+        reason = str(exc)[:300]
+        if isinstance(exc, ContractLogicError):
+            raw = getattr(exc, "data", None)
+            selector = (
+                raw[:10] if isinstance(raw, str) and raw.startswith("0x") else "unknown selector"
+            )
+            reason = f"Guard simulation reverted ({selector}); no swap was broadcast"
+        result = {
+            "status": "skipped",
+            "reason": reason,
+            "decision_id": decision_id,
+            "commit_tx": Hex(commit_receipt["transactionHash"]),
+        }
+        # Persist the actual reason before reveal so a crash cannot turn a
+        # non-retryable risk rejection into an assumed freshness skip.
+        self.client.db.execute(
+            "UPDATE intents SET state='revealing_skip',outcome=? WHERE key=?",
+            (json.dumps(result), key),
+        )
+        reveal = self.log.reveal(key, decision_id, payload)
+        result["reveal_tx"] = Hex(reveal["transactionHash"])
         self.client.db.execute(
             "UPDATE intents SET state='complete',outcome=? WHERE key=?", (json.dumps(result), key)
         )

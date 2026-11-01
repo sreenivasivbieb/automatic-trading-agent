@@ -22,8 +22,9 @@ from aegis.connectors.rpc import ReadOnlyRpc
 from aegis.data import HSKSwapData, load_network
 from aegis.deploy import make_plan, record_deployment
 from aegis.execution.live import LiveExecutionGateway
-from aegis.execution.proof import prove_trade_limit
+from aegis.execution.proof import PROOF_RATIONALE, prove_trade_limit, reconcile_public_proof
 from aegis.execution.vault_client import VaultClient
+from aegis.risk.engine import RiskRejected
 from aegis.verify_decision import verify_reveal
 from scripts.hsk_testnet_setup import fund_vault
 
@@ -174,14 +175,47 @@ def main():
         quote = connector.get_quote(connector.tokens["WHSK"], connector.tokens["USDT"], 5 * 10**15)
         gateway = LiveExecutionGateway(connector, client)
         risk_proof = prove_trade_limit(client, quote.route)
-        execution = gateway.execute(
-            "local-fork-proof", quote, rationale="Bounded stable exit on isolated local fork"
+        first_plan = reconcile_public_proof(
+            client, quote.amount_in_raw, quote.route.tokens[0], quote.route.tokens[-1]
         )
+        original_preflight = gateway._preflight
+
+        def inject_stale_skip(*args, **kwargs):
+            if kwargs.get("committed"):
+                raise RiskRejected("Quote is stale or has an invalid timestamp")
+            return original_preflight(*args, **kwargs)
+
+        # Fault injection on a loopback fork only: preserve an actual unused,
+        # revealed first commitment and exercise the production recovery planner.
+        gateway._preflight = inject_stale_skip
+        skipped = gateway.execute(first_plan.key, quote, rationale=PROOF_RATIONALE)
+        assert skipped["status"] == "skipped" and "swap_tx" not in skipped
+        gateway._preflight = original_preflight
+        plan = reconcile_public_proof(
+            client, quote.amount_in_raw, quote.route.tokens[0], quote.route.tokens[-1]
+        )
+        assert plan.new_attempt and len(plan.history) == 1
+        original_commit = gateway.log.commit
+
+        def delayed_commit(*args):
+            receipt = original_commit(*args)
+            # Exceed the quote's 20-second TTL while keeping the fixed 60-second
+            # deadline. A fresh execution check must pass without editing payload.
+            print("Local fork: delaying confirmed commit by 21 seconds...", flush=True)
+            time.sleep(21)
+            return receipt
+
+        gateway.log.commit = delayed_commit
+        quote = connector.get_quote(connector.tokens["WHSK"], connector.tokens["USDT"], 5 * 10**15)
+        execution = gateway.execute(plan.key, quote, rationale=PROOF_RATIONALE)
         assert execution["status"] == "reconciled", execution
+        gateway.log.commit = original_commit
         nonce = w3.eth.get_transaction_count(agent.address)
-        repeated = gateway.execute(
-            "local-fork-proof", quote, rationale="Bounded stable exit on isolated local fork"
+        resumed = reconcile_public_proof(
+            client, quote.amount_in_raw, quote.route.tokens[0], quote.route.tokens[-1]
         )
+        assert not resumed.new_attempt and resumed.key == plan.key
+        repeated = gateway.execute(resumed.key, resumed.quote, rationale=PROOF_RATIONALE)
         assert repeated == execution and w3.eth.get_transaction_count(agent.address) == nonce
         verified = verify_reveal(
             n, deployment, execution["decision_id"], execution["reveal_tx"], rpc
@@ -214,6 +248,9 @@ def main():
             "testnet_signing_transport": "curl; local cast keystore funding/wrapping",
             "owner_resume_no_new_transaction": True,
             "idempotent_replay": True,
+            "revealed_skip_reconciled_before_new_attempt": True,
+            "delayed_commit_seconds": 21,
+            "fresh_quote_after_delayed_commit": True,
             "agent_nonce_after_replay": nonce,
             "agent_received_output": False,
             "source_sha256": {

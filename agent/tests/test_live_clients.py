@@ -204,14 +204,14 @@ def test_swap_revert_reveals_original_intent_without_a_fill_or_repeat_send():
         )
     )
 
-    def send(*args):
+    def send(*args, **kwargs):
         calls.append(args[0])
         raise TransactionReverted(receipt)
 
     client.send = send
     gateway = object.__new__(LiveExecutionGateway)
     gateway.client, gateway.connector = client, connector
-    gateway._preflight = lambda *args, **kwargs: None
+    gateway._preflight = lambda quote, **kwargs: quote
     reveals = []
     gateway.log = SimpleNamespace(
         commit=lambda *a: (1, receipt), reveal=lambda *a: reveals.append(a) or receipt

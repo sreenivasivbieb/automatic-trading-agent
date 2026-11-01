@@ -28,8 +28,14 @@ from aegis.data import ROOT, HSKSwapData, load_network
 from aegis.deploy import make_plan, record_deployment
 from aegis.execution.confirmations import consistent_read
 from aegis.execution.live import LiveExecutionGateway
-from aegis.execution.proof import prove_trade_limit
-from aegis.execution.vault_client import VaultClient
+from aegis.execution.proof import (
+    PROOF_RATIONALE,
+    RETRYABLE_SKIPS,
+    prove_trade_limit,
+    reconcile_public_proof,
+)
+from aegis.execution.vault_client import ReconciliationRequired, VaultClient
+from aegis.risk.engine import RiskRejected
 from aegis.verify_decision import verify_reveal
 from scripts.hsk_testnet_setup import (
     TestnetSetupBlocked,
@@ -218,22 +224,53 @@ def prove(args, network) -> dict:
             vault_code_hash=client.records["AegisVault"]["runtime_code_hash"],
         )
         raw = int(amount * 10 ** connector.tokens["WHSK"].decimals)
+        print("Reconciling recorded agent hashes and exact on-chain decision state...", flush=True)
+        plan = reconcile_public_proof(
+            client, raw, connector.tokens["WHSK"], connector.tokens["USDT"]
+        )
         routes = connector.find_routes(connector.tokens["WHSK"], connector.tokens["USDT"])
         if not routes:
             raise DeploymentBlocked("No verified stable-exit route is available for the proof")
         # Complete the independent size-limit proof before starting the short quote lifetime.
         risk = prove_trade_limit(client, routes[0])
-        quote = connector.get_quote(connector.tokens["WHSK"], connector.tokens["USDT"], raw)
-        if Decimal(quote.amount_out_raw) / 10 ** connector.tokens["USDT"].decimals > 1:
-            raise DeploymentBlocked("Proof is bounded to one USDT of quoted output")
-        # Stable exit is risk-reducing; do not invent a profitable entry for a demo.
-        result = LiveExecutionGateway(connector, client).execute(
-            "public-hsk-micro-proof-v1",
-            quote,
-            rationale="Bounded HSKSwap stable-exit verification; not a profitability claim",
-        )
+        # At most one fresh commitment in an invocation. An interrupted old
+        # attempt may first need its remaining reveal; it is never overwritten.
+        for _ in range(2):
+            quote = plan.quote or connector.get_quote(
+                connector.tokens["WHSK"], connector.tokens["USDT"], raw
+            )
+            if Decimal(quote.amount_out_raw) / 10 ** connector.tokens["USDT"].decimals > 1:
+                raise DeploymentBlocked("Proof is bounded to one USDT of quoted output")
+            print(
+                f"{'Starting bounded new' if plan.new_attempt else 'Resuming recorded'} proof {plan.key}; existing vault funds only.",
+                flush=True,
+            )
+            # Stable exit is risk-reducing; do not invent a profitable entry for a demo.
+            result = LiveExecutionGateway(connector, client).execute(
+                plan.key, quote, rationale=PROOF_RATIONALE
+            )
+            if (
+                result["status"] == "reconciled"
+                or plan.new_attempt
+                or result.get("reason") not in RETRYABLE_SKIPS
+            ):
+                break
+            plan = reconcile_public_proof(
+                client, raw, connector.tokens["WHSK"], connector.tokens["USDT"]
+            )
         if result["status"] != "reconciled":
-            raise DeploymentBlocked("Proof is not reconciled; inspect signer journal before retry")
+            report = deployment_report(network, deployment)
+            report.update(
+                status="PUBLIC_PROOF_" + result["status"].upper(),
+                execution=result,
+                attempt_key=plan.key,
+                previous_attempts=plan.history,
+                risk_limit=risk,
+            )
+            write_evidence(args.output, args.network, report)
+            raise DeploymentBlocked(
+                f"Proof {result['status']}: {result.get('reason', 'inspect the canonical journal')}. Recorded hashes are preserved; no additional attempt was sent."
+            )
         verification = consistent_read(
             lambda: verify_reveal(
                 network, deployment, result["decision_id"], result["reveal_tx"], client.rpc
@@ -244,6 +281,8 @@ def prove(args, network) -> dict:
             status="PUBLIC_LIFECYCLE_VERIFIED",
             risk_limit=risk,
             execution=result,
+            attempt_key=plan.key,
+            previous_attempts=plan.history,
             exact_reveal_verification=verification,
             transactions={
                 name: {"hash": result[key], "explorer": network.explorer + "/tx/" + result[key]}
@@ -451,7 +490,13 @@ def main() -> int:
             }[args.operation](args, network)
         write_evidence(args.output, args.network, report)
         print(json.dumps(report, indent=2))
-    except (DeploymentBlocked, TestnetSetupBlocked, RpcViewLag) as exc:
+    except (
+        DeploymentBlocked,
+        TestnetSetupBlocked,
+        RpcViewLag,
+        ReconciliationRequired,
+        RiskRejected,
+    ) as exc:
         print(f"HSK operation stopped: {exc}")
         return 1
     except Exception as exc:
