@@ -11,7 +11,9 @@ make demo
 
 Open `http://127.0.0.1:5173/#/aegis`. Press **Refresh HSKSwap data**, inspect the observed block and three pools, then explicitly start the paper agent. Initial virtual cash is 100 USDT. Restarting preserves funding, fills, preferences, holding times and risk baselines; new entries recover paused. An emergency remains latched across restart.
 
-Twenty distinct observed blocks are required before a mean-reversion entry. The signal compares a rolling pool-price mean with the current price, requires a sufficiently negative z-score and deducts modeled round-trip costs. No entry is forced for a demo. Closed-route arbitrage evaluates net Quoter output after fees, modeled slippage and network costs; discovery has not found a liquid registered mainnet triangle. No CEX spread is presented as an executed two-leg arbitrage.
+The [original strategy adapter](STRATEGY_CONNECTION.md) additionally reuses all five library rules and the configured selector without modifying their implementations. It requires fresh reference tickers and closed hourly history; eligible BTC/ETH signals map to WBTC/WETH and pass HSKSwap quote/risk checks. Unsupported SOL, stale/synthetic sources, excessive reference/DEX gaps and unsupported arbitrage are blocked. Original ATR stops and strategy identity are durable with each fill. The existing Trading Desk shows their actual execution or rejection reasons.
+
+Twenty distinct observed blocks are required before a native pool mean-reversion entry. The signal compares a rolling pool-price mean with the current price, requires a sufficiently negative z-score and deducts modeled round-trip costs. No entry is forced for a demo. Closed-route arbitrage evaluates net Quoter output after fees, modeled slippage and network costs; discovery has not found a liquid registered mainnet triangle. No CEX spread is presented as an executed two-leg arbitrage.
 
 ## One state, one execution gate
 
@@ -71,9 +73,9 @@ The user-supplied `kavach-main/` folder is retained as an ignored local referenc
 
 [Connection instructions](CONNECTIONS.md) cover verified networks, owner-device signing, registration and optional provider/Telegram configuration. [Kavach comparison](KAVACH_COMPARISON.md) records the useful separation of engine/vault/independent keeper and the boundaries not imported. The [three-minute demo script](DEMO_SCRIPT.md) and [one-page pitch](WHY_AEGIS.md) distinguish paper, fixture, local-fork and public evidence.
 
-## Recorded acceptance checkpoint
+## Recorded acceptance checkpoints
 
-[Current validation](evidence/aegis-connected-validation.json) records 256 Python checks (plus ten subtests), 57 contract checks and 18 browser workflows. The mainnet-data PAPER service ran unattended for 3,601 seconds, observed 88 ticks and recovered its ledger/preferences after restart with entries paused. Eight durable data-unavailable events blocked new fills; zero process crashes does not imply uninterrupted RPC availability. The two forced accounting fills preceded strategy observation and netted −0.027984 virtual USDT.
+[Earlier connected validation](evidence/aegis-connected-validation.json) records 256 Python checks (plus ten subtests), 57 contract checks and 18 browser workflows. The mainnet-data PAPER service ran unattended for 3,601 seconds, observed 88 ticks and recovered its ledger/preferences after restart with entries paused. Eight durable data-unavailable events blocked new fills; zero process crashes does not imply uninterrupted RPC availability. The two forced accounting fills preceded strategy observation and netted −0.027984 virtual USDT.
 
 The one-hour report retains its starting source hashes. Its paper runtime, policy, strategy, gateway and ledger stayed unchanged during the run; transport, optional control adapters and shutdown handling were extended and checked separately. The final entire tree is not claimed to have run unchanged for an hour. A separate shorter HTTP smoke ended stale after an RPC outage without fallback fills; a later independent fresh-price check recovered. See the evidence for both results.
 
@@ -88,3 +90,5 @@ The one-hour report retains its starting source hashes. Its paper runtime, polic
 | Public proof       | No public AEGIS transaction has been sent; funded testnet proof and mainnet approval remain outstanding                      |
 
 Actual live-data PAPER screenshots: [desktop](evidence/screenshots/aegis-live-paper-desktop.png) and [mobile](evidence/screenshots/aegis-live-paper-mobile.png). These capture virtual balances and local decisions; they are not funded wallet or public transaction evidence.
+
+The [strategy-library checkpoint](evidence/strategy-library-validation.json) adds the unchanged five-strategy adapter, 272 Python checks and 27 browser workflows. Fresh actual reference inputs and live HSKSwap data reached the built UI; positive entry/ATR-stop behavior was verified separately with explicit replay fixtures. The original home components and 82 inherited source/configuration files remain unchanged. This adapter has not undergone a new one-hour observation or public funded execution.

@@ -4,7 +4,7 @@
 
 Run `make setup && make demo`, then open `http://127.0.0.1:5173/` for the original Command center and coin artwork. Select **AEGIS · HSKSwap** in the navigation or open `/#/aegis` for HSKSwap. Its navigation uses the same backend session across screens; the existing network area also switches between workspaces. Refresh HSKSwap data, inspect the block and three pool links, and explicitly start the paper agent. No wallet, browser connection to HSKSwap, API key or faucet is needed for this path. Fresh data failure blocks fills and exposes unavailable valuation. Keep the backend bound to loopback and run one worker.
 
-The existing Krono SIMULATION and AEGIS PAPER ledgers are separate. The AWS tenant worker still uses Krono simulation; it does not run AEGIS or accept wallet keys. Do not change its mode/tenant schema to bypass this boundary.
+The original five strategy rules and configured selector now feed AEGIS through a [typed reference-market adapter](STRATEGY_CONNECTION.md). Normal library execution requires **Settings → Data providers → Coinbase**; synthetic fixtures cannot drive it. Configure the original strategies in the existing library and inspect their current HSKSwap execution/blocking reasons in **AEGIS → Trading Desk**. BTC/ETH map to WBTC/WETH; SOL has no verified HSKSwap mapping. The existing Krono SIMULATION and AEGIS PAPER ledgers are separate. The AWS tenant worker still uses Krono simulation; it does not run AEGIS or accept wallet keys. Do not change its mode/tenant schema to bypass this boundary.
 
 ## 2. Add the correct wallet network
 

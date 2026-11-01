@@ -25,7 +25,7 @@ The web strategy remains PAPER. Live mainnet reads do not mean real funds or pub
 
 ## Existing strategies and features
 
-Momentum Trading, Mean reversion, Trend Following, Breakout Trading and Arbitrage Detection retain their existing implementation and configurations. Their reference-data requirements and original simulation execution rules are unchanged. The HSKSwap engine retains its separately implemented mean-reversion and closed-route signals; this integration does not pretend that the reference strategies have been validated against unsupported on-chain candle/volume data.
+Momentum Trading, Mean reversion, Trend Following, Breakout Trading and Arbitrage Detection retain their existing implementation and configurations. The [strategy adapter](STRATEGY_CONNECTION.md) now feeds their current reference-market evaluations and original selector into HSKSwap paper execution. BTC/ETH map to verified WBTC/WETH; SOL is blocked. Freshness, reference/DEX basis, costs and the shared gateway are checked before fills. ATR stops, strategy identity and one-entry-per-hourly-bar deduplication survive restart. Reference candles are not presented as HSKSwap candles, and missing arbitrage routes remain unavailable. Native pool mean reversion and closed-route scanning remain available.
 
 Research/news, backtests, alerts, manual simulation authorization, wallet inspection and the AWS workspace remain accessible through their existing context. Browser regression checks cover these original flows as well as the newly connected HSKSwap routes. Source hashes and configuration comparisons verify preservation.
 

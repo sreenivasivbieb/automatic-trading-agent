@@ -1,0 +1,14 @@
+{
+  "verified_at": "2026-11-01T11:33:35.909972+00:00",
+  "status": "PASSED",
+  "mode": "SIMULATION",
+  "frontend_served": true,
+  "frontend_index_sha256": "fe793fa22ec2849a30e5d565235f1feabb4b9b033e7d7dd3a7c99a51d3afdeee",
+  "simulated_fills_before_restart": 1,
+  "simulated_fills_after_restart": 1,
+  "cash_persisted": true,
+  "equity_persisted": true,
+  "scheduler_after_restart": "PAUSED",
+  "live_enabled": false,
+  "blockchain_submission_attempted": false
+}

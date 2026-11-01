@@ -6,6 +6,10 @@ The [recorded checkpoint](docs/evidence/aegis-connected-validation.json) include
 
 ![Original Krono home with dimensional coin artwork and reference markets](docs/evidence/screenshots/home-restored-desktop.png)
 
+**Latest validation:** [272 Python checks and 27 browser workflows](docs/evidence/strategy-library-validation.json), including an original-strategy paper fill in an isolated replay and a built UI check with actual Coinbase/HSKSwap data. Public trades and profitability are unproven.
+
+**Strategy connection:** all five original rules and their configured selector now feed the HSKSwap paper loop through a typed adapter. Fresh BTC/ETH reference signals can execute as WBTC/WETH after quote, cost, basis and risk checks. SOL and missing arbitrage routes remain blocked. Original ATR stops and entry deduplication survive restart. [Implementation and supplied-guide review](docs/STRATEGY_CONNECTION.md) explain the data and execution boundaries.
+
 **Frontend integration:** the original Command center, dimensional coin artwork, BTC/ETH/SOL market watch and original strategy preview remain the home page. HSKSwap is available through **AEGIS · HSKSwap** or `/#/aegis`, with shared backend state across the desk, markets, positions, executions, risk, settings, wallet and assistant. News/research tools and the AWS workspace remain accessible. See [the screen-to-backend mapping](docs/FRONTEND_INTEGRATION.md) and [recorded frontend evidence](docs/evidence/frontend-integration-validation.json). The original strategy implementations and configurations are unchanged.
 
 **KRONO 2.0:** a Cognito/DynamoDB tenant control plane, centralized Bedrock MiniMax provider, conversational agent drafts and isolated ECS runtime infrastructure have been added. Configure your account using [the AWS setup guide](docs/AWS_SETUP.md) and [environment template](deploy/aws/.env.example). Cloud deployment and model access remain pending account configuration; the local simulation terminal still runs independently.

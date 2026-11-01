@@ -26,6 +26,8 @@ OpenZeppelin 5.0.2 sources and an adapted Uniswap TickMath subset are vendored w
 
 ## Operational status
 
+The reference-strategy adapter trusts validated Coinbase inputs for analysis and independently verified HSKSwap quotes for execution. Synthetic sources cannot drive the normal paper agent. Reference/DEX basis checks and costs bound execution conditions; they do not establish that a reference signal predicts returns or that USDT maintains a USD peg. SOL has no mapped HSKSwap token. The original rules remain unchanged, and model text cannot create a raw library intent. See [adapter constraints and recovery checks](docs/STRATEGY_CONNECTION.md).
+
 The connected paper loop, automatic software stop attempts, dashboard and bounded language tools are implemented. Optional Claude tool calling and the private-chat Telegram adapter have transport-fixture tests; no actual provider call or Telegram delivery is claimed without configured credentials. The language model receives bounded tools and observed state, never wallet keys or owner-transaction tools. Close confirmation is withheld from the model. Prompt-injection tests demonstrate selected refusals; they are not a general proof that every prompt attack is impossible.
 
 The separate live signer/gateway and independent keeper are implemented. Signed commit/swap/reveal, receipt reconciliation and idempotent replay pass against a local HashKey fork; public execution remains pending real deployment and funded accounts. Journal files are private and process-locked. A submission timeout or restart never authorizes another nonce. Explicit same-nonce replacement and cancellation preserve all attempt hashes. Fee estimates are bounded, not guarantees.
