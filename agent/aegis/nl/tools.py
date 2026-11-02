@@ -7,16 +7,24 @@ from typing import Literal
 from pydantic import Field
 
 from aegis.data import StrictModel
-from aegis.risk.policy import ActiveStrategy
+from aegis.risk.policy import (
+    CAPS,
+    RISK_PRESETS,
+    TICK_SECONDS_RANGE,
+    ActiveStrategy,
+    SupportedAsset,
+)
 
 
 class StrategyConfigUpdate(StrictModel):
     position_size_usdt: Decimal | None = Field(default=None, gt=0, le=1000000)
-    frequency_seconds: int | None = Field(default=None, ge=15, le=300, strict=True)
+    frequency_seconds: int | None = Field(
+        default=None, ge=TICK_SECONDS_RANGE[0], le=TICK_SECONDS_RANGE[1], strict=True
+    )
     risk_appetite: Literal["conservative", "balanced", "aggressive"] | None = None
-    stop_loss_pct: Decimal | None = Field(default=None, gt=0, le=10)
-    take_profit_pct: Decimal | None = Field(default=None, gt=0, le=15)
-    target_assets: tuple[Literal["WHSK", "WETH", "WBTC"], ...] | None = None
+    stop_loss_pct: Decimal | None = Field(default=None, gt=0, le=int(CAPS["max_stop_loss_pct"]))
+    take_profit_pct: Decimal | None = Field(default=None, gt=0, le=int(CAPS["max_take_profit_pct"]))
+    target_assets: tuple[SupportedAsset, ...] | None = None
     active_strategies: tuple[ActiveStrategy, ...] | None = None
 
 
@@ -83,6 +91,9 @@ def execute_tool(runtime, call: ToolCall) -> dict:
             raise ValueError("Supply at least one strategy preference")
         aliases = {"frequency_seconds": "tick_seconds", "risk_appetite": "risk_level"}
         patch = {aliases.get(k, k): v for k, v in update.items()}
+        if "risk_level" in patch:
+            # Same bundled preset as the deterministic router; explicit values still win.
+            patch = {**RISK_PRESETS[patch["risk_level"]], **patch}
         if "position_size_usdt" in patch:
             # This remains a hard 10% ceiling; the independent absolute budget narrows it.
             patch["position_size_pct"] = "10"
@@ -236,16 +247,11 @@ def interpret(text: str) -> ToolCall:
     focus = bool(re.search(r"\b(?:focus|target assets)\b", t))
     patch = {}
     if "conservative" in t or "careful" in t or "less risk" in t:
-        patch.update(
-            risk_level="conservative",
-            position_size_pct="3",
-            max_trades_per_hour=3,
-            stop_loss_pct="3",
-        )
+        patch.update(risk_level="conservative", **RISK_PRESETS["conservative"])
     elif "aggressive" in t or "more risk" in t:
-        patch.update(risk_level="aggressive", position_size_pct="8", max_trades_per_hour=6)
+        patch.update(risk_level="aggressive", **RISK_PRESETS["aggressive"])
     elif "balanced" in t:
-        patch.update(risk_level="balanced", position_size_pct="5")
+        patch.update(risk_level="balanced", **RISK_PRESETS["balanced"])
     for pattern, key in [
         (
             r"(?:position(?: size)?|allocation|size)[^\d+-]{0,15}([+-]?\d+(?:\.\d+)?)\s*%",

@@ -18,7 +18,16 @@ from aegis.connectors.rpc import DiscoveryError
 from aegis.data import load_network
 from aegis.execution.gateway import ExecutionGateway
 from aegis.risk.engine import RiskRejected
-from aegis.risk.policy import CAPS, AgentParams, entry_check, exit_reason
+from aegis.risk.policy import (
+    CAPS,
+    MEAN_REVERSION_Z,
+    NATIVE_STRATEGIES,
+    PARAM_BOUNDS,
+    SUPPORTED_ASSETS,
+    AgentParams,
+    entry_check,
+    exit_reason,
+)
 from aegis.store.db import LedgerError, PaperLedger
 from aegis.strategy.arbitrage import evaluate as evaluate_cycle
 from aegis.strategy.library import (
@@ -334,7 +343,7 @@ class PaperRuntime:
                 asset, price = pool.token1, Decimal(1) / pool.mid_token1_per_token0
             else:
                 continue
-            if asset not in {"WHSK", "WETH", "WBTC"}:
+            if asset not in SUPPORTED_ASSETS:
                 continue
             marks[self.live.tokens[asset].address.lower()] = price
             markets[asset] = {
@@ -508,18 +517,15 @@ class PaperRuntime:
                     prices.append(Decimal(market["markets"][asset]["price"]))
                     nav = Decimal(self.ledger.pnl(marks)["nav_usdt"])
                     size = self._entry_size(nav)
+                    terms = self.gateway.connector.terms
+                    # Round trip = LP fee of this pool's tier plus modeled slippage, on both legs
+                    # (fee_pips / 100 = bps), plus the modeled network expense for two fills.
                     cost = (
-                        Decimal(80)
-                        + self.gateway.connector.terms.network_fee_usdt
-                        * 2
-                        / max(size, Decimal("0.000001"))
-                        * 10000
+                        Decimal(market["markets"][asset]["fee_pips"]) / 100 * 2
+                        + Decimal(terms.extra_slippage_bps) * 2
+                        + terms.network_fee_usdt * 2 / max(size, Decimal("0.000001")) * 10000
                     )
-                    z = {
-                        "conservative": Decimal("2.5"),
-                        "balanced": Decimal(2),
-                        "aggressive": Decimal("1.75"),
-                    }[self.params.risk_level]
+                    z = MEAN_REVERSION_Z[self.params.risk_level]
                     signal = evaluate(asset, prices, z_threshold=z, modeled_cost_bps=cost)
                     payload = signal.model_dump(mode="json")
                     signals.append(payload)
@@ -703,6 +709,11 @@ class PaperRuntime:
             "params": self.params.model_dump(mode="json"),
             "params_version": self.version,
             "caps": CAPS,
+            # The UI renders these instead of copying limits, asset lists or network URLs.
+            "param_bounds": PARAM_BOUNDS,
+            "supported_assets": list(SUPPORTED_ASSETS),
+            "native_strategies": [{"id": k, "name": v} for k, v in NATIVE_STRATEGIES.items()],
+            "explorer": getattr(getattr(self.live, "network", None), "explorer", None),
             "risk": self.baseline,
             "trades_this_hour": sum(
                 f["created_at"] // 3600 == int(time.time()) // 3600 for f in fills
@@ -793,8 +804,20 @@ class PaperRuntime:
         elif action == "clear_emergency":
             if acknowledgement != "REVIEW_AND_CLEAR_PAPER_STOP":
                 raise ValueError("Explicit emergency-stop review is required")
-            if not self.view()["valuation_fresh"] or self.view()["positions"]:
+            state = self.view()
+            if not state["valuation_fresh"] or state["positions"]:
                 raise ValueError("Obtain fresh marks and finish the stable unwind before clearing")
+            # Without a reset the unchanged high-water mark re-trips the breaker on the next tick,
+            # so a paper ledger could never resume. The human review plays the role of the
+            # vault owner's capital-flow baseline reset; the lifetime max drawdown is kept.
+            nav = state["pnl"]["nav_usdt"]
+            previous = {k: self.baseline.get(k) for k in ("day_nav", "high_water")}
+            self.baseline.update(day_nav=nav, high_water=nav, daily_loss_pct="0", drawdown_pct="0")
+            self.ledger.set_metadata("risk_baseline", self.baseline)
+            self.ledger.record(
+                "risk_baseline_reset",
+                {"reason": "emergency cleared after review", "nav_usdt": nav, "previous": previous},
+            )
             self.emergency.clear()
             self.halted.set()
             self.ledger.set_metadata("emergency", False)

@@ -21,6 +21,7 @@ from fastapi.responses import FileResponse, JSONResponse
 from pydantic import Field
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
+from aegis.data import field_bounds
 from aegis.service import AegisService
 from backend.analytics import aggregate, chart_indicators, correlations
 from backend.backtesting import backtest
@@ -34,6 +35,7 @@ from backend.models import (
     ChatRequest,
     Model,
     Proposal,
+    RiskConfig,
     RunRequest,
     SchedulerAction,
     StrategyConfig,
@@ -536,7 +538,11 @@ def create_app(db_path=None, *, testing=False, transport=None, api_token=None, a
             "latest_run": latest[0] if latest else None,
             "executions": e.store.history("intents", 20),
             "audit": e.store.history("audit", 20),
-            "risk": {"config": e.execution.risk()[0], "version": e.execution.risk()[1]},
+            "risk": {
+                "config": e.execution.risk()[0],
+                "version": e.execution.risk()[1],
+                "bounds": field_bounds(RiskConfig),
+            },
             "scheduler": e.state(),
             "mode": "SIMULATION",
         }
@@ -670,6 +676,8 @@ def create_app(db_path=None, *, testing=False, transport=None, api_token=None, a
             "config": e.execution.risk()[0],
             "version": e.execution.risk()[1],
             "portfolio": e.portfolio.view(e.markets),
+            # Validation bounds so the UI never copies RiskConfig limits by hand.
+            "bounds": field_bounds(RiskConfig),
         }
 
     @app.put("/api/risk")

@@ -39,6 +39,22 @@ For that command with optional `.env` values loaded, use `UV_CACHE_DIR="$PWD/.ca
 
 The terminal database defaults to `.runtime/terminal.sqlite3`; AEGIS uses `.runtime/aegis-paper.sqlite3`. Runtime data, credentials, journals, downloaded tools, dependencies and generated artifacts are ignored by Git. Keep the existing database when restarting to retain balances, fills, preferences and emergency state. Changing market sources after simulation fills requires a separate database.
 
+## Single source of truth for limits
+
+Do not copy a limit, asset list or network URL into a second place. Read it from its source:
+
+| Value | Source | Consumers |
+| --- | --- | --- |
+| Guard caps (sizing, trades/hour/day, loss, drawdown, exposure, cooldown, stops, holding time) | `CAPS` in `agent/aegis/risk/policy.py`, checked against `GUARD_LIMITS` in `agent/aegis/deploy.py` | `entry_check`, circuit breaker, `AgentParams` ceilings, chat tool schema, `state.caps` in the UI |
+| Preference bounds | `AgentParams` → `PARAM_BOUNDS` | `state.param_bounds` → AEGIS settings form `min`/`max` |
+| Supported assets, native strategies | `SUPPORTED_ASSETS`, `NATIVE_STRATEGIES` | runtime market filter, chat schema, `state.supported_assets` / `state.native_strategies` |
+| Risk-appetite presets, mean-reversion thresholds | `RISK_PRESETS`, `MEAN_REVERSION_Z` | deterministic router and LLM tool path alike |
+| Paper costs | `PaperTerms` | gateway, signals, `state.costs` |
+| Explorer URL | `config/networks.yaml` | `state.explorer` |
+| Krono risk bounds | `RiskConfig` in `backend/models.py` | `risk.bounds` in `/api/risk` and `/api/dashboard` → risk form |
+
+`agent/tests/test_single_source.py` and `backend/tests/test_api_backtest.py::test_risk_bounds_are_served_from_the_model` fail when a value drifts. Fix the source, not the test.
+
 ## Debugging and checks
 
 Use [verification commands](VERIFICATION.md) and the [connection guide](CONNECTIONS.md). A running agent may legitimately produce only skips. Check data freshness, required history, reference/DEX gaps, target assets, fees, cooldowns and stop state in the Trading Desk and Observatory.

@@ -198,3 +198,14 @@ def test_backtest_is_reproducible_costed_and_chronological():
         market, news, BacktestRequest(strategy_id="news_aware_v1"), StrategyConfig(), RiskConfig()
     )
     assert no_future_news["out_of_sample"]["fill_count"] == 0
+
+
+async def test_risk_bounds_are_served_from_the_model(client):
+    from aegis.data import field_bounds
+
+    expected = field_bounds(RiskConfig)
+    risk = (await client.get("/api/risk", headers=HEADERS)).json()
+    dashboard = (await client.get("/api/dashboard", headers=HEADERS)).json()
+    assert risk["bounds"] == expected == dashboard["risk"]["bounds"]
+    assert risk["bounds"]["max_slippage_bps"] == {"ge": 1, "le": 100}
+    assert risk["bounds"]["max_daily_loss"]["le"] == "0.05"

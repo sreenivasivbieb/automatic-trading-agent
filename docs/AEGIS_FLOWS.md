@@ -39,7 +39,7 @@ The position size default is 5% with a reviewed 10% ceiling; the off-chain portf
 - **Pause entries** leaves monitoring and risk-reducing exits available. No new entry is accepted after its control acknowledgement.
 - **PANIC** latches the emergency flag and requests bounded exits into virtual USDT. Fresh quotes, minimum outputs and per-trade limits still apply. Quote failure leaves the unwind pending and visible.
 - **Close all** first returns an expiring preview bound to the current holdings. Confirmation is one-use; changed holdings require another preview.
-- **Clear stop** requires fresh marks and a completed stable unwind. It leaves entries paused; resuming is a separate action.
+- **Clear stop** requires fresh marks and a completed stable unwind. It leaves entries paused; resuming is a separate action. Clearing also resets the daily and high-water NAV baselines to the current NAV (audited as `risk_baseline_reset`, lifetime maximum drawdown kept); otherwise the unchanged high-water mark would re-trip the breaker on the next tick. This mirrors the vault, where the owner's capital flows reset the same baselines.
 - RPC errors preserve the ledger and expose unavailable valuation. Stale marks are never shown as current NAV. They do not trigger an estimated-price fallback fill.
 - Strategy preferences are schema-validated and versioned. Out-of-range, unsupported and prompt-injection requests cannot loosen caps or access keys.
 

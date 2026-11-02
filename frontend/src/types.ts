@@ -381,7 +381,20 @@ export interface Dashboard {
   latest_run: Run | null;
   executions: History<Intent>;
   audit: History<Audit>;
-  risk: { config: RiskConfig; version: number };
+  risk: {
+    config: RiskConfig;
+    version: number;
+    /** Backend RiskConfig validation bounds; the UI renders them instead of copying limits. */
+    bounds?: Record<
+      string,
+      {
+        gt?: number | string;
+        ge?: number | string;
+        lt?: number | string;
+        le?: number | string;
+      }
+    >;
+  };
   scheduler: Scheduler;
   mode: string;
 }

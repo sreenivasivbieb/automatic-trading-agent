@@ -61,6 +61,39 @@ export type Signal = {
   strategy_name?: string;
   execution_status?: string;
 };
+export type FieldBounds = {
+  gt?: number | string;
+  ge?: number | string;
+  lt?: number | string;
+  le?: number | string;
+};
+export type AegisCaps = {
+  max_position_size_pct: string;
+  max_trades_per_hour: number;
+  max_trades_per_day: number;
+  max_token_exposure_pct: string;
+  max_positions: number;
+  daily_loss_limit_pct: string;
+  max_drawdown_pct: string;
+  cooldown_seconds: number;
+  max_stop_loss_pct: string;
+  max_take_profit_pct: string;
+  max_holding_seconds: number;
+  source: string;
+};
+/** Lower and upper input limits for a numeric field, or undefined when unknown. */
+export function inputRange(bounds?: FieldBounds): {
+  min?: number;
+  max?: number;
+} {
+  if (!bounds) return {};
+  const lower = bounds.ge ?? bounds.gt,
+    upper = bounds.le ?? bounds.lt;
+  return {
+    min: lower === undefined ? undefined : Number(lower),
+    max: upper === undefined ? undefined : Number(upper),
+  };
+}
 export type AegisState = {
   available: boolean;
   reason?: string;
@@ -121,6 +154,13 @@ export type AegisState = {
     }
   >;
   risk: { daily_loss_pct?: string; drawdown_pct?: string };
+  /** Guard-default limits from the backend policy; never copy these numbers into the UI. */
+  caps?: AegisCaps;
+  /** Validation bounds for each preference, from the backend AgentParams model. */
+  param_bounds?: Record<string, FieldBounds>;
+  supported_assets?: string[];
+  native_strategies?: { id: string; name: string }[];
+  explorer?: string | null;
   equity_curve: (Pnl & { at: number })[];
   price_history?: {
     at: number;
