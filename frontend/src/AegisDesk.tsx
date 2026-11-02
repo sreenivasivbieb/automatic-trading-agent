@@ -272,7 +272,7 @@ export function AegisDesk({
             </Panel>
             <Panel
               title="Risk usage"
-              subtitle="Reviewed Guard defaults; public contract deployment pending"
+              subtitle="Reviewed Guard defaults, enforced off-chain for this paper ledger"
             >
               <div className="aegis-risk">
                 <label>
@@ -547,6 +547,11 @@ export function AegisDesk({
                         <input
                           type="checkbox"
                           checked={form.target_assets.includes(asset)}
+                          // The backend requires at least one target asset; keep the last one checked.
+                          disabled={
+                            form.target_assets.length === 1 &&
+                            form.target_assets.includes(asset)
+                          }
                           onChange={(e) =>
                             setForm({
                               ...form,
@@ -613,7 +618,7 @@ export function AegisDesk({
         <>
           <Panel
             title="Decision feed"
-            subtitle="Local paper audit. No public commit/reveal transactions have been submitted."
+            subtitle="Local paper audit. These decisions are not committed on-chain; public testnet proofs are in the Verifier."
           >
             <div className="aegis-decisions">
               {state.decisions

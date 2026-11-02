@@ -69,7 +69,7 @@ CAPS = {
     "max_stop_loss_pct": "10",
     "max_take_profit_pct": "15",
     "max_holding_seconds": 3600,
-    "source": "Reviewed Guard constructor defaults; no public deployment is registered yet",
+    "source": "Reviewed Guard constructor defaults; paper policy enforces these values off-chain",
 }
 
 
@@ -89,13 +89,17 @@ def entry_check(
         raise RiskRejected("Position size exceeds the configured fraction of current NAV")
     if params.position_size_usdt is not None and input_value > params.position_size_usdt:
         raise RiskRejected("Position size exceeds the configured absolute USDT budget")
-    if positions >= 3 or (exposure + input_value) * 100 > nav * 30:
+    if (
+        positions >= CAPS["max_positions"]
+        or (exposure + input_value) * 100 > nav * Decimal(CAPS["max_token_exposure_pct"])
+    ):
         raise RiskRejected("Concurrent-position or token-exposure cap would be exceeded")
-    if fills and now - fills[-1]["created_at"] < 30:
+    # Like AegisVault.lastTradeAt, every fill (including exits) restarts the entry cooldown.
+    if fills and now - fills[-1]["created_at"] < CAPS["cooldown_seconds"]:
         raise RiskRejected("Entry cooldown is active")
     if sum(f["created_at"] // 3600 == now // 3600 for f in fills) >= params.max_trades_per_hour:
         raise RiskRejected("Hourly trade cap is exhausted")
-    if sum(f["created_at"] // 86400 == now // 86400 for f in fills) >= 20:
+    if sum(f["created_at"] // 86400 == now // 86400 for f in fills) >= CAPS["max_trades_per_day"]:
         raise RiskRejected("Daily trade cap is exhausted")
 
 

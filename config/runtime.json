@@ -38,7 +38,7 @@
   "hsk": {
     "chain_id": 177,
     "rpc_url": "https://mainnet.hsk.xyz",
-    "explorer": "https://hashkey.blockscout.com",
+    "explorer": "https://hsk.blockscout.com",
     "native_symbol": "HSK",
     "native_decimals": 18,
     "network_source": "https://docs.hskchain.net/docs/Build-on-HashKey-Chain/network-info",
