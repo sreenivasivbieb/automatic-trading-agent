@@ -45,13 +45,36 @@ The position size default is 5% with a reviewed 10% ceiling; the off-chain portf
 
 The local natural-language control plane defaults to an explicitly labeled deterministic router, with typed tools for status, positions, P&L, recent decisions, preferences, pause/resume, confirmed close and trade explanation. Without credentials it does not claim a model was invoked. Optional Claude tool calling uses the same validated tools, bounded turns and schema limits; it cannot receive or submit a close confirmation. A separately configured Telegram bridge accepts only the owner's private chat and sender. Typed changes/tool events are recorded; raw messages are not persisted in the ledger. Configured model/Telegram requests transmit the selected message/state to those providers. Real provider use/delivery remain pending credentials. Public commit/reveal badges require registered real deployments and canonical reveal receipts; testnet (133) decisions #1 and #2 have them, mainnet has none yet.
 
+## Changing settings while the agent runs
+
+Every change is versioned, audited and applied from the next market check; the single runtime thread never applies one in the middle of a fill.
+
+| Change | Effect on open positions |
+| --- | --- |
+| Position size, sizing mode, regime scaling, frequency, risk appetite | New entries only. A smaller size can trim open positions down to it, if the human chooses so in the preview. |
+| Stop-loss, take-profit, trailing stop, holding time | The preview shows which positions would close at once. The human chooses: apply to open positions too, or new entries only (open positions keep their rules, shown as frozen). |
+| Removing a held asset from the targets | The human chooses: close it now through the bounded exit path, or keep it until its stops or targets. |
+| Deactivating a strategy | Its open positions keep their own exits. |
+| Library strategy parameters or the selector | Any in-flight library snapshot is invalidated; the next check uses the new configuration. Open positions keep the ATR stop set at entry. |
+
+A change with no effect on open positions applies at once; otherwise it returns a one-use preview that expires after two minutes and is bound to the settings version and holdings. Chat and LLM tools receive the preview; only a human confirmation applies it. Saving identical settings keeps the version. Settings history keeps the last twenty versions for restore.
+
+**Sizing.** `fixed` uses the percentage/USDT cap. `risk_per_trade` sizes each entry so its nearest stop (ATR or generic) loses at most `risk_per_trade_pct` of NAV; the cap still bounds it. `regime_scaling` multiplies the size by the deterministic regime multiplier (0.25–1). Neither can raise a size above the cap.
+
+**Guarded trigger.** With `derisk_daily_loss_pct` set below the 2% breaker, an observed daily loss at that level tightens the preferences toward the conservative preset once per UTC day (audited as `auto_derisk`). It never loosens a value; open positions keep their exit rules. Loosening again is a human decision.
+
+The research **Risk** workspace limits govern the research simulation ledger only; the paper agent uses the Guard caps and these preferences.
+
 ## HTTP boundary
 
 | Method | Route                      | Behavior                                                                  |
 | ------ | -------------------------- | ------------------------------------------------------------------------- |
 | GET    | `/api/aegis/state`         | Cached mode, freshness, positions, P&L, policy, fills and local decisions |
 | POST   | `/api/aegis/check`         | One verified market observation and eligible strategy/stop evaluation     |
-| PUT    | `/api/aegis/settings`      | Validated patch with `expected_version`                                   |
+| PUT    | `/api/aegis/settings`      | Validated patch with `expected_version`; applied at once unless open positions are affected, then a one-use preview |
+| POST   | `/api/aegis/settings/confirm` | Human confirmation of a settings preview: exit scope, close removed assets, trim to size |
+| POST   | `/api/aegis/settings/rollback` | Restore a recorded settings version through the same preview rules     |
+| GET/PUT | `/api/selection`          | Versioned strategy-selector settings; saving invalidates library snapshots |
 | POST   | `/api/aegis/control`       | Explicit paper controls and close confirmation                            |
 | POST   | `/api/aegis/chat`          | Shared validated language tools                                           |
 | GET    | `/api/aegis/vault`         | Chain-specific public deployment metadata                                 |

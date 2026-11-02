@@ -8,10 +8,12 @@ import "./aegis.css";
 
 import { useAegis } from "./aegis/context";
 import { AegisMarketAnalysis } from "./aegis/MarketAnalysis";
+import { SelectorSettings, SettingsHistory } from "./aegis/LiveControls";
 import { ClosedLoopStatus } from "./aegis/Pipeline";
 import type {
   AegisState as State,
   AegisView,
+  Change,
   Params,
   Preview,
 } from "./aegis/types";
@@ -407,6 +409,18 @@ export function AegisDesk({
                               {number(p.strategy_stop_price, 8)}
                             </small>
                           )}
+                          {p.exit_rules === "frozen_at_change" && (
+                            <small className="muted">
+                              {" "}
+                              · exit rules frozen at change
+                            </small>
+                          )}
+                          {p.pending_action && (
+                            <small className="muted">
+                              {" "}
+                              · pending {p.pending_action.replaceAll("_", " ")}
+                            </small>
+                          )}
                           {p.target_price && (
                             <small className="muted">
                               {" "}
@@ -436,15 +450,21 @@ export function AegisDesk({
                   onSubmit={(e) => {
                     e.preventDefault();
                     void act(async () => {
-                      const r = await api<{
-                        changes: Record<
-                          string,
-                          { before: unknown; after: unknown }
-                        >;
-                      }>("/aegis/settings", "PUT", {
+                      const r = await api<
+                        { changes: Change } & Partial<Preview>
+                      >("/aegis/settings", "PUT", {
                         expected_version: state.params_version,
                         patch: form,
                       });
+                      // A change that affects open positions comes back as a
+                      // preview; nothing is applied until it is confirmed.
+                      if (r.kind === "params_change") {
+                        setPreview(r as Preview);
+                        setNotice(
+                          "Review the effect on open positions; nothing changed yet.",
+                        );
+                        return;
+                      }
                       setNotice(
                         Object.entries(r.changes)
                           .map(
@@ -564,6 +584,72 @@ export function AegisDesk({
                       required
                     />
                   </label>
+                  <label>
+                    Sizing
+                    <select
+                      aria-label="AEGIS sizing mode"
+                      value={form.sizing_mode ?? "fixed"}
+                      onChange={(e) =>
+                        setForm({
+                          ...form,
+                          sizing_mode: e.target.value as Params["sizing_mode"],
+                        })
+                      }
+                    >
+                      <option value="fixed">Fixed % of NAV</option>
+                      <option value="risk_per_trade">Risk per trade</option>
+                    </select>
+                    <small>
+                      Risk per trade sizes each entry so its nearest stop loses
+                      at most the set % of NAV. The % cap above still bounds it.
+                    </small>
+                  </label>
+                  <label>
+                    Risk per trade (% of NAV)
+                    <input
+                      aria-label="AEGIS risk per trade"
+                      type="number"
+                      step="any"
+                      {...bounds("risk_per_trade_pct")}
+                      disabled={form.sizing_mode !== "risk_per_trade"}
+                      value={form.risk_per_trade_pct ?? ""}
+                      onChange={(e) =>
+                        setForm({ ...form, risk_per_trade_pct: e.target.value })
+                      }
+                    />
+                  </label>
+                  <label>
+                    Auto-derisk at daily loss (%, optional)
+                    <input
+                      aria-label="AEGIS auto-derisk threshold"
+                      type="number"
+                      step="any"
+                      {...bounds("derisk_daily_loss_pct")}
+                      value={form.derisk_daily_loss_pct ?? ""}
+                      onChange={(e) =>
+                        setForm({
+                          ...form,
+                          derisk_daily_loss_pct: e.target.value || null,
+                        })
+                      }
+                    />
+                    <small>
+                      Once per UTC day, tightens toward the conservative preset
+                      before the {number(state.caps?.daily_loss_limit_pct)}%
+                      breaker. It never loosens a value.
+                    </small>
+                  </label>
+                  <label className="inline gap">
+                    <input
+                      type="checkbox"
+                      aria-label="AEGIS regime scaling"
+                      checked={form.regime_scaling ?? false}
+                      onChange={(e) =>
+                        setForm({ ...form, regime_scaling: e.target.checked })
+                      }
+                    />
+                    Scale entries down in hostile market regimes
+                  </label>
                   <fieldset>
                     <legend>Target assets</legend>
                     {(state.supported_assets ?? []).map((asset) => (
@@ -634,6 +720,10 @@ export function AegisDesk({
                 </form>
               )}
             </Panel>
+            <div>
+              <SelectorSettings />
+              <SettingsHistory />
+            </div>
           </div>
         </>
       )}

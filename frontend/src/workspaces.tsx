@@ -2202,7 +2202,9 @@ export function RiskWorkspace({ data, act, busy }: WorkspaceProps) {
           <h2>Hard limits. Independent enforcement.</h2>
           <p>
             LLM reasoning and interface settings cannot override these backend
-            checks.
+            checks. These limits govern the research simulation ledger; the
+            HSKSwap paper agent uses its own Guard caps under AEGIS → Risk
+            Controls and Strategies.
           </p>
         </div>
         <Badge tone="accent">Config v{data.risk.version}</Badge>

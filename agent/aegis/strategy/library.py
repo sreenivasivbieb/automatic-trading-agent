@@ -38,6 +38,8 @@ class LibrarySignal(StrictModel):
     cooldown_seconds: int = Field(ge=30, le=86400)
     # Selector suitability score (0–1) for this strategy on this asset; orders same-asset entries.
     selection_score: Decimal | None = Field(default=None, ge=0, le=1)
+    # Deterministic regime size multiplier (0.25–1) for the reference market, if classified.
+    regime_risk_multiplier: Decimal | None = Field(default=None, gt=0, le=1)
 
     @property
     def entry_key(self) -> str:

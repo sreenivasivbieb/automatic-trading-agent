@@ -8,53 +8,57 @@ This tool reads source only. It does not load environment files, databases, AWS 
 
 Use the local session/CSRF client or configured bearer authentication. Health/readiness/session/schema routes have their documented local exceptions. `/api/*` is separate from cloud `/platform/*`.
 
-- `GET /api/aegis/state` → [aegis_state](../backend/api.py#L337)
-- `GET /api/aegis/vault` → [aegis_vault](../backend/api.py#L341)
-- `POST /api/aegis/vault/prepare` → [aegis_owner_prepare](../backend/api.py#L347)
-- `POST /api/aegis/vault/receipt` → [aegis_owner_receipt](../backend/api.py#L360)
-- `POST /api/aegis/verify` → [aegis_verify](../backend/api.py#L366)
-- `POST /api/aegis/check` → [aegis_check](../backend/api.py#L386)
-- `PUT /api/aegis/settings` → [aegis_settings](../backend/api.py#L390)
-- `POST /api/aegis/control` → [aegis_control](../backend/api.py#L394)
-- `POST /api/aegis/chat` → [aegis_chat](../backend/api.py#L403)
-- `POST /api/session` → [session](../backend/api.py#L407)
-- `GET /api/health` → [health](../backend/api.py#L446)
-- `GET /api/ready` → [ready](../backend/api.py#L450)
-- `GET /api/status` → [status](../backend/api.py#L488)
-- `GET /api/dashboard` → [dashboard](../backend/api.py#L528)
-- `GET /api/markets` → [markets](../backend/api.py#L551)
-- `GET /api/correlations` → [correlation_data](../backend/api.py#L555)
-- `GET /api/markets/{symbol}` → [market](../backend/api.py#L560)
-- `GET /api/desk/budget/{symbol}` → [desk_budget](../backend/api.py#L575)
-- `GET /api/alerts` → [alerts](../backend/api.py#L580)
-- `POST /api/alerts` → [create_alert](../backend/api.py#L584)
-- `DELETE /api/alerts/{alert_id}` → [delete_alert](../backend/api.py#L589)
-- `GET /api/news` → [news](../backend/api.py#L593)
-- `POST /api/news/refresh` → [refresh_news](../backend/api.py#L614)
-- `GET /api/news/{article_id}` → [article](../backend/api.py#L618)
-- `GET /api/strategies` → [strategies](../backend/api.py#L639)
-- `PUT /api/strategies/{strategy_id}` → [strategy_config](../backend/api.py#L656)
-- `POST /api/runs` → [run](../backend/api.py#L663)
-- `GET /api/runs/{run_id}` → [run_detail](../backend/api.py#L667)
-- `GET /api/risk` → [risk](../backend/api.py#L674)
-- `PUT /api/risk` → [risk_config](../backend/api.py#L684)
-- `GET /api/portfolio` → [portfolio](../backend/api.py#L691)
-- `POST /api/positions/{symbol}/exit-preview` → [exit_preview](../backend/api.py#L696)
-- `GET /api/history/{kind}` → [history](../backend/api.py#L740)
-- `POST /api/execution/preview` → [preview](../backend/api.py#L749)
-- `POST /api/execution/authorize` → [authorize](../backend/api.py#L757)
-- `POST /api/execution/{intent_id}/reconcile` → [reconcile](../backend/api.py#L761)
-- `POST /api/agent/control` → [control](../backend/api.py#L765)
-- `POST /api/emergency-stop` → [emergency_stop](../backend/api.py#L769)
-- `POST /api/backtests` → [backtests](../backend/api.py#L776)
-- `PUT /api/settings/providers` → [provider_settings](../backend/api.py#L812)
-- `GET /api/settings/news-scoring` → [news_scoring](../backend/api.py#L828)
-- `GET /api/settings/provider-refresh` → [provider_refresh](../backend/api.py#L837)
-- `PUT /api/settings/provider-refresh` → [change_provider_refresh](../backend/api.py#L842)
-- `PUT /api/settings/news-scoring` → [change_news_scoring](../backend/api.py#L850)
-- `GET /api/wallet/{address}` → [wallet](../backend/api.py#L857)
-- `POST /api/chat` → [chat](../backend/api.py#L866)
-- `GET /{path:path}` → [frontend](../backend/api.py#L1013)
+- `GET /api/aegis/state` → [aegis_state](../backend/api.py#L393)
+- `GET /api/aegis/vault` → [aegis_vault](../backend/api.py#L397)
+- `POST /api/aegis/vault/prepare` → [aegis_owner_prepare](../backend/api.py#L403)
+- `POST /api/aegis/vault/receipt` → [aegis_owner_receipt](../backend/api.py#L416)
+- `POST /api/aegis/verify` → [aegis_verify](../backend/api.py#L422)
+- `POST /api/aegis/check` → [aegis_check](../backend/api.py#L442)
+- `PUT /api/aegis/settings` → [aegis_settings](../backend/api.py#L446)
+- `POST /api/aegis/settings/confirm` → [aegis_settings_confirm](../backend/api.py#L453)
+- `POST /api/aegis/settings/rollback` → [aegis_settings_rollback](../backend/api.py#L463)
+- `GET /api/selection` → [selection_config](../backend/api.py#L469)
+- `PUT /api/selection` → [update_selection](../backend/api.py#L474)
+- `POST /api/aegis/control` → [aegis_control](../backend/api.py#L482)
+- `POST /api/aegis/chat` → [aegis_chat](../backend/api.py#L491)
+- `POST /api/session` → [session](../backend/api.py#L495)
+- `GET /api/health` → [health](../backend/api.py#L534)
+- `GET /api/ready` → [ready](../backend/api.py#L538)
+- `GET /api/status` → [status](../backend/api.py#L576)
+- `GET /api/dashboard` → [dashboard](../backend/api.py#L616)
+- `GET /api/markets` → [markets](../backend/api.py#L639)
+- `GET /api/correlations` → [correlation_data](../backend/api.py#L643)
+- `GET /api/markets/{symbol}` → [market](../backend/api.py#L648)
+- `GET /api/desk/budget/{symbol}` → [desk_budget](../backend/api.py#L663)
+- `GET /api/alerts` → [alerts](../backend/api.py#L668)
+- `POST /api/alerts` → [create_alert](../backend/api.py#L672)
+- `DELETE /api/alerts/{alert_id}` → [delete_alert](../backend/api.py#L677)
+- `GET /api/news` → [news](../backend/api.py#L681)
+- `POST /api/news/refresh` → [refresh_news](../backend/api.py#L702)
+- `GET /api/news/{article_id}` → [article](../backend/api.py#L706)
+- `GET /api/strategies` → [strategies](../backend/api.py#L727)
+- `PUT /api/strategies/{strategy_id}` → [strategy_config](../backend/api.py#L744)
+- `POST /api/runs` → [run](../backend/api.py#L751)
+- `GET /api/runs/{run_id}` → [run_detail](../backend/api.py#L755)
+- `GET /api/risk` → [risk](../backend/api.py#L762)
+- `PUT /api/risk` → [risk_config](../backend/api.py#L772)
+- `GET /api/portfolio` → [portfolio](../backend/api.py#L779)
+- `POST /api/positions/{symbol}/exit-preview` → [exit_preview](../backend/api.py#L784)
+- `GET /api/history/{kind}` → [history](../backend/api.py#L828)
+- `POST /api/execution/preview` → [preview](../backend/api.py#L837)
+- `POST /api/execution/authorize` → [authorize](../backend/api.py#L845)
+- `POST /api/execution/{intent_id}/reconcile` → [reconcile](../backend/api.py#L849)
+- `POST /api/agent/control` → [control](../backend/api.py#L853)
+- `POST /api/emergency-stop` → [emergency_stop](../backend/api.py#L857)
+- `POST /api/backtests` → [backtests](../backend/api.py#L864)
+- `PUT /api/settings/providers` → [provider_settings](../backend/api.py#L900)
+- `GET /api/settings/news-scoring` → [news_scoring](../backend/api.py#L916)
+- `GET /api/settings/provider-refresh` → [provider_refresh](../backend/api.py#L925)
+- `PUT /api/settings/provider-refresh` → [change_provider_refresh](../backend/api.py#L930)
+- `PUT /api/settings/news-scoring` → [change_news_scoring](../backend/api.py#L938)
+- `GET /api/wallet/{address}` → [wallet](../backend/api.py#L945)
+- `POST /api/chat` → [chat](../backend/api.py#L954)
+- `GET /{path:path}` → [frontend](../backend/api.py#L1101)
 
 ## Cloud HTTP routes
 
@@ -115,74 +119,83 @@ Cognito access-token identity and tenant-aware repositories protect application 
 
 ### backend/api.py
 
-- [PreviewRequest](../backend/api.py#L65) — class
-- [ProviderSettings](../backend/api.py#L69) — class
-- [RefreshSettings](../backend/api.py#L75) — class
-- [AegisControl](../backend/api.py#L80) — class
-- [AegisSettings](../backend/api.py#L88) — class
-- [OwnerRequest](../backend/api.py#L93) — class
-- [OwnerReceipt](../backend/api.py#L101) — class
-- [DecisionProof](../backend/api.py#L107) — class
-- [create_app](../backend/api.py#L113) — `create_app(db_path=None, *, testing=False, transport=None, api_token=None, aegis_factory=None)`
-- [create_app.lifespan](../backend/api.py#L128) — `async lifespan(app)`
-- [create_app.lifespan.reference_source](../backend/api.py#L179) — `async reference_source(state)`
-- [create_app.error](../backend/api.py#L203) — `error(request, code, message, status=400, details=None)`
-- [create_app.origin_allowed](../backend/api.py#L216) — `origin_allowed(request)`
-- [create_app.authorize_api](../backend/api.py#L224) — `async authorize_api(request: Request)`
-- [create_app.boundary](../backend/api.py#L240) — `async boundary(request: Request, call_next)`
-- [create_app.value_error](../backend/api.py#L317) — `async value_error(request, exc)`
-- [create_app.validation_error](../backend/api.py#L321) — `async validation_error(request, exc)`
-- [create_app.engine](../backend/api.py#L333) — `engine(request: Request)`
-- [create_app.aegis_state](../backend/api.py#L337) — `async aegis_state(request: Request)`
-- [create_app.aegis_vault](../backend/api.py#L341) — `async aegis_vault(network: Literal['testnet', 'mainnet']='testnet')`
-- [create_app.aegis_owner_prepare](../backend/api.py#L347) — `async aegis_owner_prepare(body: OwnerRequest)`
-- [create_app.aegis_owner_receipt](../backend/api.py#L360) — `async aegis_owner_receipt(body: OwnerReceipt)`
-- [create_app.aegis_verify](../backend/api.py#L366) — `async aegis_verify(body: DecisionProof)`
-- [create_app.aegis_verify.verify](../backend/api.py#L371) — `verify()`
-- [create_app.aegis_check](../backend/api.py#L386) — `async aegis_check(request: Request)`
-- [create_app.aegis_settings](../backend/api.py#L390) — `async aegis_settings(body: AegisSettings, request: Request)`
-- [create_app.aegis_control](../backend/api.py#L394) — `async aegis_control(body: AegisControl, request: Request)`
-- [create_app.aegis_chat](../backend/api.py#L403) — `async aegis_chat(body: ChatRequest, request: Request)`
-- [create_app.session](../backend/api.py#L407) — `async session(request: Request)`
-- [create_app.health](../backend/api.py#L446) — `async health()`
-- [create_app.ready](../backend/api.py#L450) — `async ready(e: Engine=Depends(engine))`
-- [create_app.market_summary](../backend/api.py#L459) — `market_summary(market)`
-- [create_app.status](../backend/api.py#L488) — `async status(request: Request, e: Engine=Depends(engine))`
-- [create_app.dashboard](../backend/api.py#L528) — `async dashboard(e: Engine=Depends(engine))`
-- [create_app.markets](../backend/api.py#L551) — `async markets(e: Engine=Depends(engine))`
-- [create_app.correlation_data](../backend/api.py#L555) — `async correlation_data(e: Engine=Depends(engine))`
-- [create_app.market](../backend/api.py#L560) — `async market(symbol: Literal['BTC', 'ETH', 'SOL'], timeframe: Literal['1h', '4h', '1d']='1h', e: Engine=Depends(engine))`
-- [create_app.desk_budget](../backend/api.py#L575) — `async desk_budget(symbol: Literal['BTC', 'ETH', 'SOL'], e: Engine=Depends(engine))`
-- [create_app.alerts](../backend/api.py#L580) — `async alerts(e: Engine=Depends(engine))`
-- [create_app.create_alert](../backend/api.py#L584) — `async create_alert(body: AlertRequest, e: Engine=Depends(engine))`
-- [create_app.delete_alert](../backend/api.py#L589) — `async delete_alert(alert_id: str, e: Engine=Depends(engine))`
-- [create_app.news](../backend/api.py#L593) — `async news(breaking: bool=False, q: str=Query(default='', max_length=200), asset: str=Query(default='', max_length=20), e: Engine=Depends(engine))`
-- [create_app.refresh_news](../backend/api.py#L614) — `async refresh_news(breaking: bool=False, e: Engine=Depends(engine))`
-- [create_app.article](../backend/api.py#L618) — `async article(article_id: str, e: Engine=Depends(engine))`
-- [create_app.strategies](../backend/api.py#L639) — `async strategies(e: Engine=Depends(engine))`
-- [create_app.save_strategy](../backend/api.py#L642) — `save_strategy(e: Engine, strategy_id: str, config: StrategyConfig, expected_version: int)`
-- [create_app.strategy_config](../backend/api.py#L656) — `async strategy_config(strategy_id: str, body: VersionedStrategy, e: Engine=Depends(engine))`
-- [create_app.run](../backend/api.py#L663) — `async run(body: RunRequest, e: Engine=Depends(engine))`
-- [create_app.run_detail](../backend/api.py#L667) — `async run_detail(run_id: str, e: Engine=Depends(engine))`
-- [create_app.risk](../backend/api.py#L674) — `async risk(e: Engine=Depends(engine))`
-- [create_app.risk_config](../backend/api.py#L684) — `async risk_config(body: VersionedRisk, e: Engine=Depends(engine))`
-- [create_app.portfolio](../backend/api.py#L691) — `async portfolio(e: Engine=Depends(engine))`
-- [create_app.exit_preview](../backend/api.py#L696) — `async exit_preview(symbol: Literal['BTC', 'ETH', 'SOL'], e: Engine=Depends(engine))`
-- [create_app.history](../backend/api.py#L740) — `async history(kind: Literal['runs', 'risks', 'intents', 'ledger', 'audit', 'snapshots'], limit: int=Query(default=50, ge=1, le=200), offset: int=Query(default=0, ge=0), e: E...`
-- [create_app.preview](../backend/api.py#L749) — `async preview(body: PreviewRequest, e: Engine=Depends(engine))`
-- [create_app.authorize](../backend/api.py#L757) — `async authorize(body: Authorize, e: Engine=Depends(engine))`
-- [create_app.reconcile](../backend/api.py#L761) — `async reconcile(intent_id: str, e: Engine=Depends(engine))`
-- [create_app.control](../backend/api.py#L765) — `async control(body: SchedulerAction, e: Engine=Depends(engine))`
-- [create_app.emergency_stop](../backend/api.py#L769) — `async emergency_stop(request: Request, e: Engine=Depends(engine))`
-- [create_app.backtests](../backend/api.py#L776) — `async backtests(body: BacktestRequest, e: Engine=Depends(engine))`
-- [create_app.provider_settings](../backend/api.py#L812) — `async provider_settings(body: ProviderSettings, e: Engine=Depends(engine))`
-- [create_app.news_scoring](../backend/api.py#L828) — `async news_scoring(e: Engine=Depends(engine))`
-- [create_app.provider_refresh](../backend/api.py#L837) — `async provider_refresh(e: Engine=Depends(engine))`
-- [create_app.change_provider_refresh](../backend/api.py#L842) — `async change_provider_refresh(body: RefreshSettings, e: Engine=Depends(engine))`
-- [create_app.change_news_scoring](../backend/api.py#L850) — `async change_news_scoring(body: VersionedNewsScoring, e: Engine=Depends(engine))`
-- [create_app.wallet](../backend/api.py#L857) — `async wallet(address: str, request: Request)`
-- [create_app.chat](../backend/api.py#L866) — `async chat(body: ChatRequest, e: Engine=Depends(engine))`
-- [create_app.frontend](../backend/api.py#L1013) — `async frontend(path: str)`
+- [PreviewRequest](../backend/api.py#L66) — class
+- [ProviderSettings](../backend/api.py#L70) — class
+- [RefreshSettings](../backend/api.py#L76) — class
+- [AegisControl](../backend/api.py#L81) — class
+- [AegisSettings](../backend/api.py#L89) — class
+- [AegisSettingsConfirm](../backend/api.py#L94) — class
+- [AegisRollback](../backend/api.py#L101) — class
+- [VersionedSelection](../backend/api.py#L106) — class
+- [diff](../backend/api.py#L111) — `diff(before: dict, after: dict)`
+- [OwnerRequest](../backend/api.py#L117) — class
+- [OwnerReceipt](../backend/api.py#L125) — class
+- [DecisionProof](../backend/api.py#L131) — class
+- [create_app](../backend/api.py#L137) — `create_app(db_path=None, *, testing=False, transport=None, api_token=None, aegis_factory=None)`
+- [create_app.lifespan](../backend/api.py#L152) — `async lifespan(app)`
+- [create_app.lifespan.reference_source](../backend/api.py#L203) — `async reference_source(state)`
+- [create_app.lifespan.terminal_tool](../backend/api.py#L206) — `async terminal_tool(name: str, args: dict)`
+- [create_app.error](../backend/api.py#L259) — `error(request, code, message, status=400, details=None)`
+- [create_app.origin_allowed](../backend/api.py#L272) — `origin_allowed(request)`
+- [create_app.authorize_api](../backend/api.py#L280) — `async authorize_api(request: Request)`
+- [create_app.boundary](../backend/api.py#L296) — `async boundary(request: Request, call_next)`
+- [create_app.value_error](../backend/api.py#L373) — `async value_error(request, exc)`
+- [create_app.validation_error](../backend/api.py#L377) — `async validation_error(request, exc)`
+- [create_app.engine](../backend/api.py#L389) — `engine(request: Request)`
+- [create_app.aegis_state](../backend/api.py#L393) — `async aegis_state(request: Request)`
+- [create_app.aegis_vault](../backend/api.py#L397) — `async aegis_vault(network: Literal['testnet', 'mainnet']='testnet')`
+- [create_app.aegis_owner_prepare](../backend/api.py#L403) — `async aegis_owner_prepare(body: OwnerRequest)`
+- [create_app.aegis_owner_receipt](../backend/api.py#L416) — `async aegis_owner_receipt(body: OwnerReceipt)`
+- [create_app.aegis_verify](../backend/api.py#L422) — `async aegis_verify(body: DecisionProof)`
+- [create_app.aegis_verify.verify](../backend/api.py#L427) — `verify()`
+- [create_app.aegis_check](../backend/api.py#L442) — `async aegis_check(request: Request)`
+- [create_app.aegis_settings](../backend/api.py#L446) — `async aegis_settings(body: AegisSettings, request: Request)`
+- [create_app.aegis_settings_confirm](../backend/api.py#L453) — `async aegis_settings_confirm(body: AegisSettingsConfirm, request: Request)`
+- [create_app.aegis_settings_rollback](../backend/api.py#L463) — `async aegis_settings_rollback(body: AegisRollback, request: Request)`
+- [create_app.selection_config](../backend/api.py#L469) — `async selection_config(e: Engine=Depends(engine))`
+- [create_app.update_selection](../backend/api.py#L474) — `async update_selection(body: VersionedSelection, e: Engine=Depends(engine))`
+- [create_app.aegis_control](../backend/api.py#L482) — `async aegis_control(body: AegisControl, request: Request)`
+- [create_app.aegis_chat](../backend/api.py#L491) — `async aegis_chat(body: ChatRequest, request: Request)`
+- [create_app.session](../backend/api.py#L495) — `async session(request: Request)`
+- [create_app.health](../backend/api.py#L534) — `async health()`
+- [create_app.ready](../backend/api.py#L538) — `async ready(e: Engine=Depends(engine))`
+- [create_app.market_summary](../backend/api.py#L547) — `market_summary(market)`
+- [create_app.status](../backend/api.py#L576) — `async status(request: Request, e: Engine=Depends(engine))`
+- [create_app.dashboard](../backend/api.py#L616) — `async dashboard(e: Engine=Depends(engine))`
+- [create_app.markets](../backend/api.py#L639) — `async markets(e: Engine=Depends(engine))`
+- [create_app.correlation_data](../backend/api.py#L643) — `async correlation_data(e: Engine=Depends(engine))`
+- [create_app.market](../backend/api.py#L648) — `async market(symbol: Literal['BTC', 'ETH', 'SOL'], timeframe: Literal['1h', '4h', '1d']='1h', e: Engine=Depends(engine))`
+- [create_app.desk_budget](../backend/api.py#L663) — `async desk_budget(symbol: Literal['BTC', 'ETH', 'SOL'], e: Engine=Depends(engine))`
+- [create_app.alerts](../backend/api.py#L668) — `async alerts(e: Engine=Depends(engine))`
+- [create_app.create_alert](../backend/api.py#L672) — `async create_alert(body: AlertRequest, e: Engine=Depends(engine))`
+- [create_app.delete_alert](../backend/api.py#L677) — `async delete_alert(alert_id: str, e: Engine=Depends(engine))`
+- [create_app.news](../backend/api.py#L681) — `async news(breaking: bool=False, q: str=Query(default='', max_length=200), asset: str=Query(default='', max_length=20), e: Engine=Depends(engine))`
+- [create_app.refresh_news](../backend/api.py#L702) — `async refresh_news(breaking: bool=False, e: Engine=Depends(engine))`
+- [create_app.article](../backend/api.py#L706) — `async article(article_id: str, e: Engine=Depends(engine))`
+- [create_app.strategies](../backend/api.py#L727) — `async strategies(e: Engine=Depends(engine))`
+- [create_app.save_strategy](../backend/api.py#L730) — `save_strategy(e: Engine, strategy_id: str, config: StrategyConfig, expected_version: int)`
+- [create_app.strategy_config](../backend/api.py#L744) — `async strategy_config(strategy_id: str, body: VersionedStrategy, e: Engine=Depends(engine))`
+- [create_app.run](../backend/api.py#L751) — `async run(body: RunRequest, e: Engine=Depends(engine))`
+- [create_app.run_detail](../backend/api.py#L755) — `async run_detail(run_id: str, e: Engine=Depends(engine))`
+- [create_app.risk](../backend/api.py#L762) — `async risk(e: Engine=Depends(engine))`
+- [create_app.risk_config](../backend/api.py#L772) — `async risk_config(body: VersionedRisk, e: Engine=Depends(engine))`
+- [create_app.portfolio](../backend/api.py#L779) — `async portfolio(e: Engine=Depends(engine))`
+- [create_app.exit_preview](../backend/api.py#L784) — `async exit_preview(symbol: Literal['BTC', 'ETH', 'SOL'], e: Engine=Depends(engine))`
+- [create_app.history](../backend/api.py#L828) — `async history(kind: Literal['runs', 'risks', 'intents', 'ledger', 'audit', 'snapshots'], limit: int=Query(default=50, ge=1, le=200), offset: int=Query(default=0, ge=0), e: E...`
+- [create_app.preview](../backend/api.py#L837) — `async preview(body: PreviewRequest, e: Engine=Depends(engine))`
+- [create_app.authorize](../backend/api.py#L845) — `async authorize(body: Authorize, e: Engine=Depends(engine))`
+- [create_app.reconcile](../backend/api.py#L849) — `async reconcile(intent_id: str, e: Engine=Depends(engine))`
+- [create_app.control](../backend/api.py#L853) — `async control(body: SchedulerAction, e: Engine=Depends(engine))`
+- [create_app.emergency_stop](../backend/api.py#L857) — `async emergency_stop(request: Request, e: Engine=Depends(engine))`
+- [create_app.backtests](../backend/api.py#L864) — `async backtests(body: BacktestRequest, e: Engine=Depends(engine))`
+- [create_app.provider_settings](../backend/api.py#L900) — `async provider_settings(body: ProviderSettings, e: Engine=Depends(engine))`
+- [create_app.news_scoring](../backend/api.py#L916) — `async news_scoring(e: Engine=Depends(engine))`
+- [create_app.provider_refresh](../backend/api.py#L925) — `async provider_refresh(e: Engine=Depends(engine))`
+- [create_app.change_provider_refresh](../backend/api.py#L930) — `async change_provider_refresh(body: RefreshSettings, e: Engine=Depends(engine))`
+- [create_app.change_news_scoring](../backend/api.py#L938) — `async change_news_scoring(body: VersionedNewsScoring, e: Engine=Depends(engine))`
+- [create_app.wallet](../backend/api.py#L945) — `async wallet(address: str, request: Request)`
+- [create_app.chat](../backend/api.py#L954) — `async chat(body: ChatRequest, e: Engine=Depends(engine))`
+- [create_app.frontend](../backend/api.py#L1101) — `async frontend(path: str)`
 
 ### backend/backtesting.py
 

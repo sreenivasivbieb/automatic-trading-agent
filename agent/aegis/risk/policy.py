@@ -75,6 +75,17 @@ class AgentParams(StrictModel):
         default=30, ge=TICK_SECONDS_RANGE[0], le=TICK_SECONDS_RANGE[1], strict=True
     )
     active_strategies: tuple[ActiveStrategy, ...] = ALL_STRATEGIES
+    # "fixed": the percentage/USDT cap is the entry size. "risk_per_trade": size so that the
+    # nearest stop loses at most risk_per_trade_pct of NAV; the cap still bounds it.
+    sizing_mode: Literal["fixed", "risk_per_trade"] = "fixed"
+    risk_per_trade_pct: Decimal = Field(default=Decimal("0.5"), gt=0, le=2)
+    # Scale entries by the deterministic regime multiplier (0.25–1); it can only shrink a size.
+    regime_scaling: bool = False
+    # Guarded trigger: at this observed daily loss, tighten to the conservative preset once per
+    # UTC day. Must sit below the circuit breaker; it never loosens a tighter user value.
+    derisk_daily_loss_pct: Decimal | None = Field(
+        default=None, gt=0, lt=int(CAPS["daily_loss_limit_pct"])
+    )
 
     @field_validator("target_assets")
     @classmethod
@@ -100,6 +111,21 @@ RISK_PRESETS: dict[str, dict] = {
     "balanced": {"position_size_pct": "5"},
     "aggressive": {"position_size_pct": "8", "max_trades_per_hour": 6},
 }
+# Preferences that decide when an open position exits. A change to these can be applied to open
+# positions or frozen for them ("new entries only").
+EXIT_FIELDS = ("stop_loss_pct", "take_profit_pct", "max_holding_seconds", "trailing_stop_pct")
+
+
+def tightened(params: AgentParams, preset: dict) -> dict:
+    """Patch moving `params` toward `preset` without loosening any value the user set tighter."""
+    current = params.model_dump(mode="json")
+    patch = {}
+    for key, value in preset.items():
+        if Decimal(str(value)) < Decimal(str(current[key])):
+            patch[key] = value
+    return patch
+
+
 # Native mean-reversion entry threshold (|z|) per risk appetite.
 MEAN_REVERSION_Z = {
     "conservative": Decimal("2.5"),

@@ -179,6 +179,35 @@ test("AEGIS close-all preview can be cancelled and confirmation unwinds the actu
   await expect(
     positions.getByRole("cell", { name: "WHSK", exact: true }),
   ).toBeVisible();
+  // A settings change that touches an open position is previewed, not applied.
+  const before = await (await page.request.get("/api/aegis/state")).json();
+  await page.goto("/#/aegis/strategies");
+  await page.getByLabel("AEGIS take profit").fill("12");
+  await page.getByRole("button", { name: "Save AEGIS preferences" }).click();
+  const change = page.getByRole("dialog", { name: "Confirm settings change" });
+  await expect(change).toContainText("take profit pct");
+  expect(
+    (await (await page.request.get("/api/aegis/state")).json()).params_version,
+  ).toBe(before.params_version);
+  await expect(
+    change.getByRole("radio", { name: /New entries only/ }),
+  ).toBeChecked();
+  await change.getByRole("button", { name: "Confirm settings change" }).click();
+  await expect(page.getByRole("status")).toContainText(
+    "Settings change applied",
+  );
+  const after = await (await page.request.get("/api/aegis/state")).json();
+  expect(after.params.take_profit_pct).toBe("12");
+  expect(after.params_version).toBe(before.params_version + 1);
+  await expect(
+    page.getByRole("button", {
+      name: `Restore settings version ${before.params_version}`,
+    }),
+  ).toBeVisible();
+  await expect(page.getByLabel("Strategy selector mode")).toHaveValue(
+    "dominant",
+  );
+  await page.goto("/#/aegis");
   await page.getByRole("button", { name: "Review close all" }).click();
   await expect(
     page.getByRole("dialog", { name: "Confirm paper position unwind" }),

@@ -122,3 +122,48 @@ def test_telegram_rejects_foreign_chats_and_deduplicates_authorized_commands(tmp
         assert calls[1][1]["chat_id"] == 12345
     finally:
         bot.close()
+
+
+def test_telegram_offers_no_unwind_button_for_a_settings_preview(tmp_path):
+    sent = []
+
+    def handler(request):
+        body = json.loads(request.content)
+        if request.url.host == "api.telegram.org":
+            sent.append(body)
+            return httpx.Response(200, json={"ok": True, "result": {}})
+        return httpx.Response(
+            200,
+            json={
+                "response": "PAPER: nothing changed yet.",
+                "data": {
+                    "kind": "params_change",
+                    "requires_confirmation": True,
+                    "confirmation": "settings-token",
+                },
+            },
+        )
+
+    bot = TelegramControl(
+        bot_token="123:fixture-token",
+        chat_id=12345,
+        api_token="fixture-api",
+        api_url="http://127.0.0.1:8787",
+        state_file=tmp_path / "bot.json",
+        transport=httpx.MockTransport(handler),
+    )
+    try:
+        bot.handle(
+            {
+                "update_id": 1,
+                "message": {
+                    "chat": {"id": 12345, "type": "private"},
+                    "from": {"id": 12345},
+                    "text": "set stop-loss to 1%",
+                },
+            }
+        )
+        assert sent and "reply_markup" not in sent[-1]
+        assert "dashboard" in sent[-1]["text"] and "settings-token" not in sent[-1]["text"]
+    finally:
+        bot.close()
