@@ -18,7 +18,19 @@ from aegis.connectors.rpc import DiscoveryError
 from aegis.data import load_network
 from aegis.execution.gateway import ExecutionGateway
 from aegis.risk.engine import RiskRejected
-from aegis.risk.policy import CAPS, AgentParams, entry_check, exit_reason
+from aegis.risk.policy import (
+    CAPS,
+    EXIT_FIELDS,
+    MEAN_REVERSION_Z,
+    NATIVE_STRATEGIES,
+    PARAM_BOUNDS,
+    RISK_PRESETS,
+    SUPPORTED_ASSETS,
+    AgentParams,
+    entry_check,
+    exit_reason,
+    tightened,
+)
 from aegis.store.db import LedgerError, PaperLedger
 from aegis.strategy.arbitrage import evaluate as evaluate_cycle
 from aegis.strategy.library import (
@@ -28,8 +40,9 @@ from aegis.strategy.library import (
     LibrarySignal,
     LibrarySnapshot,
 )
-from aegis.strategy.mean_reversion import evaluate
+from aegis.strategy.mean_reversion import contiguous_prices, evaluate
 from aegis.strategy.pipeline import build_pipeline, unavailable
+from aegis.strategy.signals import NativeOrigin
 from aegis.strategy.spreads import compare_reference
 
 
@@ -60,6 +73,7 @@ class PaperRuntime:
         self.last_error = None
         self.last_tick_at = None
         self.tick_count = 0
+        self.tick_entry = None
         self.allow_test_connectors = allow_test_connectors
         self.library_intent: LibrarySignal | None = None
         self.library_revision = lambda: 0
@@ -92,9 +106,21 @@ class PaperRuntime:
         self.ledger.close()
         self.live.close()
 
+    def _position_params(self, asset: str, overrides: dict | None = None) -> AgentParams:
+        """Exit rules in force for one open position: live preferences, unless a change was
+        confirmed for new entries only, which froze the earlier values for this position."""
+        frozen = (
+            overrides if overrides is not None else self.ledger.metadata("position_overrides", {})
+        ).get(asset)
+        if not frozen:
+            return self.params
+        return AgentParams.model_validate({**self.params.model_dump(mode="json"), **frozen})
+
     def _positions(self, marks: dict[str, Decimal]) -> list[dict]:
         positions = []
         fills = self.ledger.fills()
+        overrides = self.ledger.metadata("position_overrides", {})
+        pending = self.ledger.metadata("pending_exits", {})
         for address, row in self.ledger.balances().items():
             token, amount, cost = row["token"], row["amount_raw"], row["cost_usdt"]
             if token == self.ledger.stable or amount == 0:
@@ -111,9 +137,14 @@ class PaperRuntime:
                 ),
                 None,
             )
+            # Library origins carry an ATR stop ratio; native mean-reversion origins a target mean.
             strategy_stop = (
-                Decimal(origin["entry_mark"]) * Decimal(origin["stop_ratio"]) if origin else None
+                Decimal(origin["entry_mark"]) * Decimal(origin["stop_ratio"])
+                if origin and origin.get("stop_ratio")
+                else None
             )
+            target = origin.get("target_mark") if origin else None
+            rules = self._position_params(token.asset_id, overrides)
             positions.append(
                 {
                     "asset": token.asset_id,
@@ -128,18 +159,21 @@ class PaperRuntime:
                     "unrealized_pnl_pct": dec((value / cost - 1) * 100) if cost else "0",
                     "opened_at": clock["opened_at"],
                     "peak_price": dec(clock["peak_price"]),
-                    "stop_price": dec(cost / quantity * (1 - self.params.stop_loss_pct / 100)),
-                    "take_profit_price": dec(
-                        cost / quantity * (1 + self.params.take_profit_pct / 100)
-                    ),
+                    "stop_price": dec(cost / quantity * (1 - rules.stop_loss_pct / 100)),
+                    "take_profit_price": dec(cost / quantity * (1 + rules.take_profit_pct / 100)),
+                    "exit_rules": "frozen_at_change" if token.asset_id in overrides else "live",
                     **(
-                        {
-                            "strategy_id": origin["strategy_id"],
-                            "strategy_stop_price": dec(strategy_stop),
-                        }
-                        if origin
+                        {"pending_action": pending[token.asset_id]["reason"]}
+                        if token.asset_id in pending
                         else {}
                     ),
+                    **({"strategy_id": origin["strategy_id"]} if origin else {}),
+                    **(
+                        {"strategy_stop_price": dec(strategy_stop)}
+                        if strategy_stop is not None
+                        else {}
+                    ),
+                    **({"target_price": dec(target)} if target is not None else {}),
                 }
             )
         return positions
@@ -150,7 +184,11 @@ class PaperRuntime:
                 raise RiskRejected(
                     "Strategy configuration changed during quote; refresh the reference snapshot"
                 )
-            self.library_intent.guard(int(time.time()), allow_fixture=self.allow_test_connectors)
+            self.library_intent.guard(
+                int(time.time()),
+                allow_fixture=self.allow_test_connectors,
+                entry=self.library_intent.action == "BUY",
+            )
         if (
             quote.route.tokens[-1] == self.ledger.stable
             and quote.route.tokens[0] != self.ledger.stable
@@ -219,11 +257,24 @@ class PaperRuntime:
         self.library_selection = snapshot.selection
         self.ledger.set_metadata("library_selection", snapshot.selection)
         results = []
-        for candidate in sorted(snapshot.signals, key=lambda c: c.action != "SELL"):
+        # Exits first. Entries keep the snapshot's asset order; within one asset the selector's
+        # higher-ranked strategy is tried first instead of the registry order.
+        assets = {
+            symbol: i for i, symbol in enumerate(dict.fromkeys(s.symbol for s in snapshot.signals))
+        }
+        ordered = sorted(
+            snapshot.signals,
+            key=lambda c: (c.action != "SELL", assets[c.symbol], -(c.selection_score or 0)),
+        )
+        for candidate in ordered:
             asset = ASSET_MAP.get(candidate.symbol)
             reason, status, fill = candidate.reason, "HOLD", None
             try:
-                candidate.guard(int(time.time()), allow_fixture=self.allow_test_connectors)
+                candidate.guard(
+                    int(time.time()),
+                    allow_fixture=self.allow_test_connectors,
+                    entry=candidate.action != "SELL",
+                )
                 if snapshot.error or abs(int(time.time()) - snapshot.captured_at) > 90:
                     raise RiskRejected(snapshot.error or "Reference strategy snapshot is stale")
                 owned = next((p for p in self._positions(marks) if p["asset"] == asset), None)
@@ -255,6 +306,13 @@ class PaperRuntime:
                         raise RiskRejected("Entries paused or an exit takes precedence")
                     if asset not in self.params.target_assets:
                         raise RiskRejected("Mapped asset is excluded by the HSKSwap preferences")
+                    # Cheap pre-checks before any quote: the gateway would refuse these anyway.
+                    if owned:
+                        raise RiskRejected("A position in this asset is already open")
+                    if self.tick_entry:
+                        raise RiskRejected(
+                            "Entry cooldown: another entry already executed this tick"
+                        )
                     if self.ledger.filled_key(candidate.entry_key):
                         raise RiskRejected(
                             "This strategy's closed hourly bar already produced a fill"
@@ -269,10 +327,18 @@ class PaperRuntime:
                         raise RiskRejected(
                             "The original strategy ATR stop is already breached or unavailable"
                         )
-                    amount = int(
-                        self._entry_size(Decimal(self.ledger.pnl(marks)["nav_usdt"]))
-                        * 10**self.ledger.stable.decimals
+                    # The nearest stop decides the loss if the trade fails: ATR or generic stop.
+                    size = self._entry_size(
+                        Decimal(self.ledger.pnl(marks)["nav_usdt"]),
+                        stop_distance=min(
+                            1 - candidate.stop_price / candidate.reference_price,
+                            self.params.stop_loss_pct / 100,
+                        ),
+                        regime_multiplier=candidate.regime_risk_multiplier,
                     )
+                    amount = int(size * 10**self.ledger.stable.decimals)
+                    if amount <= 0:
+                        raise RiskRejected("Sized entry rounds to zero")
                     origin = LibraryOrigin(
                         strategy_id=candidate.strategy_id,
                         reference_symbol=candidate.symbol,
@@ -293,6 +359,7 @@ class PaperRuntime:
                         )
                     finally:
                         self.library_intent = None
+                    self.tick_entry = fill["id"]
                     status = "ENTRY_EXECUTED"
             except (ValueError, LedgerError, DiscoveryError) as exc:
                 reason, status = str(exc), "BLOCKED"
@@ -306,6 +373,9 @@ class PaperRuntime:
                 "execution_status": status,
                 "expected_edge_bps": None,
                 "confidence": dec(candidate.confidence),
+                "selection_score": None
+                if candidate.selection_score is None
+                else dec(candidate.selection_score),
                 "reason": reason,
                 "inputs_snapshot": candidate.model_dump(mode="json"),
             }
@@ -315,13 +385,25 @@ class PaperRuntime:
             results.append(result)
         return results, exiting
 
-    def _entry_size(self, nav: Decimal) -> Decimal:
-        fraction = nav * self.params.position_size_pct / 100
-        return (
-            min(fraction, self.params.position_size_usdt)
-            if self.params.position_size_usdt is not None
-            else fraction
-        )
+    def _entry_size(
+        self,
+        nav: Decimal,
+        *,
+        params: AgentParams | None = None,
+        stop_distance: Decimal | None = None,
+        regime_multiplier: Decimal | None = None,
+    ) -> Decimal:
+        """Entry notional in USDT. The %-of-NAV and USDT budget form a hard cap; risk-per-trade
+        sizing and regime scaling can only shrink it, never raise it."""
+        p = params or self.params
+        size = nav * p.position_size_pct / 100
+        if p.position_size_usdt is not None:
+            size = min(size, p.position_size_usdt)
+        if p.sizing_mode == "risk_per_trade" and stop_distance is not None and stop_distance > 0:
+            size = min(size, nav * p.risk_per_trade_pct / 100 / stop_distance)
+        if p.regime_scaling and regime_multiplier is not None:
+            size *= min(Decimal(1), max(Decimal(0), regime_multiplier))
+        return size
 
     def _snapshot(self) -> tuple[dict, dict[str, Decimal]]:
         m = self.live.refresh()
@@ -334,7 +416,7 @@ class PaperRuntime:
                 asset, price = pool.token1, Decimal(1) / pool.mid_token1_per_token0
             else:
                 continue
-            if asset not in {"WHSK", "WETH", "WBTC"}:
+            if asset not in SUPPORTED_ASSETS:
                 continue
             marks[self.live.tokens[asset].address.lower()] = price
             markets[asset] = {
@@ -376,6 +458,14 @@ class PaperRuntime:
             max(drawdown, Decimal(self.baseline.get("max_drawdown_pct", "0")))
         )
         self.ledger.set_metadata("risk_baseline", self.baseline)
+        threshold = self.params.derisk_daily_loss_pct
+        if (
+            threshold is not None
+            and loss >= threshold
+            and self.baseline.get("derisked_day") != day
+            and not self.emergency.is_set()
+        ):
+            self._auto_derisk(loss, threshold, day)
         if (
             loss >= Decimal(CAPS["daily_loss_limit_pct"])
             or drawdown >= Decimal(CAPS["max_drawdown_pct"])
@@ -393,7 +483,35 @@ class PaperRuntime:
                 },
             )
 
-    def _close_position(self, position: dict, marks: dict[str, Decimal], reason: str, key: str):
+    def _auto_derisk(self, loss: Decimal, threshold: Decimal, day: int):
+        """Guarded trigger: tighten toward the conservative preset, once per UTC day. It never
+        loosens a value, and frozen exit rules keep open positions from a surprise stop-out."""
+        patch = {
+            **tightened(self.params, RISK_PRESETS["conservative"]),
+            "risk_level": "conservative",
+        }
+        candidate = AgentParams.model_validate({**self.params.model_dump(mode="json"), **patch})
+        self.baseline["derisked_day"] = day
+        self.ledger.set_metadata("risk_baseline", self.baseline)
+        result = self._apply_params(candidate, source="auto_derisk", exit_scope="new_entries")
+        self.ledger.record(
+            "auto_derisk",
+            {
+                "daily_loss_pct": dec(loss),
+                "threshold_pct": dec(threshold),
+                "changes": result["changes"],
+                "action": "tightened toward the conservative preset; human review loosens it",
+            },
+        )
+
+    def _close_position(
+        self,
+        position: dict,
+        marks: dict[str, Decimal],
+        reason: str,
+        key: str,
+        amount: int | None = None,
+    ):
         token = self.live.tokens[position["asset"]]
         nav = Decimal(self.ledger.pnl(marks)["nav_usdt"])
         # Leave rounding margin under the atomic 10% NAV cap; large holdings unwind in chunks.
@@ -402,7 +520,7 @@ class PaperRuntime:
                 nav * Decimal("0.099") / marks[token.address.lower()] * 10**token.decimals
             ).to_integral_value(rounding=ROUND_DOWN)
         )
-        amount = min(int(position["amount_raw"]), limit)
+        amount = min(int(position["amount_raw"]), limit, *([amount] if amount is not None else []))
         if amount <= 0:
             raise RiskRejected("Remaining value is too small for a bounded exit")
         signal_id = self.ledger.record(
@@ -428,6 +546,7 @@ class PaperRuntime:
     def tick(self, *, evaluate_entries=True, library: LibrarySnapshot | None = None) -> dict:
         self.tick_count += 1
         self.last_tick_at = int(time.time())
+        self.tick_entry = None  # Fill id of this tick's entry; the Guard cooldown allows one.
         prior_events = {e["id"] for e in self.ledger.decisions(100)}
         prior_fills = {f["id"] for f in self.ledger.fills()}
         try:
@@ -437,16 +556,53 @@ class PaperRuntime:
             pnl = self.ledger.pnl(marks)
             self._circuit(pnl, market["block_timestamp"])
             positions = self._positions(marks)
+            overrides = self.ledger.metadata("position_overrides", {})
+            pending = self.ledger.metadata("pending_exits", {})
             exiting = False
             for position in positions:
+                amount = None
                 reason = (
                     "panic_unwind"
                     if self.unwind
                     else "strategy_atr_stop"
                     if position.get("strategy_stop_price")
                     and Decimal(position["mark"]) <= Decimal(position["strategy_stop_price"])
-                    else exit_reason(position, self.params, self.last_tick_at)
+                    else exit_reason(
+                        position,
+                        self._position_params(position["asset"], overrides),
+                        self.last_tick_at,
+                    )
+                    # A reversion trade's thesis is complete once the entry mean is reclaimed.
+                    or (
+                        "mean_reversion_target"
+                        if position.get("target_price")
+                        and Decimal(position["mark"]) >= Decimal(position["target_price"])
+                        else None
+                    )
                 )
+                action = pending.get(position["asset"])
+                if not reason and action:
+                    # Human-confirmed follow-ups of a settings change, through the same bounded exit.
+                    if action["reason"] == "removed_from_targets":
+                        reason = "removed_from_targets"
+                    else:
+                        target = Decimal(action["target_value_usdt"])
+                        excess = Decimal(position["value_usdt"]) - target
+                        if excess > target / 100:
+                            reason = "trim_to_size"
+                            token = self.live.tokens[position["asset"]]
+                            amount = int(
+                                (
+                                    excess / Decimal(position["mark"]) * 10**token.decimals
+                                ).to_integral_value(rounding=ROUND_DOWN)
+                            )
+                        else:
+                            pending.pop(position["asset"])
+                            self.ledger.set_metadata("pending_exits", pending)
+                            self.ledger.record(
+                                "pending_exit_completed",
+                                {"asset": position["asset"], "action": "trim_to_size"},
+                            )
                 if reason:
                     exiting = True
                     try:
@@ -455,6 +611,7 @@ class PaperRuntime:
                             marks,
                             reason,
                             f"exit:{position['asset']}:{position['opened_at']}:{market['block_hash']}:{self.tick_count}",
+                            amount=amount,
                         )
                     except (RiskRejected, LedgerError, DiscoveryError) as exc:
                         self.ledger.record(
@@ -462,6 +619,11 @@ class PaperRuntime:
                             {"asset": position["asset"], "reason": str(exc), "trigger": reason},
                         )
             positions = self._positions(marks)
+            held = {p["asset"] for p in positions}
+            # Frozen rules and pending follow-ups end with the position they belong to.
+            for key, rows in (("position_overrides", overrides), ("pending_exits", pending)):
+                if set(rows) - held:
+                    self.ledger.set_metadata(key, {a: v for a, v in rows.items() if a in held})
             if not positions:
                 self.unwind = False
             history = self.ledger.observations(120)
@@ -476,7 +638,10 @@ class PaperRuntime:
                         continue
                     compared.add(asset)
                     try:
-                        candidate.guard(int(time.time()), allow_fixture=self.allow_test_connectors)
+                        # Observational: needs a fresh reference price, not an entry-eligible rule.
+                        candidate.guard(
+                            int(time.time()), allow_fixture=self.allow_test_connectors, entry=False
+                        )
                         spread = compare_reference(
                             self.live,
                             asset,
@@ -497,65 +662,77 @@ class PaperRuntime:
                 library, marks, entries=evaluate_entries and not same_block, exiting=exiting
             )
             if not same_block:
+                open_assets = {p["asset"] for p in self._positions(marks)}
                 for asset in self.params.target_assets:
                     if "mean_reversion" not in self.params.active_strategies:
                         break
-                    prices = [
-                        Decimal(h["markets"][asset]["price"])
-                        for h in history
-                        if asset in h["markets"]
-                    ]
+                    # Only the unbroken recent run: a pause or restart must not blend old prices
+                    # into the rolling mean. A gap of more than three ticks breaks the run.
+                    prices = contiguous_prices(
+                        history,
+                        asset,
+                        now=self.last_tick_at,
+                        max_gap_seconds=max(3 * self.params.tick_seconds, 90),
+                    )
                     prices.append(Decimal(market["markets"][asset]["price"]))
                     nav = Decimal(self.ledger.pnl(marks)["nav_usdt"])
-                    size = self._entry_size(nav)
+                    # Native entries exit on the generic stop, so it bounds the trade's loss.
+                    size = self._entry_size(nav, stop_distance=self.params.stop_loss_pct / 100)
+                    terms = self.gateway.connector.terms
+                    # Round trip = LP fee of this pool's tier plus modeled slippage, on both legs
+                    # (fee_pips / 100 = bps), plus the modeled network expense for two fills.
                     cost = (
-                        Decimal(80)
-                        + self.gateway.connector.terms.network_fee_usdt
-                        * 2
-                        / max(size, Decimal("0.000001"))
-                        * 10000
+                        Decimal(market["markets"][asset]["fee_pips"]) / 100 * 2
+                        + Decimal(terms.extra_slippage_bps) * 2
+                        + terms.network_fee_usdt * 2 / max(size, Decimal("0.000001")) * 10000
                     )
-                    z = {
-                        "conservative": Decimal("2.5"),
-                        "balanced": Decimal(2),
-                        "aggressive": Decimal("1.75"),
-                    }[self.params.risk_level]
+                    z = MEAN_REVERSION_Z[self.params.risk_level]
                     signal = evaluate(asset, prices, z_threshold=z, modeled_cost_bps=cost)
                     payload = signal.model_dump(mode="json")
                     signals.append(payload)
-                    if (
-                        signal.action == "buy"
-                        and evaluate_entries
-                        and self.running
-                        and not exiting
-                        and not self.halted.is_set()
-                    ):
-                        try:
-                            amount = int(size * 10**self.ledger.stable.decimals)
-                            result = self.gateway.execute(
-                                "signal:" + signal.id,
-                                self.ledger.stable,
-                                self.live.tokens[asset],
-                                amount,
-                            )
-                            self.ledger.record(
-                                "signal_executed", {"signal": payload, "fill_id": result["id"]}
-                            )
-                            break
-                        except (RiskRejected, LedgerError, DiscoveryError) as exc:
-                            self.ledger.record(
-                                "risk_rejected", {"signal": payload, "reason": str(exc)}
-                            )
-                    else:
+                    # Every asset is evaluated and recorded; cheap pre-checks precede any quote.
+                    blocked = (
+                        signal.reason
+                        if signal.action != "buy"
+                        else "Entries paused"
+                        if not evaluate_entries or not self.running or self.halted.is_set()
+                        else "An exit executed this tick; entries wait for the next tick"
+                        if exiting
+                        else "A position in this asset is already open"
+                        if asset in open_assets
+                        else "Entry cooldown: another entry already executed this tick"
+                        if self.tick_entry
+                        else None
+                    )
+                    if blocked:
+                        self.ledger.record("signal_skipped", {"signal": payload, "reason": blocked})
+                        continue
+                    try:
+                        amount = int(size * 10**self.ledger.stable.decimals)
+                        result = self.gateway.execute(
+                            "signal:" + signal.id,
+                            self.ledger.stable,
+                            self.live.tokens[asset],
+                            amount,
+                            origin=NativeOrigin(
+                                strategy_id="mean_reversion",
+                                signal_id=signal.id,
+                                target_mark=Decimal(signal.inputs_snapshot["mean"]),
+                            ),
+                        )
+                        self.tick_entry = result["id"]
+                        open_assets.add(asset)
                         self.ledger.record(
-                            "signal_skipped",
+                            "signal_executed",
                             {
                                 "signal": payload,
-                                "reason": "Entries paused"
-                                if self.halted.is_set()
-                                else signal.reason,
+                                "fill_id": result["id"],
+                                "entry_size_usdt": dec(size),
+                                "sizing_mode": self.params.sizing_mode,
                             },
                         )
+                    except (RiskRejected, LedgerError, DiscoveryError) as exc:
+                        self.ledger.record("risk_rejected", {"signal": payload, "reason": str(exc)})
                 cycles = (
                     self.live.find_routes(self.ledger.stable, self.ledger.stable)
                     if "arbitrage" in self.params.active_strategies
@@ -593,6 +770,7 @@ class PaperRuntime:
                             and evaluate_entries
                             and self.running
                             and not exiting
+                            and not self.tick_entry
                             and not self.halted.is_set()
                         ):
                             gross_profit = quote.amount_out_raw - amount
@@ -600,9 +778,10 @@ class PaperRuntime:
                                 raise RiskRejected(
                                     "Modeled network expense exceeds 25% of expected cycle profit"
                                 )
-                            self.gateway.execute(
+                            result = self.gateway.execute(
                                 "cycle:" + cycle.id, self.ledger.stable, self.ledger.stable, amount
                             )
+                            self.tick_entry = result["id"]
                     except (DiscoveryError, RiskRejected, LedgerError) as exc:
                         self.ledger.record("arbitrage_rejected", {"reason": str(exc)})
             fills = self.ledger.fills()
@@ -702,7 +881,17 @@ class PaperRuntime:
             "library_error": latest.get("library_error"),
             "params": self.params.model_dump(mode="json"),
             "params_version": self.version,
+            "params_history": [
+                {k: h[k] for k in ("version", "at", "source")}
+                for h in reversed(self.ledger.metadata("params_history", [])[-10:])
+            ],
+            "pending_exits": self.ledger.metadata("pending_exits", {}),
             "caps": CAPS,
+            # The UI renders these instead of copying limits, asset lists or network URLs.
+            "param_bounds": PARAM_BOUNDS,
+            "supported_assets": list(SUPPORTED_ASSETS),
+            "native_strategies": [{"id": k, "name": v} for k, v in NATIVE_STRATEGIES.items()],
+            "explorer": getattr(getattr(self.live, "network", None), "explorer", None),
             "risk": self.baseline,
             "trades_this_hour": sum(
                 f["created_at"] // 3600 == int(time.time()) // 3600 for f in fills
@@ -727,12 +916,11 @@ class PaperRuntime:
             "disclosure": "PAPER · live HSKSwap quotes, virtual funds and modeled costs. Decisions are local; no public on-chain verification is claimed.",
         }
 
-    def set_params(self, patch: dict, expected_version: int) -> dict:
+    def _candidate(self, patch: dict, expected_version: int) -> AgentParams:
         if expected_version != self.version:
             raise ValueError("Settings changed; refresh before applying this change")
-        previous = self.params.model_dump(mode="json")
         try:
-            candidate = AgentParams.model_validate({**previous, **patch})
+            candidate = AgentParams.model_validate({**self.params.model_dump(mode="json"), **patch})
         except ValidationError as exc:
             raise ValueError(
                 "PAPER settings refused: "
@@ -749,16 +937,75 @@ class PaperRuntime:
                 raise ValueError(
                     f"PAPER: requested USDT size exceeds the {candidate.position_size_pct}% NAV cap ({dec(cap)} USDT). No settings changed."
                 )
+        return candidate
+
+    def _apply_params(
+        self, candidate: AgentParams, *, source: str, exit_scope: str = "all"
+    ) -> dict:
+        """Persist a validated preference set atomically with its audit record and history.
+
+        exit_scope "all": changed exit rules apply to open positions too.
+        exit_scope "new_entries": open positions keep the exit rules they currently use."""
+        previous = self.params.model_dump(mode="json")
         values = candidate.model_dump(mode="json")
         changes = {
             k: {"before": previous[k], "after": v} for k, v in values.items() if v != previous[k]
         }
+        if not changes:
+            # A no-op save keeps the version: no empty history entry, and an open settings form
+            # is not reset under the user.
+            return {
+                "changes": {},
+                "params_version": self.version,
+                "params": values,
+                "mode": "paper",
+                "applied": True,
+            }
+        changed_exits = [f for f in EXIT_FIELDS if f in changes]
+        overrides = self.ledger.metadata("position_overrides", {})
+        if changed_exits and exit_scope == "new_entries":
+            for position in self.view()["positions"]:
+                frozen = overrides.get(position["asset"], {})
+                current = {**previous, **frozen}
+                overrides[position["asset"]] = {
+                    **frozen,
+                    **{f: current[f] for f in changed_exits},
+                }
+        elif changed_exits:
+            overrides = {
+                asset: rest
+                for asset, frozen in overrides.items()
+                if (rest := {f: v for f, v in frozen.items() if f not in changed_exits})
+            }
+        history = self.ledger.metadata("params_history", [])
+        if not history:
+            history = [
+                {"version": self.version, "params": previous, "at": None, "source": "initial"}
+            ]
+        history = [
+            *history,
+            {
+                "version": self.version + 1,
+                "params": values,
+                "at": int(time.time()),
+                "source": source,
+            },
+        ][-20:]
         self.ledger.db.execute("BEGIN IMMEDIATE")
         try:
             self.ledger.set_metadata("agent_params", values)
             self.ledger.set_metadata("params_version", self.version + 1)
+            self.ledger.set_metadata("position_overrides", overrides)
+            self.ledger.set_metadata("params_history", history)
             self.ledger.record(
-                "params_changed", {"changes": changes, "mode": "paper", "on_chain": False}
+                "params_changed",
+                {
+                    "changes": changes,
+                    "mode": "paper",
+                    "on_chain": False,
+                    "source": source,
+                    "exit_scope": exit_scope if changed_exits else None,
+                },
             )
             self.ledger.db.execute("COMMIT")
         except Exception:
@@ -770,7 +1017,150 @@ class PaperRuntime:
             "params_version": self.version,
             "params": values,
             "mode": "paper",
+            "applied": True,
         }
+
+    def set_params(self, patch: dict, expected_version: int, *, source: str = "direct") -> dict:
+        """Apply immediately to every position. Interactive callers use change_params."""
+        return self._apply_params(self._candidate(patch, expected_version), source=source)
+
+    def _impact(self, candidate: AgentParams) -> dict:
+        """What a candidate preference set would do to open positions right now."""
+        state = self.view()
+        positions = state["positions"]
+        overrides = self.ledger.metadata("position_overrides", {})
+        current = self.params.model_dump(mode="json")
+        proposed = candidate.model_dump(mode="json")
+        changed_exits = [f for f in EXIT_FIELDS if current[f] != proposed[f]]
+        now = int(time.time())
+        immediate = []
+        for position in positions:
+            frozen = overrides.get(position["asset"], {})
+            before = self._position_params(position["asset"], overrides)
+            after = AgentParams.model_validate(
+                {**proposed, **{f: v for f, v in frozen.items() if f not in changed_exits}}
+            )
+            trigger = exit_reason(position, after, now)
+            if trigger and not exit_reason(position, before, now):
+                immediate.append({"asset": position["asset"], "trigger": trigger})
+        nav = Decimal((state["pnl"] or state["last_known_pnl"] or {}).get("nav_usdt") or 0)
+        old_size, new_size = self._entry_size(nav), self._entry_size(nav, params=candidate)
+        oversized = [
+            {
+                "asset": p["asset"],
+                "value_usdt": p["value_usdt"],
+                "target_value_usdt": dec(new_size),
+            }
+            for p in positions
+            if new_size < old_size and Decimal(p["value_usdt"]) > new_size
+        ]
+        removed = [p["asset"] for p in positions if p["asset"] not in candidate.target_assets]
+        return {
+            "open_positions": len(positions),
+            "valuation_fresh": state["valuation_fresh"],
+            "changed_exit_rules": changed_exits if positions else [],
+            "immediate_exits": immediate,
+            "removed_held_assets": removed,
+            "oversized_positions": oversized,
+            "entry_size_usdt": {"before": dec(old_size), "after": dec(new_size)},
+            "affects_open_positions": bool((changed_exits and positions) or removed or oversized),
+        }
+
+    def change_params(
+        self, patch: dict, expected_version: int, *, source: str = "settings"
+    ) -> dict:
+        """Interactive change: applied at once when no open position is affected; otherwise a
+        one-use, expiring preview that only a human confirmation (confirm_params) can apply."""
+        candidate = self._candidate(patch, expected_version)
+        impact = self._impact(candidate)
+        if not impact["affects_open_positions"]:
+            return self._apply_params(candidate, source=source)
+        current = self.params.model_dump(mode="json")
+        proposed = candidate.model_dump(mode="json")
+        token = secrets.token_urlsafe(24)
+        pending = {
+            "token": token,
+            "expires_at": int(time.time()) + 120,
+            "version": self.version,
+            "params": proposed,
+            "balances_hash": self._balances_hash(),
+            "source": source,
+            "impact": impact,
+        }
+        self.ledger.set_metadata("params_preview", pending)
+        self.ledger.record(
+            "params_previewed", {"source": source, "impact": impact, "mode": "paper"}
+        )
+        return {
+            "kind": "params_change",
+            "requires_confirmation": True,
+            "applied": False,
+            "confirmation": token,
+            "expires_at": pending["expires_at"],
+            "changes": {
+                k: {"before": current[k], "after": v}
+                for k, v in proposed.items()
+                if v != current[k]
+            },
+            "impact": impact,
+            "params_version": self.version,
+            "mode": "paper",
+        }
+
+    def confirm_params(
+        self,
+        confirmation: str | None,
+        *,
+        exit_scope: str = "all",
+        close_removed: bool = False,
+        trim_to_size: bool = False,
+    ) -> dict:
+        """Human confirmation of a preview. Follow-up exits run on the next tick through the
+        normal bounded exit path, never inside this call."""
+        if exit_scope not in {"all", "new_entries"}:
+            raise ValueError("Choose exit scope all or new_entries")
+        pending = self.ledger.metadata("params_preview", {})
+        if (
+            not confirmation
+            or not secrets.compare_digest(confirmation, pending.get("token", ""))
+            or int(time.time()) > pending.get("expires_at", 0)
+        ):
+            raise ValueError("Settings preview is invalid or expired; preview again")
+        if pending["version"] != self.version:
+            raise ValueError("Settings changed after the preview; preview again")
+        if pending["balances_hash"] != self._balances_hash():
+            raise ValueError("Holdings changed after the preview; preview again")
+        self.ledger.set_metadata("params_preview", {})
+        candidate = AgentParams.model_validate(pending["params"])
+        result = self._apply_params(
+            candidate, source=pending["source"] + ":confirmed", exit_scope=exit_scope
+        )
+        impact = pending["impact"]
+        follow_ups = self.ledger.metadata("pending_exits", {})
+        if close_removed:
+            for asset in impact["removed_held_assets"]:
+                follow_ups[asset] = {"reason": "removed_from_targets"}
+        if trim_to_size:
+            for row in impact["oversized_positions"]:
+                follow_ups.setdefault(
+                    row["asset"],
+                    {"reason": "trim_to_size", "target_value_usdt": row["target_value_usdt"]},
+                )
+        self.ledger.set_metadata("pending_exits", follow_ups)
+        if close_removed or trim_to_size:
+            self.ledger.record(
+                "pending_exits_scheduled", {"pending_exits": follow_ups, "mode": "paper"}
+            )
+        return {**result, "exit_scope": exit_scope, "pending_exits": follow_ups}
+
+    def rollback_params(self, version: int, expected_version: int) -> dict:
+        entry = next(
+            (h for h in self.ledger.metadata("params_history", []) if h["version"] == version),
+            None,
+        )
+        if entry is None:
+            raise ValueError("That settings version is not in the recorded history")
+        return self.change_params(entry["params"], expected_version, source=f"rollback:{version}")
 
     def control(
         self, action: str, *, acknowledgement: str | None = None, confirmation: str | None = None
@@ -793,8 +1183,20 @@ class PaperRuntime:
         elif action == "clear_emergency":
             if acknowledgement != "REVIEW_AND_CLEAR_PAPER_STOP":
                 raise ValueError("Explicit emergency-stop review is required")
-            if not self.view()["valuation_fresh"] or self.view()["positions"]:
+            state = self.view()
+            if not state["valuation_fresh"] or state["positions"]:
                 raise ValueError("Obtain fresh marks and finish the stable unwind before clearing")
+            # Without a reset the unchanged high-water mark re-trips the breaker on the next tick,
+            # so a paper ledger could never resume. The human review plays the role of the
+            # vault owner's capital-flow baseline reset; the lifetime max drawdown is kept.
+            nav = state["pnl"]["nav_usdt"]
+            previous = {k: self.baseline.get(k) for k in ("day_nav", "high_water")}
+            self.baseline.update(day_nav=nav, high_water=nav, daily_loss_pct="0", drawdown_pct="0")
+            self.ledger.set_metadata("risk_baseline", self.baseline)
+            self.ledger.record(
+                "risk_baseline_reset",
+                {"reason": "emergency cleared after review", "nav_usdt": nav, "previous": previous},
+            )
             self.emergency.clear()
             self.halted.set()
             self.ledger.set_metadata("emergency", False)

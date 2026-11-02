@@ -2,12 +2,35 @@
 
 from __future__ import annotations
 
+import time
 from datetime import datetime
 
 from pydantic import Field
 
 from backend.models import Market, Model, NewsFeed, Signal, now
 from backend.strategies import indicators
+
+
+def selection_inputs(store, symbol: str, market: Market) -> dict:
+    """Evidence every caller passes to `rank_strategies`, so the research engine and the AEGIS
+    bridge rank the same market with the same out-of-sample performance and model review."""
+    review = (store.config("model_reviews")[0] or {}).get(symbol) or (
+        store.config("model_review")[0] or {}
+    )
+    compatible = (
+        market.as_of is not None
+        and review.get("symbol") == symbol
+        and review.get("marketSource") == market.source
+        and review.get("marketAsOf") == market.as_of.isoformat()
+        and review.get("expiresAt", 0) > time.time()
+    )
+    return {
+        "review": review if compatible else None,
+        "contextual_advice": {review["preferredStrategy"]: review.get("confidence", 0)}
+        if compatible and review.get("preferredStrategy")
+        else None,
+        "performance": store.get("cache", "strategy_performance:" + symbol),
+    }
 
 
 class SelectionConfig(Model):

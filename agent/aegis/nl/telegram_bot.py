@@ -139,10 +139,14 @@ class TelegramControl:
             text = commands.get(text.split()[0].split("@")[0], text)
             result = self.api("/chat", body={"message": text})
             preview = result.get("data", {})
+            settings = preview.get("kind") == "params_change"
+            # The inline button confirms a position unwind only. A settings change that affects
+            # open positions needs its scope chosen in the dashboard dialog.
             self.reply(
-                result["response"],
+                result["response"]
+                + (" Open the AEGIS dashboard to choose and confirm it." if settings else ""),
                 preview=preview.get("confirmation")
-                if preview.get("requires_confirmation")
+                if preview.get("requires_confirmation") and not settings
                 else None,
             )
         except ValueError as exc:

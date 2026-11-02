@@ -7,16 +7,24 @@ from typing import Literal
 from pydantic import Field
 
 from aegis.data import StrictModel
-from aegis.risk.policy import ActiveStrategy
+from aegis.risk.policy import (
+    CAPS,
+    RISK_PRESETS,
+    TICK_SECONDS_RANGE,
+    ActiveStrategy,
+    SupportedAsset,
+)
 
 
 class StrategyConfigUpdate(StrictModel):
     position_size_usdt: Decimal | None = Field(default=None, gt=0, le=1000000)
-    frequency_seconds: int | None = Field(default=None, ge=15, le=300, strict=True)
+    frequency_seconds: int | None = Field(
+        default=None, ge=TICK_SECONDS_RANGE[0], le=TICK_SECONDS_RANGE[1], strict=True
+    )
     risk_appetite: Literal["conservative", "balanced", "aggressive"] | None = None
-    stop_loss_pct: Decimal | None = Field(default=None, gt=0, le=10)
-    take_profit_pct: Decimal | None = Field(default=None, gt=0, le=15)
-    target_assets: tuple[Literal["WHSK", "WETH", "WBTC"], ...] | None = None
+    stop_loss_pct: Decimal | None = Field(default=None, gt=0, le=int(CAPS["max_stop_loss_pct"]))
+    take_profit_pct: Decimal | None = Field(default=None, gt=0, le=int(CAPS["max_take_profit_pct"]))
+    target_assets: tuple[SupportedAsset, ...] | None = None
     active_strategies: tuple[ActiveStrategy, ...] | None = None
 
 
@@ -43,8 +51,16 @@ class ToolCall(StrictModel):
         "explain_latest_decision",
         "trigger_emergency_panic",
         "request_close_all",
+        "rollback_params",
+        "set_strategy_selector",
+        "update_library_strategy",
     ]
     arguments: dict = Field(default_factory=dict)
+
+
+# Library strategy and selector settings live in the research store, which only the API event
+# loop may touch. The service installs `runtime.terminal_bridge` to run them there.
+TERMINAL_TOOLS = {"set_strategy_selector", "update_library_strategy"}
 
 
 def execute_tool(runtime, call: ToolCall) -> dict:
@@ -75,6 +91,16 @@ def execute_tool(runtime, call: ToolCall) -> dict:
                 "caps": view["caps"],
             },
         }
+    if call.name in TERMINAL_TOOLS:
+        bridge = getattr(runtime, "terminal_bridge", None)
+        if bridge is None:
+            raise ValueError("Strategy library settings are unavailable in this runtime")
+        return bridge(call.name, args)
+    if call.name == "rollback_params":
+        version = args.get("version")
+        if set(args) != {"version"} or type(version) is not int:
+            raise ValueError("Provide the integer settings version to restore")
+        return runtime.rollback_params(version, runtime.version)
     if call.name == "update_strategy_config":
         update = StrategyConfigUpdate.model_validate(args).model_dump(
             exclude_unset=True, exclude_none=True
@@ -83,10 +109,13 @@ def execute_tool(runtime, call: ToolCall) -> dict:
             raise ValueError("Supply at least one strategy preference")
         aliases = {"frequency_seconds": "tick_seconds", "risk_appetite": "risk_level"}
         patch = {aliases.get(k, k): v for k, v in update.items()}
+        if "risk_level" in patch:
+            # Same bundled preset as the deterministic router; explicit values still win.
+            patch = {**RISK_PRESETS[patch["risk_level"]], **patch}
         if "position_size_usdt" in patch:
             # This remains a hard 10% ceiling; the independent absolute budget narrows it.
             patch["position_size_pct"] = "10"
-        return runtime.set_params(patch, runtime.version)
+        return runtime.change_params(patch, runtime.version, source="chat")
     if call.name == "explain_latest_decision":
         if args:
             raise ValueError("explain_latest_decision takes no arguments")
@@ -188,7 +217,7 @@ def execute_tool(runtime, call: ToolCall) -> dict:
             raise ValueError("Choose 1–100 decisions")
         return {"mode": "paper", "decisions": runtime.ledger.decisions(n)}
     if call.name == "set_params":
-        return runtime.set_params(args, runtime.version)
+        return runtime.change_params(args, runtime.version, source="chat")
     if call.name in {"pause", "resume"}:
         if args:
             raise ValueError("Pause/resume take no arguments")
@@ -228,6 +257,37 @@ def interpret(text: str) -> ToolCall:
         return ToolCall(name="trigger_emergency_panic")
     if re.search(r"close (all|everything)|sell everything", t):
         return ToolCall(name="close_all_positions")
+    restore = re.search(r"\b(?:revert|roll ?back|restore)\b.*?\bversion\s*(\d+)", t)
+    if restore:
+        return ToolCall(name="rollback_params", arguments={"version": int(restore[1])})
+    if "selector" in t or re.search(r"\b(?:consensus|dominant)\b.*\bmode\b", t):
+        selector = {}
+        mode = re.search(r"\b(consensus|dominant)\b", t)
+        if mode:
+            selector["mode"] = mode[1]
+        if re.search(r"\b(?:enable|turn on)\b", t):
+            selector["enabled"] = True
+        elif re.search(r"\b(?:disable|turn off)\b", t):
+            selector["enabled"] = False
+        if selector:
+            return ToolCall(name="set_strategy_selector", arguments=selector)
+    library = re.search(
+        r"\bset (momentum|mean reversion|trend following|breakout) ([a-z ]+?) to (\d+(?:\.\d+)?)\b",
+        t,
+    )
+    if library:
+        value = Decimal(library[3])
+        return ToolCall(
+            name="update_library_strategy",
+            arguments={
+                "strategy_id": library[1].replace(" ", "_") + "_v1",
+                "changes": {
+                    library[2].strip().replace(" ", "_"): int(value)
+                    if value == value.to_integral_value()
+                    else float(value)
+                },
+            },
+        )
     # The complete demo commands use one atomic schema, including mixed-parameter requests.
     absolute = re.search(
         r"(?:position(?: size)?|allocation|size)[^\d+-]{0,15}([+-]?\d+(?:\.\d+)?)\s*usdt", t
@@ -236,16 +296,11 @@ def interpret(text: str) -> ToolCall:
     focus = bool(re.search(r"\b(?:focus|target assets)\b", t))
     patch = {}
     if "conservative" in t or "careful" in t or "less risk" in t:
-        patch.update(
-            risk_level="conservative",
-            position_size_pct="3",
-            max_trades_per_hour=3,
-            stop_loss_pct="3",
-        )
+        patch.update(risk_level="conservative", **RISK_PRESETS["conservative"])
     elif "aggressive" in t or "more risk" in t:
-        patch.update(risk_level="aggressive", position_size_pct="8", max_trades_per_hour=6)
+        patch.update(risk_level="aggressive", **RISK_PRESETS["aggressive"])
     elif "balanced" in t:
-        patch.update(risk_level="balanced", position_size_pct="5")
+        patch.update(risk_level="balanced", **RISK_PRESETS["balanced"])
     for pattern, key in [
         (
             r"(?:position(?: size)?|allocation|size)[^\d+-]{0,15}([+-]?\d+(?:\.\d+)?)\s*%",
@@ -260,6 +315,16 @@ def interpret(text: str) -> ToolCall:
     preceding_stop = re.search(r"([+-]?\d+(?:\.\d+)?)\s*%\s*stop[ -]?loss", t)
     if preceding_stop:
         patch["stop_loss_pct"] = preceding_stop[1]
+    per_trade = re.search(r"risk[ -]per[ -]trade[^\d+-]{0,12}([+-]?\d+(?:\.\d+)?)\s*%", t)
+    if per_trade:
+        patch.update(sizing_mode="risk_per_trade", risk_per_trade_pct=per_trade[1])
+    elif re.search(r"\bfixed (?:sizing|size)\b", t):
+        patch["sizing_mode"] = "fixed"
+    derisk = re.search(r"de-?risk[^\d+-]{0,12}([+-]?\d+(?:\.\d+)?)\s*%", t)
+    if derisk:
+        patch["derisk_daily_loss_pct"] = derisk[1]
+    if re.search(r"\bregime (?:scaling|sizing)\b", t):
+        patch["regime_scaling"] = not re.search(r"\b(?:off|disable|stop)\b", t)
     frequency = re.search(r"(\d+)\s*trades?\s*(?:per|an?|/)\s*hour", t)
     if frequency:
         patch["max_trades_per_hour"] = int(frequency[1])
@@ -278,10 +343,12 @@ def interpret(text: str) -> ToolCall:
             if re.search(pattern, t)
         ]
     if absolute or seconds or focus:
+        # Only fields of the update schema; preset sizes/trade caps return via the preset.
         update = {
-            "risk_appetite" if k == "risk_level" else k: v
+            key: v
             for k, v in patch.items()
-            if k not in {"position_size_pct", "max_trades_per_hour"}
+            if (key := "risk_appetite" if k == "risk_level" else k)
+            in StrategyConfigUpdate.model_fields
         }
         if absolute:
             update["position_size_usdt"] = absolute[1]
@@ -307,6 +374,34 @@ def interpret(text: str) -> ToolCall:
     return ToolCall(name="get_status")
 
 
+def describe_impact(preview: dict) -> str:
+    """Plain summary of what a previewed settings change would do to open positions."""
+    impact = preview["impact"]
+    parts = []
+    if impact["immediate_exits"]:
+        parts.append(
+            "applying the new exit rules to open positions would close "
+            + ", ".join(f"{e['asset']} ({e['trigger']})" for e in impact["immediate_exits"])
+            + " on the next tick"
+        )
+    elif impact["changed_exit_rules"]:
+        parts.append(
+            "changed exit rules ("
+            + ", ".join(impact["changed_exit_rules"])
+            + ") can apply to open positions or to new entries only"
+        )
+    if impact["removed_held_assets"]:
+        parts.append(
+            "positions in " + ", ".join(impact["removed_held_assets"]) + " leave the targets"
+        )
+    if impact["oversized_positions"]:
+        parts.append(
+            "positions above the new size can be trimmed: "
+            + ", ".join(p["asset"] for p in impact["oversized_positions"])
+        )
+    return "This change affects open positions: " + "; ".join(parts) + "."
+
+
 def chat(runtime, text: str) -> dict:
     stamp = re.search(r"(?:why|explain).*?\b([0-2]\d:[0-5]\d)\b", text.lower())
     if stamp:
@@ -325,13 +420,22 @@ def chat(runtime, text: str) -> dict:
     else:
         call = interpret(text)
     data = execute_tool(runtime, call)
-    if call.name in {"set_params", "update_strategy_config"}:
+    if data.get("kind") == "params_change":
+        reply = (
+            "PAPER: nothing changed yet. " + describe_impact(data) + " Confirm it in the dialog."
+        )
+    elif call.name in {"set_params", "update_strategy_config", "rollback_params"}:
         changes = "; ".join(
             f"{k}: {v['before']} → {v['after']}" for k, v in data["changes"].items()
         )
         reply = (
             "PAPER: " + (changes or "Settings already match") + ". Within the reviewed Guard caps."
         )
+    elif call.name in TERMINAL_TOOLS:
+        changes = "; ".join(
+            f"{k}: {v['before']} → {v['after']}" for k, v in data["changes"].items()
+        )
+        reply = f"{data['target']} v{data['version']}: " + (changes or "already matches") + "."
     elif call.name in {"close_all_positions", "request_close_all"}:
         reply = (
             "PAPER: review the positions and confirm this close request. No positions were sold yet."

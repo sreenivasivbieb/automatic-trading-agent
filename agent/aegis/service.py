@@ -6,6 +6,7 @@ import asyncio
 import copy
 import threading
 from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import TimeoutError as FutureTimeout
 from pathlib import Path
 
 from aegis.nl.agent import ControlAgent
@@ -15,9 +16,14 @@ from aegis.strategy.library import LibrarySnapshot
 
 
 class AegisService:
-    def __init__(self, path: Path, *, factory=None, enabled=True, reference_source=None):
+    def __init__(
+        self, path: Path, *, factory=None, enabled=True, reference_source=None, terminal_tool=None
+    ):
         self.path, self.factory, self.enabled = path, factory, enabled
         self.reference_source = reference_source
+        # Async callable(name, args) on the API loop for library/selector chat tools.
+        self.terminal_tool = terminal_tool
+        self.loop = None
         self.library_revision = 0
         self.pool = ThreadPoolExecutor(max_workers=1, thread_name_prefix="aegis-paper")
         self.halted, self.emergency = threading.Event(), threading.Event()
@@ -47,15 +53,29 @@ class AegisService:
                 else PaperRuntime(self.path, halted=self.halted, emergency=self.emergency)
             )
             self.runtime.library_revision = lambda: self.library_revision
+            self.runtime.terminal_bridge = self._terminal_bridge if self.terminal_tool else None
 
+        self.loop = asyncio.get_running_loop()
         try:
-            await asyncio.get_running_loop().run_in_executor(self.pool, initialize)
+            await self.loop.run_in_executor(self.pool, initialize)
             await self.call("view")
             self.task = asyncio.create_task(self._loop())
         except Exception:
             self.state["reason"] = (
                 "AEGIS storage or configuration could not initialize; existing terminal remains available"
             )
+
+    def _terminal_bridge(self, name: str, args: dict) -> dict:
+        """Run a research-store tool on the API event loop from the runtime thread. The loop is
+        free while it awaits this executor call, so the coroutine can run; SQLite stays on it."""
+        future = asyncio.run_coroutine_threadsafe(self.terminal_tool(name, args), self.loop)
+        try:
+            return future.result(timeout=15)
+        except FutureTimeout:
+            future.cancel()
+            raise ValueError(
+                "Strategy library update timed out; check Strategies before retrying"
+            ) from None
 
     async def call(self, operation: str, *args, **kwargs):
         if self.runtime is None:

@@ -3,6 +3,7 @@ import { Bot, Send, X } from "lucide-react";
 import { api } from "../api";
 import { Modal } from "../ui";
 import { useAegis } from "./context";
+import { ParamsConfirmation } from "./LiveControls";
 import { utcTime } from "./types";
 
 export function AegisChat() {
@@ -126,6 +127,12 @@ export function AegisChat() {
 export function AegisConfirmations() {
   const { preview, setPreview, busy, act } = useAegis();
   if (!preview) return null;
+  if (preview.kind === "params_change")
+    return (
+      <Modal title="Confirm settings change" close={() => setPreview(null)}>
+        <ParamsConfirmation key={preview.confirmation} preview={preview} />
+      </Modal>
+    );
   return (
     <Modal title="Confirm paper position unwind" close={() => setPreview(null)}>
       <p>

@@ -2118,94 +2118,53 @@ export function Executions(
 }
 
 const riskFields: [keyof RiskConfig, string, string, string][] = [
-  [
-    "max_trade_notional",
-    "Maximum trade notional",
-    "USD · hard ceiling 1,000",
-    "1",
-  ],
+  ["max_trade_notional", "Maximum trade notional", "USD", "1"],
   [
     "max_equity_per_trade",
     "Equity allocated per trade",
-    "Fraction · 0.01 = 1% · hard ceiling 5%",
+    "Fraction · 0.01 = 1%",
     "0.001",
   ],
-  [
-    "max_asset_exposure",
-    "Per-token concentration",
-    "Fraction · hard ceiling 25%",
-    "0.01",
-  ],
-  [
-    "max_aggregate_exposure",
-    "Aggregate exposure",
-    "Fraction · hard ceiling 60%",
-    "0.01",
-  ],
-  [
-    "max_daily_loss",
-    "Maximum daily loss",
-    "Fraction · hard ceiling 5%",
-    "0.001",
-  ],
-  ["max_drawdown", "Maximum drawdown", "Fraction · hard ceiling 20%", "0.01"],
-  [
-    "max_slippage_bps",
-    "Slippage ceiling",
-    "Basis points · hard ceiling 100",
-    "1",
-  ],
-  [
-    "max_trading_fee_bps",
-    "Trading fee ceiling",
-    "Basis points · hard ceiling 100",
-    "1",
-  ],
-  [
-    "max_price_impact",
-    "Price impact ceiling",
-    "Fraction · hard ceiling 2%",
-    "0.001",
-  ],
-  [
-    "min_liquidity_usd",
-    "Minimum quote liquidity",
-    "USD · mandatory minimum 10,000",
-    "1000",
-  ],
-  ["max_network_fee", "Network fee ceiling", "USD · hard ceiling 10", "0.1"],
-  ["cooldown_seconds", "Entry cooldown", "Seconds · mandatory minimum 30", "1"],
-  [
-    "max_positions",
-    "Concurrent position limit",
-    "Positions · hard ceiling 10",
-    "1",
-  ],
-  [
-    "max_quote_age_seconds",
-    "Maximum quote age",
-    "Seconds · hard ceiling 30",
-    "1",
-  ],
-  [
-    "max_market_age_seconds",
-    "Maximum reference-data age",
-    "Seconds · hourly-history limit 3,600–14,400",
-    "1",
-  ],
-  [
-    "max_recent_failures",
-    "Recent failure ceiling",
-    "Failures · hard ceiling 5",
-    "1",
-  ],
-  [
-    "failure_cooldown_seconds",
-    "Failure cooldown window",
-    "Seconds · mandatory minimum 60",
-    "1",
-  ],
+  ["max_asset_exposure", "Per-token concentration", "Fraction", "0.01"],
+  ["max_aggregate_exposure", "Aggregate exposure", "Fraction", "0.01"],
+  ["max_daily_loss", "Maximum daily loss", "Fraction", "0.001"],
+  ["max_drawdown", "Maximum drawdown", "Fraction", "0.01"],
+  ["max_slippage_bps", "Slippage ceiling", "Basis points", "1"],
+  ["max_trading_fee_bps", "Trading fee ceiling", "Basis points", "1"],
+  ["max_price_impact", "Price impact ceiling", "Fraction", "0.001"],
+  ["min_liquidity_usd", "Minimum quote liquidity", "USD", "1000"],
+  ["max_network_fee", "Network fee ceiling", "USD", "0.1"],
+  ["cooldown_seconds", "Entry cooldown", "Seconds", "1"],
+  ["max_positions", "Concurrent position limit", "Positions", "1"],
+  ["max_quote_age_seconds", "Maximum quote age", "Seconds", "1"],
+  ["max_market_age_seconds", "Maximum reference-data age", "Seconds", "1"],
+  ["max_recent_failures", "Recent failure ceiling", "Failures", "1"],
+  ["failure_cooldown_seconds", "Failure cooldown window", "Seconds", "1"],
 ];
+
+// Unit text above is static; the allowed range comes from the backend RiskConfig bounds.
+type RiskBounds = NonNullable<Dashboard["risk"]["bounds"]>[string];
+function riskRange(unit: string, bounds?: RiskBounds) {
+  if (!bounds) return { text: "", min: undefined, max: undefined };
+  const fraction = unit.startsWith("Fraction"),
+    format = (value: number | string) =>
+      fraction ? percent(value) : Number(value).toLocaleString("en-US"),
+    min = bounds.ge,
+    max = bounds.le ?? bounds.lt,
+    text =
+      min !== undefined && max !== undefined
+        ? ` · allowed ${format(min)}–${format(max)}`
+        : max !== undefined
+          ? ` · hard ceiling ${format(max)}`
+          : min !== undefined
+            ? ` · mandatory minimum ${format(min)}`
+            : "";
+  return {
+    text,
+    min: min === undefined ? bounds.gt : min,
+    max,
+  };
+}
 
 export function RiskWorkspace({ data, act, busy }: WorkspaceProps) {
   const [draft, setDraft] = useState(data.risk.config),
@@ -2243,7 +2202,9 @@ export function RiskWorkspace({ data, act, busy }: WorkspaceProps) {
           <h2>Hard limits. Independent enforcement.</h2>
           <p>
             LLM reasoning and interface settings cannot override these backend
-            checks.
+            checks. These limits govern the research simulation ledger; the
+            HSKSwap paper agent uses its own Guard caps under AEGIS → Risk
+            Controls and Strategies.
           </p>
         </div>
         <Badge tone="accent">Config v{data.risk.version}</Badge>
@@ -2283,28 +2244,36 @@ export function RiskWorkspace({ data, act, busy }: WorkspaceProps) {
           }}
         >
           <div className="form-grid risk-form">
-            {riskFields.map(([key, label, help, step]) => (
-              <label key={key}>
-                {label}
-                <input
-                  aria-label={label}
-                  type="number"
-                  step={step}
-                  required
-                  value={String(draft[key])}
-                  onChange={(e) =>
-                    setDraft({
-                      ...draft,
-                      [key]:
-                        typeof data.risk.config[key] === "number"
-                          ? Number(e.target.value)
-                          : e.target.value,
-                    })
-                  }
-                />
-                <small>{help}</small>
-              </label>
-            ))}
+            {riskFields.map(([key, label, help, step]) => {
+              const range = riskRange(help, data.risk.bounds?.[key]);
+              return (
+                <label key={key}>
+                  {label}
+                  <input
+                    aria-label={label}
+                    type="number"
+                    step={step}
+                    min={range.min}
+                    max={range.max}
+                    required
+                    value={String(draft[key])}
+                    onChange={(e) =>
+                      setDraft({
+                        ...draft,
+                        [key]:
+                          typeof data.risk.config[key] === "number"
+                            ? Number(e.target.value)
+                            : e.target.value,
+                      })
+                    }
+                  />
+                  <small>
+                    {help}
+                    {range.text}
+                  </small>
+                </label>
+              );
+            })}
           </div>
           <div className="form-footer">
             <p>

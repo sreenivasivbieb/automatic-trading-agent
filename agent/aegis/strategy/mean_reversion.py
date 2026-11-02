@@ -5,6 +5,27 @@ from decimal import Decimal, localcontext
 from aegis.strategy.signals import Signal
 
 
+def contiguous_prices(
+    observations: list[dict], asset: str, *, now: int, max_gap_seconds: int
+) -> list[Decimal]:
+    """The newest unbroken run of observed prices for `asset`, oldest first.
+
+    The run ends at the first gap longer than `max_gap_seconds` (counting from `now`), or at an
+    observation without this asset. Prices from before a pause or restart therefore never mix
+    with current ones in the rolling mean."""
+    series: list[Decimal] = []
+    newer = now
+    for observation in sorted(observations, key=lambda o: o["observed_at"], reverse=True):
+        if (
+            asset not in observation["markets"]
+            or newer - observation["observed_at"] > max_gap_seconds
+        ):
+            break
+        series.append(Decimal(observation["markets"][asset]["price"]))
+        newer = observation["observed_at"]
+    return series[::-1]
+
+
 def evaluate(
     asset: str,
     prices: list[Decimal],

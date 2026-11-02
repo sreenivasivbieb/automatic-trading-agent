@@ -21,6 +21,7 @@ from fastapi.responses import FileResponse, JSONResponse
 from pydantic import Field
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
+from aegis.data import field_bounds
 from aegis.service import AegisService
 from backend.analytics import aggregate, chart_indicators, correlations
 from backend.backtesting import backtest
@@ -34,6 +35,7 @@ from backend.models import (
     ChatRequest,
     Model,
     Proposal,
+    RiskConfig,
     RunRequest,
     SchedulerAction,
     StrategyConfig,
@@ -43,6 +45,7 @@ from backend.models import (
     now,
     uid,
 )
+from backend.selection import SelectionConfig
 from backend.settings import ProviderRefresh, get_settings
 from backend.storage import Store
 from backend.strategies import REGISTRY, indicators
@@ -86,6 +89,29 @@ class AegisControl(Model):
 class AegisSettings(Model):
     expected_version: int = Field(ge=1)
     patch: dict
+
+
+class AegisSettingsConfirm(Model):
+    confirmation: str = Field(min_length=1, max_length=100)
+    exit_scope: Literal["all", "new_entries"] = "all"
+    close_removed: bool = False
+    trim_to_size: bool = False
+
+
+class AegisRollback(Model):
+    version: int = Field(ge=1)
+    expected_version: int = Field(ge=1)
+
+
+class VersionedSelection(Model):
+    expected_version: int = Field(ge=1)
+    config: SelectionConfig
+
+
+def diff(before: dict, after: dict) -> dict:
+    return {
+        k: {"before": before.get(k), "after": v} for k, v in after.items() if before.get(k) != v
+    }
 
 
 class OwnerRequest(Model):
@@ -177,12 +203,44 @@ def create_app(db_path=None, *, testing=False, transport=None, api_token=None, a
         async def reference_source(state):
             return await collect_library(engine, state)
 
+        async def terminal_tool(name: str, args: dict) -> dict:
+            # Chat tools that change the research store; validated by its own models, versioned,
+            # audited by the store, and invalidating any in-flight library snapshot.
+            if name == "set_strategy_selector":
+                if not args or set(args) - {"enabled", "mode"}:
+                    raise ValueError("Provide enabled and/or mode for the strategy selector")
+                current, version = store.config("selection")
+                config = SelectionConfig.model_validate({**current, **args}).model_dump(mode="json")
+                saved = store.update_config("selection", config, version)
+                app.state.aegis.invalidate_library()
+                return {
+                    "target": "Strategy selector",
+                    "version": saved,
+                    "changes": diff(current, config),
+                }
+            strategy_id, changes = args.get("strategy_id"), args.get("changes")
+            if set(args) != {"strategy_id", "changes"} or strategy_id not in REGISTRY:
+                raise ValueError("Provide a known library strategy_id and its changes")
+            if not isinstance(changes, dict) or not changes or "enabled" in changes:
+                raise ValueError(
+                    "Provide strategy parameters to change; enable or disable strategies in Strategies"
+                )
+            current, version = store.config("strategy:" + strategy_id)
+            config = StrategyConfig.model_validate({**current, **changes})
+            saved = save_strategy(engine, strategy_id, config, version)
+            return {
+                "target": REGISTRY[strategy_id]["name"],
+                "version": saved,
+                "changes": diff(current, config.model_dump(mode="json")),
+            }
+
         aegis = AegisService(
             aegis_path,
             factory=aegis_factory,
             enabled=(not testing and os.getenv("AEGIS_ENABLED", "true").lower() == "true")
             or aegis_factory is not None,
             reference_source=reference_source,
+            terminal_tool=terminal_tool,
         )
         app.state.aegis = aegis
         await aegis.start()
@@ -386,7 +444,39 @@ def create_app(db_path=None, *, testing=False, transport=None, api_token=None, a
 
     @app.put("/api/aegis/settings")
     async def aegis_settings(body: AegisSettings, request: Request):
-        return await request.app.state.aegis.call("set_params", body.patch, body.expected_version)
+        # Applied at once unless open positions are affected; then a preview to confirm.
+        return await request.app.state.aegis.call(
+            "change_params", body.patch, body.expected_version, source="settings"
+        )
+
+    @app.post("/api/aegis/settings/confirm")
+    async def aegis_settings_confirm(body: AegisSettingsConfirm, request: Request):
+        return await request.app.state.aegis.call(
+            "confirm_params",
+            body.confirmation,
+            exit_scope=body.exit_scope,
+            close_removed=body.close_removed,
+            trim_to_size=body.trim_to_size,
+        )
+
+    @app.post("/api/aegis/settings/rollback")
+    async def aegis_settings_rollback(body: AegisRollback, request: Request):
+        return await request.app.state.aegis.call(
+            "rollback_params", body.version, body.expected_version
+        )
+
+    @app.get("/api/selection")
+    async def selection_config(e: Engine = Depends(engine)):
+        config, version = e.store.config("selection")
+        return {"config": config, "version": version, "bounds": field_bounds(SelectionConfig)}
+
+    @app.put("/api/selection")
+    async def update_selection(body: VersionedSelection, e: Engine = Depends(engine)):
+        version = e.store.update_config(
+            "selection", body.config.model_dump(mode="json"), body.expected_version
+        )
+        app.state.aegis.invalidate_library()
+        return {"config": body.config, "version": version}
 
     @app.post("/api/aegis/control")
     async def aegis_control(body: AegisControl, request: Request):
@@ -536,7 +626,11 @@ def create_app(db_path=None, *, testing=False, transport=None, api_token=None, a
             "latest_run": latest[0] if latest else None,
             "executions": e.store.history("intents", 20),
             "audit": e.store.history("audit", 20),
-            "risk": {"config": e.execution.risk()[0], "version": e.execution.risk()[1]},
+            "risk": {
+                "config": e.execution.risk()[0],
+                "version": e.execution.risk()[1],
+                "bounds": field_bounds(RiskConfig),
+            },
             "scheduler": e.state(),
             "mode": "SIMULATION",
         }
@@ -670,6 +764,8 @@ def create_app(db_path=None, *, testing=False, transport=None, api_token=None, a
             "config": e.execution.risk()[0],
             "version": e.execution.risk()[1],
             "portfolio": e.portfolio.view(e.markets),
+            # Validation bounds so the UI never copies RiskConfig limits by hand.
+            "bounds": field_bounds(RiskConfig),
         }
 
     @app.put("/api/risk")

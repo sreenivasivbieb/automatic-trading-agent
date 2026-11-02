@@ -103,8 +103,9 @@ export function ClosedLoopStatus({ state }: { state: AegisState }) {
           : `Position size ${state.params.position_size_pct}% NAV. `}
         Monitor every {state.params.tick_seconds}s · {state.trades_this_hour}/
         {state.params.max_trades_per_hour} hourly trades · daily loss{" "}
-        {number(state.risk.daily_loss_pct ?? "0", 2)}% / 2%. Pipeline details
-        expose recorded inputs and outcomes.
+        {number(state.risk.daily_loss_pct ?? "0", 2)}% /{" "}
+        {number(state.caps?.daily_loss_limit_pct)}%. Pipeline details expose
+        recorded inputs and outcomes.
       </p>
     </Panel>
   );

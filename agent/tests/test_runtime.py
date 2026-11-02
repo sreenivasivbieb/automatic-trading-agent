@@ -19,11 +19,15 @@ class ReplayConnector(MockConnector):
     """Explicit local test data, never selected by application configuration."""
 
     def refresh(self):
+        # Like a real chain, a different pool state never shares a block hash. Hashing the state
+        # keeps replays across process restarts or repricing from colliding with stored ticks.
+        state = "".join(p.model_dump_json() for p in self._fixture.pools)
+        number = self._fixture.block_number + 1
         self._fixture = self._fixture.model_copy(
             update={
-                "block_number": self._fixture.block_number + 1,
+                "block_number": number,
                 "block_timestamp": int(time.time()) - 4,
-                "block_hash": Web3.keccak(text=str(self._fixture.block_number + 1)).to_0x_hex(),
+                "block_hash": Web3.keccak(text=f"{number}:{state}").to_0x_hex(),
             }
         )
         return self._fixture

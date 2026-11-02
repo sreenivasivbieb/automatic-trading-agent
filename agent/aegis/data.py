@@ -21,6 +21,23 @@ class StrictModel(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
 
 
+def field_bounds(model: type[BaseModel]) -> dict[str, dict[str, int | str]]:
+    """Numeric validation bounds per field, so clients render limits instead of copying them."""
+    bounds: dict[str, dict[str, int | str]] = {}
+    for name, field in model.model_fields.items():
+        found = {}
+        for constraint in field.metadata:
+            for kind in ("gt", "ge", "lt", "le"):
+                value = getattr(constraint, kind, None)
+                if value is not None:
+                    found[kind] = (
+                        value if isinstance(value, int) else format(Decimal(str(value)), "f")
+                    )
+        if found:
+            bounds[name] = found
+    return bounds
+
+
 class ContractSpec(StrictModel):
     address: Address
     runtime_code_hash: str = Field(pattern=r"^0x[0-9a-fA-F]{64}$")

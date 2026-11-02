@@ -129,14 +129,18 @@ export function AegisMarketAnalysis() {
                 <strong>{state.block_number ?? "Unavailable"}</strong>
               </div>
             </div>
-            <a
-              className="aegis-address"
-              href={`https://hsk.blockscout.com/address/${market.pool}`}
-              target="_blank"
-              rel="noreferrer"
-            >
-              Pool {market.pool}
-            </a>
+            {state.explorer ? (
+              <a
+                className="aegis-address"
+                href={`${state.explorer}/address/${market.pool}`}
+                target="_blank"
+                rel="noreferrer"
+              >
+                Pool {market.pool}
+              </a>
+            ) : (
+              <code className="aegis-address">Pool {market.pool}</code>
+            )}
           </div>
         )}
       </Panel>
@@ -166,7 +170,10 @@ export function AegisMarketAnalysis() {
                   {s.type === "strategy_library"
                     ? "Reference-market signal; expected profit is not estimated"
                     : `Expected net edge ${number(s.expected_edge_bps, 2)} bps`}{" "}
-                  · confidence {number(Number(s.confidence) * 100, 1)}%
+                  · rule-agreement score {number(Number(s.confidence) * 100, 1)}
+                  % (heuristic, not a probability of profit)
+                  {s.selection_score != null &&
+                    ` · selector score ${number(Number(s.selection_score) * 100, 1)}%`}
                 </small>
               </article>
             ))}

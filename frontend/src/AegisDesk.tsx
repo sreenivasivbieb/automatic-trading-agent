@@ -8,14 +8,16 @@ import "./aegis.css";
 
 import { useAegis } from "./aegis/context";
 import { AegisMarketAnalysis } from "./aegis/MarketAnalysis";
+import { SelectorSettings, SettingsHistory } from "./aegis/LiveControls";
 import { ClosedLoopStatus } from "./aegis/Pipeline";
 import type {
   AegisState as State,
   AegisView,
+  Change,
   Params,
   Preview,
 } from "./aegis/types";
-import { utcTime as at } from "./aegis/types";
+import { inputRange, utcTime as at } from "./aegis/types";
 
 function Curve({ rows }: { rows: State["equity_curve"] }) {
   if (rows.length < 2)
@@ -128,6 +130,9 @@ export function AegisDesk({
       </Panel>
     );
   const active = !state.paused && !state.emergency;
+  // Input limits come from the backend AgentParams model, never from copied numbers.
+  const bounds = (field: keyof Params) =>
+    inputRange(state.param_bounds?.[field]);
   return (
     <div className="aegis-workspace">
       <div className="aegis-disclosure">
@@ -276,30 +281,33 @@ export function AegisDesk({
             >
               <div className="aegis-risk">
                 <label>
-                  Daily loss: {number(state.risk.daily_loss_pct || "0", 3)}% /
-                  2%
+                  Daily loss: {number(state.risk.daily_loss_pct || "0", 3)}% /{" "}
+                  {number(state.caps?.daily_loss_limit_pct)}%
                   <meter
                     min="0"
-                    max="2"
+                    max={Number(state.caps?.daily_loss_limit_pct) || undefined}
                     value={Number(state.risk.daily_loss_pct || 0)}
                   />
                 </label>
                 <label>
                   Observed drawdown: {number(state.risk.drawdown_pct || "0", 3)}
-                  % / 10%
+                  % / {number(state.caps?.max_drawdown_pct)}%
                   <meter
                     min="0"
-                    max="10"
+                    max={Number(state.caps?.max_drawdown_pct) || undefined}
                     value={Number(state.risk.drawdown_pct || 0)}
                   />
                 </label>
                 <p>
                   {state.trades_this_hour} / {state.params.max_trades_per_hour}{" "}
-                  fills this hour · {state.trades_today} / 20 today
+                  fills this hour · {state.trades_today} /{" "}
+                  {number(state.caps?.max_trades_per_day)} today
                 </p>
                 <p className="muted">
-                  LP fees are embedded in quotes. Extra slippage: 10 bps.
-                  Modeled network expense: 0.01 USDT per fill.
+                  LP fees are embedded in quotes. Extra slippage:{" "}
+                  {number(state.costs?.extra_slippage_bps)} bps. Modeled network
+                  expense: {number(state.costs?.network_fee_usdt)} USDT per
+                  fill.
                 </p>
               </div>
             </Panel>
@@ -313,13 +321,17 @@ export function AegisDesk({
               <div className="panel aegis-metric" key={asset}>
                 <span className="eyebrow">{asset} / USDT</span>
                 <strong>{number(m.price, 8)}</strong>
-                <a
-                  href={`https://hsk.blockscout.com/address/${m.pool}`}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  Inspect pool · {m.fee_pips / 10000}% LP fee
-                </a>
+                {state.explorer ? (
+                  <a
+                    href={`${state.explorer}/address/${m.pool}`}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    Inspect pool · {m.fee_pips / 10000}% LP fee
+                  </a>
+                ) : (
+                  <span>{m.fee_pips / 10000}% LP fee</span>
+                )}
               </div>
             ))}
           </div>
@@ -364,6 +376,7 @@ export function AegisDesk({
                   <thead>
                     <tr>
                       <th>Asset</th>
+                      <th>Strategy</th>
                       <th>Quantity</th>
                       <th>Entry</th>
                       <th>Mark</th>
@@ -375,6 +388,7 @@ export function AegisDesk({
                     {state.positions.map((p) => (
                       <tr key={p.asset}>
                         <td>{p.asset}</td>
+                        <td>{p.strategy_id?.replaceAll("_", " ") ?? "—"}</td>
                         <td>{number(p.quantity, 8)}</td>
                         <td>{number(p.entry, 8)}</td>
                         <td>
@@ -388,6 +402,31 @@ export function AegisDesk({
                         <td>
                           {number(p.stop_price, 8)} /{" "}
                           {number(p.take_profit_price, 8)}
+                          {p.strategy_stop_price && (
+                            <small className="muted">
+                              {" "}
+                              · strategy ATR stop{" "}
+                              {number(p.strategy_stop_price, 8)}
+                            </small>
+                          )}
+                          {p.exit_rules === "frozen_at_change" && (
+                            <small className="muted">
+                              {" "}
+                              · exit rules frozen at change
+                            </small>
+                          )}
+                          {p.pending_action && (
+                            <small className="muted">
+                              {" "}
+                              · pending {p.pending_action.replaceAll("_", " ")}
+                            </small>
+                          )}
+                          {p.target_price && (
+                            <small className="muted">
+                              {" "}
+                              · mean target {number(p.target_price, 8)}
+                            </small>
+                          )}
                         </td>
                       </tr>
                     ))}
@@ -411,15 +450,21 @@ export function AegisDesk({
                   onSubmit={(e) => {
                     e.preventDefault();
                     void act(async () => {
-                      const r = await api<{
-                        changes: Record<
-                          string,
-                          { before: unknown; after: unknown }
-                        >;
-                      }>("/aegis/settings", "PUT", {
+                      const r = await api<
+                        { changes: Change } & Partial<Preview>
+                      >("/aegis/settings", "PUT", {
                         expected_version: state.params_version,
                         patch: form,
                       });
+                      // A change that affects open positions comes back as a
+                      // preview; nothing is applied until it is confirmed.
+                      if (r.kind === "params_change") {
+                        setPreview(r as Preview);
+                        setNotice(
+                          "Review the effect on open positions; nothing changed yet.",
+                        );
+                        return;
+                      }
                       setNotice(
                         Object.entries(r.changes)
                           .map(
@@ -451,8 +496,7 @@ export function AegisDesk({
                       aria-label="AEGIS position size"
                       type="number"
                       step="any"
-                      min="0"
-                      max="10"
+                      {...bounds("position_size_pct")}
                       value={form.position_size_pct}
                       onChange={(e) =>
                         setForm({ ...form, position_size_pct: e.target.value })
@@ -465,8 +509,7 @@ export function AegisDesk({
                     <input
                       aria-label="AEGIS trades per hour"
                       type="number"
-                      min="1"
-                      max="6"
+                      {...bounds("max_trades_per_hour")}
                       value={form.max_trades_per_hour}
                       onChange={(e) =>
                         setForm({
@@ -482,8 +525,8 @@ export function AegisDesk({
                     <input
                       aria-label="AEGIS position budget"
                       type="number"
-                      min="0"
                       step="any"
+                      {...bounds("position_size_usdt")}
                       value={form.position_size_usdt ?? ""}
                       onChange={(e) =>
                         setForm({
@@ -498,8 +541,7 @@ export function AegisDesk({
                     <input
                       aria-label="AEGIS monitor frequency"
                       type="number"
-                      min="15"
-                      max="300"
+                      {...bounds("tick_seconds")}
                       value={form.tick_seconds}
                       onChange={(e) =>
                         setForm({
@@ -509,14 +551,17 @@ export function AegisDesk({
                       }
                       required
                     />
+                    <small>
+                      How often markets are checked. Fills stay capped at{" "}
+                      {number(state.caps?.max_trades_per_hour)} per hour.
+                    </small>
                   </label>
                   <label>
                     Stop loss (%)
                     <input
                       aria-label="AEGIS stop loss"
                       type="number"
-                      min="0"
-                      max="10"
+                      {...bounds("stop_loss_pct")}
                       step="any"
                       value={form.stop_loss_pct}
                       onChange={(e) =>
@@ -530,8 +575,7 @@ export function AegisDesk({
                     <input
                       aria-label="AEGIS take profit"
                       type="number"
-                      min="0"
-                      max="15"
+                      {...bounds("take_profit_pct")}
                       step="any"
                       value={form.take_profit_pct}
                       onChange={(e) =>
@@ -540,9 +584,75 @@ export function AegisDesk({
                       required
                     />
                   </label>
+                  <label>
+                    Sizing
+                    <select
+                      aria-label="AEGIS sizing mode"
+                      value={form.sizing_mode ?? "fixed"}
+                      onChange={(e) =>
+                        setForm({
+                          ...form,
+                          sizing_mode: e.target.value as Params["sizing_mode"],
+                        })
+                      }
+                    >
+                      <option value="fixed">Fixed % of NAV</option>
+                      <option value="risk_per_trade">Risk per trade</option>
+                    </select>
+                    <small>
+                      Risk per trade sizes each entry so its nearest stop loses
+                      at most the set % of NAV. The % cap above still bounds it.
+                    </small>
+                  </label>
+                  <label>
+                    Risk per trade (% of NAV)
+                    <input
+                      aria-label="AEGIS risk per trade"
+                      type="number"
+                      step="any"
+                      {...bounds("risk_per_trade_pct")}
+                      disabled={form.sizing_mode !== "risk_per_trade"}
+                      value={form.risk_per_trade_pct ?? ""}
+                      onChange={(e) =>
+                        setForm({ ...form, risk_per_trade_pct: e.target.value })
+                      }
+                    />
+                  </label>
+                  <label>
+                    Auto-derisk at daily loss (%, optional)
+                    <input
+                      aria-label="AEGIS auto-derisk threshold"
+                      type="number"
+                      step="any"
+                      {...bounds("derisk_daily_loss_pct")}
+                      value={form.derisk_daily_loss_pct ?? ""}
+                      onChange={(e) =>
+                        setForm({
+                          ...form,
+                          derisk_daily_loss_pct: e.target.value || null,
+                        })
+                      }
+                    />
+                    <small>
+                      Once per UTC day, tightens toward the conservative preset
+                      before the {number(state.caps?.daily_loss_limit_pct)}%
+                      breaker. It never loosens a value.
+                    </small>
+                  </label>
+                  <label className="inline gap">
+                    <input
+                      type="checkbox"
+                      aria-label="AEGIS regime scaling"
+                      checked={form.regime_scaling ?? false}
+                      onChange={(e) =>
+                        setForm({ ...form, regime_scaling: e.target.checked })
+                      }
+                    />
+                    Scale entries down in hostile market regimes
+                  </label>
                   <fieldset>
                     <legend>Target assets</legend>
-                    {["WHSK", "WETH", "WBTC"].map((asset) => (
+                    {(state.supported_assets ?? []).map((asset) => (
                       <label className="inline gap" key={asset}>
                         <input
                           type="checkbox"
@@ -568,8 +678,7 @@ export function AegisDesk({
                   <fieldset>
                     <legend>Active entry strategies</legend>
                     {[
-                      { id: "mean_reversion", name: "Pool mean reversion" },
-                      { id: "arbitrage", name: "V3 arbitrage" },
+                      ...(state.native_strategies ?? []),
                       ...(state.library_catalog ?? []),
                     ].map((strategy) => (
                       <label className="inline gap" key={strategy.id}>
@@ -611,6 +720,10 @@ export function AegisDesk({
                 </form>
               )}
             </Panel>
+            <div>
+              <SelectorSettings />
+              <SettingsHistory />
+            </div>
           </div>
         </>
       )}

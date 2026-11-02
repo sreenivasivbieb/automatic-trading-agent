@@ -3,11 +3,16 @@
 from __future__ import annotations
 
 import hashlib
+from decimal import Decimal
 
+from aegis.risk.policy import ALL_STRATEGIES
 from aegis.strategy.library import ASSET_MAP, LibrarySignal, LibrarySnapshot
 from backend.models import NewsFeed, StrategyConfig, now
-from backend.selection import SelectionConfig, rank_strategies
-from backend.strategies import REGISTRY, evaluate
+from backend.selection import SelectionConfig, rank_strategies, selection_inputs
+from backend.strategies import REGISTRY, evaluate, indicators
+
+# Added to a ranking copy only: the selector must choose among strategies AEGIS may trade.
+INACTIVE = "INACTIVE_IN_AEGIS"
 
 
 async def collect_library(engine, state: dict) -> LibrarySnapshot:
@@ -31,6 +36,7 @@ async def collect_library(engine, state: dict) -> LibrarySnapshot:
         )
     versions = {item["id"]: item["version"] for item in catalog}
     positions = {p["asset"]: p for p in state.get("positions", [])}
+    active = set((state.get("params") or {}).get("active_strategies", ALL_STRATEGIES))
     selector = SelectionConfig.model_validate(engine.store.config("selection")[0])
     selection, result = {}, []
     for symbol, market in engine.markets.items():
@@ -42,15 +48,33 @@ async def collect_library(engine, state: dict) -> LibrarySnapshot:
             evaluate(identifier, market, news, config, holding=owner == identifier, clock=clock)
             for identifier, config in configurations.items()
         ]
+        inputs = selection_inputs(engine.store, symbol, market)
         ranked = rank_strategies(
             market,
             news,
-            signals,
+            [
+                s
+                if s.strategy_id in active
+                else s.model_copy(update={"risk_flags": [*s.risk_flags, INACTIVE]})
+                for s in signals
+            ],
             selector,
             previous=state.get("library_selection", {}).get(symbol),
+            performance=inputs["performance"],
+            contextual_advice=inputs["contextual_advice"],
             clock=clock,
         )
         selection[symbol] = ranked
+        # A disabled selector means no adaptive preference: entries keep the registry order.
+        scores = (
+            {r["strategy_id"]: r["score"] for r in ranked["rankings"]} if selector.enabled else {}
+        )
+        try:
+            # Deterministic regime size multiplier (0.25–1); sizing uses it only if enabled.
+            multiplier = Decimal(str(indicators(market)["regime_risk_multiplier"]))
+            regime = multiplier if 0 < multiplier <= 1 else None
+        except ValueError:
+            regime = None
         candle_hash = hashlib.sha256(
             "".join(c.model_dump_json() for c in market.candles).encode()
         ).hexdigest()
@@ -79,6 +103,10 @@ async def collect_library(engine, state: dict) -> LibrarySnapshot:
                     stop_price=signal.stop_price,
                     candle_hash=candle_hash,
                     cooldown_seconds=config.cooldown_seconds,
+                    regime_risk_multiplier=regime,
+                    selection_score=None
+                    if signal.strategy_id not in scores
+                    else Decimal(str(scores[signal.strategy_id])),
                 )
             )
     return LibrarySnapshot(

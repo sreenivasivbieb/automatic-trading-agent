@@ -6,10 +6,12 @@ import json
 import os
 import re
 import threading
+from typing import get_args
 
 from aegis.nl.providers import BedrockConverse, OpenAICompatible
 from aegis.nl.tools import SYSTEM_PROMPT, StrategyConfigUpdate, ToolCall, chat, execute_tool
 from aegis.risk.policy import AgentParams
+from aegis.strategy.library import StrategyId
 
 
 def tool_schemas():
@@ -54,7 +56,7 @@ def tool_schemas():
             },
         ),
         "set_params": (
-            "Change only preferences inside reviewed Guard caps; refuse out-of-range user requests",
+            "Change only preferences inside reviewed Guard caps; refuse out-of-range user requests. A change that affects open positions returns a preview for human confirmation and changes nothing",
             {
                 "type": "object",
                 "properties": AgentParams.model_json_schema()["properties"],
@@ -66,6 +68,38 @@ def tool_schemas():
         "close_all_positions": (
             "Prepare a close preview only. The human must confirm outside the model",
             empty,
+        ),
+        "rollback_params": (
+            "Restore a recorded earlier settings version; open-position impact needs human confirmation",
+            {
+                "type": "object",
+                "properties": {"version": {"type": "integer", "minimum": 1}},
+                "required": ["version"],
+                "additionalProperties": False,
+            },
+        ),
+        "set_strategy_selector": (
+            "Turn the strategy selector on or off, or choose dominant (one strategy per asset) or consensus mode",
+            {
+                "type": "object",
+                "properties": {
+                    "enabled": {"type": "boolean"},
+                    "mode": {"type": "string", "enum": ["dominant", "consensus"]},
+                },
+                "additionalProperties": False,
+            },
+        ),
+        "update_library_strategy": (
+            "Change validated parameters of one original library strategy (e.g. fast_period, stop_atr_multiple, cooldown_seconds); the backend validates every field",
+            {
+                "type": "object",
+                "properties": {
+                    "strategy_id": {"type": "string", "enum": list(get_args(StrategyId))},
+                    "changes": {"type": "object"},
+                },
+                "required": ["strategy_id", "changes"],
+                "additionalProperties": False,
+            },
         ),
         "explain_trade": (
             "Retrieve evidence for an actual recorded trade",
@@ -285,7 +319,9 @@ class ControlAgent:
                     if data.get("requires_confirmation"):
                         return {
                             "mode": "paper",
-                            "response": "PAPER: review and explicitly confirm the position unwind.",
+                            "response": "PAPER: review and explicitly confirm the settings change; nothing changed yet."
+                            if data.get("kind") == "params_change"
+                            else "PAPER: review and explicitly confirm the position unwind.",
                             "tool": call.name,
                             "data": data,
                             "engine": provider + " tool calling: " + model,

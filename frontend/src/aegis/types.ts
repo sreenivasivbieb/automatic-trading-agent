@@ -21,6 +21,10 @@ export type Params = {
   trailing_stop_pct?: string | null;
   max_holding_seconds?: number;
   tick_seconds: number;
+  sizing_mode?: "fixed" | "risk_per_trade";
+  risk_per_trade_pct?: string;
+  regime_scaling?: boolean;
+  derisk_daily_loss_pct?: string | null;
 };
 export type Position = {
   asset: string;
@@ -32,7 +36,14 @@ export type Position = {
   take_profit_price: string;
   value_usdt?: string;
   strategy_id?: string;
+  /** Entry strategy's own ATR stop (library strategies). */
   strategy_stop_price?: string;
+  /** Rolling pool mean at entry; native mean reversion exits once it is reclaimed. */
+  target_price?: string;
+  /** "frozen_at_change" when a change was confirmed for new entries only. */
+  exit_rules?: "live" | "frozen_at_change";
+  /** Confirmed follow-up exit waiting for the next tick. */
+  pending_action?: "removed_from_targets" | "trim_to_size";
 };
 export type Decision = {
   id: string;
@@ -60,7 +71,42 @@ export type Signal = {
   strategy_id?: string;
   strategy_name?: string;
   execution_status?: string;
+  /** Selector suitability for this strategy on this asset (0–1); null when the selector is off. */
+  selection_score?: string | null;
 };
+export type FieldBounds = {
+  gt?: number | string;
+  ge?: number | string;
+  lt?: number | string;
+  le?: number | string;
+};
+export type AegisCaps = {
+  max_position_size_pct: string;
+  max_trades_per_hour: number;
+  max_trades_per_day: number;
+  max_token_exposure_pct: string;
+  max_positions: number;
+  daily_loss_limit_pct: string;
+  max_drawdown_pct: string;
+  cooldown_seconds: number;
+  max_stop_loss_pct: string;
+  max_take_profit_pct: string;
+  max_holding_seconds: number;
+  source: string;
+};
+/** Lower and upper input limits for a numeric field, or undefined when unknown. */
+export function inputRange(bounds?: FieldBounds): {
+  min?: number;
+  max?: number;
+} {
+  if (!bounds) return {};
+  const lower = bounds.ge ?? bounds.gt,
+    upper = bounds.le ?? bounds.lt;
+  return {
+    min: lower === undefined ? undefined : Number(lower),
+    max: upper === undefined ? undefined : Number(upper),
+  };
+}
 export type AegisState = {
   available: boolean;
   reason?: string;
@@ -121,6 +167,18 @@ export type AegisState = {
     }
   >;
   risk: { daily_loss_pct?: string; drawdown_pct?: string };
+  /** Guard-default limits from the backend policy; never copy these numbers into the UI. */
+  caps?: AegisCaps;
+  /** Validation bounds for each preference, from the backend AgentParams model. */
+  param_bounds?: Record<string, FieldBounds>;
+  supported_assets?: string[];
+  params_history?: { version: number; at: number | null; source: string }[];
+  pending_exits?: Record<
+    string,
+    { reason: string; target_value_usdt?: string }
+  >;
+  native_strategies?: { id: string; name: string }[];
+  explorer?: string | null;
   equity_curve: (Pnl & { at: number })[];
   price_history?: {
     at: number;
@@ -142,12 +200,37 @@ export type AegisState = {
     };
   }[];
 };
-export type Preview = {
-  confirmation: string;
-  expires_at: number;
-  positions: Position[];
-  requires_confirmation?: boolean;
+export type ParamsImpact = {
+  open_positions: number;
+  valuation_fresh: boolean;
+  changed_exit_rules: string[];
+  immediate_exits: { asset: string; trigger: string }[];
+  removed_held_assets: string[];
+  oversized_positions: {
+    asset: string;
+    value_usdt: string;
+    target_value_usdt: string;
+  }[];
+  entry_size_usdt: { before: string; after: string };
 };
+export type Change = Record<string, { before: unknown; after: unknown }>;
+/** A human-confirmed action: closing positions, or a settings change that affects them. */
+export type Preview =
+  | {
+      kind?: "close_all";
+      confirmation: string;
+      expires_at: number;
+      positions: Position[];
+      requires_confirmation?: boolean;
+    }
+  | {
+      kind: "params_change";
+      confirmation: string;
+      expires_at: number;
+      requires_confirmation: true;
+      changes: Change;
+      impact: ParamsImpact;
+    };
 export const utcTime = (value: number) =>
   new Date(value * 1000).toLocaleTimeString("en-GB", { timeZone: "UTC" }) +
   " UTC";

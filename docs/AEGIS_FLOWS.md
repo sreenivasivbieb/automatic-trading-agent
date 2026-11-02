@@ -13,7 +13,7 @@ Open `http://127.0.0.1:5173/#/aegis`. Press **Refresh HSKSwap data**, inspect th
 
 The [original strategy adapter](STRATEGY_CONNECTION.md) additionally reuses all five library rules and the configured selector without modifying their implementations. It requires fresh reference tickers and closed hourly history; eligible BTC/ETH signals map to WBTC/WETH and pass HSKSwap quote/risk checks. Unsupported SOL, stale/synthetic sources, excessive reference/DEX gaps and unsupported arbitrage are blocked. Original ATR stops and strategy identity are durable with each fill. The existing Trading Desk shows their actual execution or rejection reasons.
 
-Twenty distinct observed blocks are required before a native pool mean-reversion entry. The signal compares a rolling pool-price mean with the current price, requires a sufficiently negative z-score and deducts modeled round-trip costs. No entry is forced for a demo. Closed-route arbitrage evaluates net Quoter output after fees, modeled slippage and network costs; discovery has not found a liquid registered mainnet triangle. No CEX spread is presented as an executed two-leg arbitrage.
+Twenty distinct observed blocks in one unbroken recent run are required before a native pool mean-reversion entry; a gap longer than three ticks (at least 90 seconds), for example a pause or restart, restarts the warm-up so older prices never mix into the rolling mean. The signal compares that mean with the current price, requires a sufficiently negative z-score and deducts modeled round-trip costs from the observed pool's fee tier. The entry stores the rolling mean as its target; the position exits once the mark reclaims it, in addition to the generic stops. No entry is forced for a demo. Closed-route arbitrage evaluates net Quoter output after fees, modeled slippage and network costs; discovery has not found a liquid registered mainnet triangle. No CEX spread is presented as an executed two-leg arbitrage.
 
 ## One state, one execution gate
 
@@ -39,11 +39,31 @@ The position size default is 5% with a reviewed 10% ceiling; the off-chain portf
 - **Pause entries** leaves monitoring and risk-reducing exits available. No new entry is accepted after its control acknowledgement.
 - **PANIC** latches the emergency flag and requests bounded exits into virtual USDT. Fresh quotes, minimum outputs and per-trade limits still apply. Quote failure leaves the unwind pending and visible.
 - **Close all** first returns an expiring preview bound to the current holdings. Confirmation is one-use; changed holdings require another preview.
-- **Clear stop** requires fresh marks and a completed stable unwind. It leaves entries paused; resuming is a separate action.
+- **Clear stop** requires fresh marks and a completed stable unwind. It leaves entries paused; resuming is a separate action. Clearing also resets the daily and high-water NAV baselines to the current NAV (audited as `risk_baseline_reset`, lifetime maximum drawdown kept); otherwise the unchanged high-water mark would re-trip the breaker on the next tick. This mirrors the vault, where the owner's capital flows reset the same baselines.
 - RPC errors preserve the ledger and expose unavailable valuation. Stale marks are never shown as current NAV. They do not trigger an estimated-price fallback fill.
 - Strategy preferences are schema-validated and versioned. Out-of-range, unsupported and prompt-injection requests cannot loosen caps or access keys.
 
 The local natural-language control plane defaults to an explicitly labeled deterministic router, with typed tools for status, positions, P&L, recent decisions, preferences, pause/resume, confirmed close and trade explanation. Without credentials it does not claim a model was invoked. Optional Claude tool calling uses the same validated tools, bounded turns and schema limits; it cannot receive or submit a close confirmation. A separately configured Telegram bridge accepts only the owner's private chat and sender. Typed changes/tool events are recorded; raw messages are not persisted in the ledger. Configured model/Telegram requests transmit the selected message/state to those providers. Real provider use/delivery remain pending credentials. Public commit/reveal badges require registered real deployments and canonical reveal receipts; testnet (133) decisions #1 and #2 have them, mainnet has none yet.
+
+## Changing settings while the agent runs
+
+Every change is versioned, audited and applied from the next market check; the single runtime thread never applies one in the middle of a fill.
+
+| Change | Effect on open positions |
+| --- | --- |
+| Position size, sizing mode, regime scaling, frequency, risk appetite | New entries only. A smaller size can trim open positions down to it, if the human chooses so in the preview. |
+| Stop-loss, take-profit, trailing stop, holding time | The preview shows which positions would close at once. The human chooses: apply to open positions too, or new entries only (open positions keep their rules, shown as frozen). |
+| Removing a held asset from the targets | The human chooses: close it now through the bounded exit path, or keep it until its stops or targets. |
+| Deactivating a strategy | Its open positions keep their own exits. |
+| Library strategy parameters or the selector | Any in-flight library snapshot is invalidated; the next check uses the new configuration. Open positions keep the ATR stop set at entry. |
+
+A change with no effect on open positions applies at once; otherwise it returns a one-use preview that expires after two minutes and is bound to the settings version and holdings. Chat and LLM tools receive the preview; only a human confirmation applies it. Saving identical settings keeps the version. Settings history keeps the last twenty versions for restore.
+
+**Sizing.** `fixed` uses the percentage/USDT cap. `risk_per_trade` sizes each entry so its nearest stop (ATR or generic) loses at most `risk_per_trade_pct` of NAV; the cap still bounds it. `regime_scaling` multiplies the size by the deterministic regime multiplier (0.25–1). Neither can raise a size above the cap.
+
+**Guarded trigger.** With `derisk_daily_loss_pct` set below the 2% breaker, an observed daily loss at that level tightens the preferences toward the conservative preset once per UTC day (audited as `auto_derisk`). It never loosens a value; open positions keep their exit rules. Loosening again is a human decision.
+
+The research **Risk** workspace limits govern the research simulation ledger only; the paper agent uses the Guard caps and these preferences.
 
 ## HTTP boundary
 
@@ -51,7 +71,10 @@ The local natural-language control plane defaults to an explicitly labeled deter
 | ------ | -------------------------- | ------------------------------------------------------------------------- |
 | GET    | `/api/aegis/state`         | Cached mode, freshness, positions, P&L, policy, fills and local decisions |
 | POST   | `/api/aegis/check`         | One verified market observation and eligible strategy/stop evaluation     |
-| PUT    | `/api/aegis/settings`      | Validated patch with `expected_version`                                   |
+| PUT    | `/api/aegis/settings`      | Validated patch with `expected_version`; applied at once unless open positions are affected, then a one-use preview |
+| POST   | `/api/aegis/settings/confirm` | Human confirmation of a settings preview: exit scope, close removed assets, trim to size |
+| POST   | `/api/aegis/settings/rollback` | Restore a recorded settings version through the same preview rules     |
+| GET/PUT | `/api/selection`          | Versioned strategy-selector settings; saving invalidates library snapshots |
 | POST   | `/api/aegis/control`       | Explicit paper controls and close confirmation                            |
 | POST   | `/api/aegis/chat`          | Shared validated language tools                                           |
 | GET    | `/api/aegis/vault`         | Chain-specific public deployment metadata                                 |

@@ -67,10 +67,17 @@ async def library_snapshot(runtime, *, source=None):
         pass
 
     class Store:
-        def config(self, key):
+        """Mirrors the backend Store interface used by the bridge."""
+
+        def config(self, key, default=None):
             if key == "selection":
                 return SelectionConfig(enabled=False).model_dump(mode="json"), 1
+            if key in {"model_reviews", "model_review"}:
+                return None, 0
             return StrategyConfig(enabled=key == "strategy:momentum_v1").model_dump(mode="json"), 1
+
+        def get(self, table, key):
+            return None
 
     result = await collect_library(
         SimpleNamespace(markets=markets, store=Store(), refresh_markets=refresh), state

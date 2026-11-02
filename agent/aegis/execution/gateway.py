@@ -11,6 +11,7 @@ from aegis.connectors.rpc import DiscoveryError
 from aegis.risk.engine import RiskEngine, RiskRejected
 from aegis.store.db import LedgerError, PaperLedger
 from aegis.strategy.library import ASSET_MAP, LibraryOrigin
+from aegis.strategy.signals import NativeOrigin
 
 
 class ExecutionGateway:
@@ -55,15 +56,20 @@ class ExecutionGateway:
         amount_in: int,
         *,
         min_out: int | None = None,
-        origin: LibraryOrigin | None = None,
+        origin: LibraryOrigin | NativeOrigin | None = None,
     ) -> dict:
         if not key or len(key) > 128:
             raise ValueError("Provide a nonempty idempotency key of at most 128 characters")
+        # An origin describes an entry: settlement token in, the strategy's asset out.
         if origin is not None and (
             token_in != self.ledger.stable
-            or token_out.asset_id != ASSET_MAP[origin.reference_symbol]
+            or (
+                isinstance(origin, LibraryOrigin)
+                and token_out.asset_id != ASSET_MAP[origin.reference_symbol]
+            )
+            or token_out == self.ledger.stable
         ):
-            raise RiskRejected("Reference strategy origin does not match the swap intent")
+            raise RiskRejected("Strategy origin does not match the swap intent")
         request_hash = self.ledger.request_hash(
             {
                 "chain": self.connector.chain_id,
