@@ -181,3 +181,13 @@ def test_missing_provider_credentials_keeps_zero_key_controls_available(monkeypa
         monkeypatch.delenv(name, raising=False)
     agent = ControlAgent.from_environment()
     assert agent.status()["label"] == "AI Engine: Deterministic Fallback"
+
+
+def test_only_restricts_targets_with_a_trading_verb_not_a_read():
+    from aegis.nl.tools import interpret
+
+    assert interpret("show only ETH positions").name == "get_positions"
+    call = interpret("trade only ETH")
+    assert call.name == "set_params" and call.arguments["target_assets"] == ["WETH"]
+    focus = interpret("Focus target assets on WHSK and WETH arbitrage spreads")
+    assert focus.arguments["target_assets"] == ["WHSK", "WETH"]

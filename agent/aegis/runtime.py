@@ -376,7 +376,10 @@ class PaperRuntime:
             max(drawdown, Decimal(self.baseline.get("max_drawdown_pct", "0")))
         )
         self.ledger.set_metadata("risk_baseline", self.baseline)
-        if (loss >= 2 or drawdown >= 10) and not self.emergency.is_set():
+        if (
+            loss >= Decimal(CAPS["daily_loss_limit_pct"])
+            or drawdown >= Decimal(CAPS["max_drawdown_pct"])
+        ) and not self.emergency.is_set():
             self.halted.set()
             self.emergency.set()
             self.unwind = True
@@ -589,6 +592,7 @@ class PaperRuntime:
                             cycle.action == "cycle"
                             and evaluate_entries
                             and self.running
+                            and not exiting
                             and not self.halted.is_set()
                         ):
                             gross_profit = quote.amount_out_raw - amount
@@ -602,12 +606,13 @@ class PaperRuntime:
                     except (DiscoveryError, RiskRejected, LedgerError) as exc:
                         self.ledger.record("arbitrage_rejected", {"reason": str(exc)})
             fills = self.ledger.fills()
-            if fills and fills[-1]["quote"]["block_hash"] != market["block_hash"]:
+            new_fills = [f for f in fills if f["id"] not in prior_fills]
+            # Re-mark only when this tick filled against a newer block, not for historical fills.
+            if new_fills and new_fills[-1]["quote"]["block_hash"] != market["block_hash"]:
                 market, marks = self._snapshot()
             pnl = self.ledger.pnl(marks)
             self._circuit(pnl, market["block_timestamp"])
             events = [e for e in self.ledger.decisions(100) if e["id"] not in prior_events]
-            new_fills = [f for f in fills if f["id"] not in prior_fills]
             self.pipeline = build_pipeline(
                 market,
                 [*signals, *library_signals],

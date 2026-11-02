@@ -263,7 +263,11 @@ def interpret(text: str) -> ToolCall:
     frequency = re.search(r"(\d+)\s*trades?\s*(?:per|an?|/)\s*hour", t)
     if frequency:
         patch["max_trades_per_hour"] = int(frequency[1])
-    if ("only" in t or focus) and re.search(r"hsk|eth|btc|bitcoin", t):
+    # "only" changes targets only alongside a trading verb; "show only ETH positions" stays a read.
+    restrict = focus or (
+        re.search(r"\bonly\b", t) and re.search(r"\b(?:trade|trading|target|allow|buy)\b", t)
+    )
+    if restrict and re.search(r"hsk|eth|btc|bitcoin", t):
         patch["target_assets"] = [
             a
             for a, pattern in [
