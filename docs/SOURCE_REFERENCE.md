@@ -103,7 +103,7 @@ Cognito access-token identity and tenant-aware repositories protect application 
 
 ### backend/aegis_bridge.py
 
-- [collect_library](../backend/aegis_bridge.py#L13) — `async collect_library(engine, state: dict)`
+- [collect_library](../backend/aegis_bridge.py#L18) — `async collect_library(engine, state: dict)`
 
 ### backend/analytics.py
 
@@ -256,13 +256,13 @@ Cognito access-token identity and tenant-aware repositories protect application 
 - [Engine._node](../backend/engine.py#L125) — `_node(self, name)`
 - [Engine._node.node](../backend/engine.py#L126) — `async node(state)`
 - [Engine._stage](../backend/engine.py#L151) — `async _stage(self, name, ctx)`
-- [Engine.run](../backend/engine.py#L407) — `async run(self, request: RunRequest, *, external_evidence=None)`
-- [Engine.authorize](../backend/engine.py#L455) — `async authorize(self, request: Authorize)`
-- [Engine.state](../backend/engine.py#L477) — `state(self)`
-- [Engine.control](../backend/engine.py#L481) — `control(self, request: SchedulerAction)`
-- [Engine.scheduler_loop](../backend/engine.py#L540) — `async scheduler_loop(self)`
-- [Engine.recover](../backend/engine.py#L593) — `recover(self)`
-- [Engine.close](../backend/engine.py#L615) — `async close(self)`
+- [Engine.run](../backend/engine.py#L390) — `async run(self, request: RunRequest, *, external_evidence=None)`
+- [Engine.authorize](../backend/engine.py#L438) — `async authorize(self, request: Authorize)`
+- [Engine.state](../backend/engine.py#L460) — `state(self)`
+- [Engine.control](../backend/engine.py#L464) — `control(self, request: SchedulerAction)`
+- [Engine.scheduler_loop](../backend/engine.py#L523) — `async scheduler_loop(self)`
+- [Engine.recover](../backend/engine.py#L576) — `recover(self)`
+- [Engine.close](../backend/engine.py#L598) — `async close(self)`
 
 ### backend/exchanges.py
 
@@ -373,9 +373,10 @@ Cognito access-token identity and tenant-aware repositories protect application 
 
 ### backend/selection.py
 
-- [SelectionConfig](../backend/selection.py#L13) — class
-- [rank_strategies](../backend/selection.py#L30) — `rank_strategies(market: Market, news: NewsFeed, signals: list[Signal], config: SelectionConfig, previous: dict | None=None, performance: dict | None=None, contextual_a...`
-- [rank_strategies.clip](../backend/selection.py#L51) — `clip(x)`
+- [selection_inputs](../backend/selection.py#L14) — `selection_inputs(store, symbol: str, market: Market)`
+- [SelectionConfig](../backend/selection.py#L36) — class
+- [rank_strategies](../backend/selection.py#L53) — `rank_strategies(market: Market, news: NewsFeed, signals: list[Signal], config: SelectionConfig, previous: dict | None=None, performance: dict | None=None, contextual_a...`
+- [rank_strategies.clip](../backend/selection.py#L74) — `clip(x)`
 
 ### backend/settings.py
 

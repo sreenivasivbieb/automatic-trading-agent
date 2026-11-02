@@ -32,7 +32,10 @@ export type Position = {
   take_profit_price: string;
   value_usdt?: string;
   strategy_id?: string;
+  /** Entry strategy's own ATR stop (library strategies). */
   strategy_stop_price?: string;
+  /** Rolling pool mean at entry; native mean reversion exits once it is reclaimed. */
+  target_price?: string;
 };
 export type Decision = {
   id: string;
@@ -60,6 +63,8 @@ export type Signal = {
   strategy_id?: string;
   strategy_name?: string;
   execution_status?: string;
+  /** Selector suitability for this strategy on this asset (0–1); null when the selector is off. */
+  selection_score?: string | null;
 };
 export type FieldBounds = {
   gt?: number | string;

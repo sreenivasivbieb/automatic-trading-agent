@@ -374,6 +374,7 @@ export function AegisDesk({
                   <thead>
                     <tr>
                       <th>Asset</th>
+                      <th>Strategy</th>
                       <th>Quantity</th>
                       <th>Entry</th>
                       <th>Mark</th>
@@ -385,6 +386,7 @@ export function AegisDesk({
                     {state.positions.map((p) => (
                       <tr key={p.asset}>
                         <td>{p.asset}</td>
+                        <td>{p.strategy_id?.replaceAll("_", " ") ?? "—"}</td>
                         <td>{number(p.quantity, 8)}</td>
                         <td>{number(p.entry, 8)}</td>
                         <td>
@@ -398,6 +400,19 @@ export function AegisDesk({
                         <td>
                           {number(p.stop_price, 8)} /{" "}
                           {number(p.take_profit_price, 8)}
+                          {p.strategy_stop_price && (
+                            <small className="muted">
+                              {" "}
+                              · strategy ATR stop{" "}
+                              {number(p.strategy_stop_price, 8)}
+                            </small>
+                          )}
+                          {p.target_price && (
+                            <small className="muted">
+                              {" "}
+                              · mean target {number(p.target_price, 8)}
+                            </small>
+                          )}
                         </td>
                       </tr>
                     ))}

@@ -37,8 +37,9 @@ from aegis.strategy.library import (
     LibrarySignal,
     LibrarySnapshot,
 )
-from aegis.strategy.mean_reversion import evaluate
+from aegis.strategy.mean_reversion import contiguous_prices, evaluate
 from aegis.strategy.pipeline import build_pipeline, unavailable
+from aegis.strategy.signals import NativeOrigin
 from aegis.strategy.spreads import compare_reference
 
 
@@ -69,6 +70,7 @@ class PaperRuntime:
         self.last_error = None
         self.last_tick_at = None
         self.tick_count = 0
+        self.tick_entry = None
         self.allow_test_connectors = allow_test_connectors
         self.library_intent: LibrarySignal | None = None
         self.library_revision = lambda: 0
@@ -120,9 +122,13 @@ class PaperRuntime:
                 ),
                 None,
             )
+            # Library origins carry an ATR stop ratio; native mean-reversion origins a target mean.
             strategy_stop = (
-                Decimal(origin["entry_mark"]) * Decimal(origin["stop_ratio"]) if origin else None
+                Decimal(origin["entry_mark"]) * Decimal(origin["stop_ratio"])
+                if origin and origin.get("stop_ratio")
+                else None
             )
+            target = origin.get("target_mark") if origin else None
             positions.append(
                 {
                     "asset": token.asset_id,
@@ -141,14 +147,13 @@ class PaperRuntime:
                     "take_profit_price": dec(
                         cost / quantity * (1 + self.params.take_profit_pct / 100)
                     ),
+                    **({"strategy_id": origin["strategy_id"]} if origin else {}),
                     **(
-                        {
-                            "strategy_id": origin["strategy_id"],
-                            "strategy_stop_price": dec(strategy_stop),
-                        }
-                        if origin
+                        {"strategy_stop_price": dec(strategy_stop)}
+                        if strategy_stop is not None
                         else {}
                     ),
+                    **({"target_price": dec(target)} if target is not None else {}),
                 }
             )
         return positions
@@ -159,7 +164,11 @@ class PaperRuntime:
                 raise RiskRejected(
                     "Strategy configuration changed during quote; refresh the reference snapshot"
                 )
-            self.library_intent.guard(int(time.time()), allow_fixture=self.allow_test_connectors)
+            self.library_intent.guard(
+                int(time.time()),
+                allow_fixture=self.allow_test_connectors,
+                entry=self.library_intent.action == "BUY",
+            )
         if (
             quote.route.tokens[-1] == self.ledger.stable
             and quote.route.tokens[0] != self.ledger.stable
@@ -228,11 +237,24 @@ class PaperRuntime:
         self.library_selection = snapshot.selection
         self.ledger.set_metadata("library_selection", snapshot.selection)
         results = []
-        for candidate in sorted(snapshot.signals, key=lambda c: c.action != "SELL"):
+        # Exits first. Entries keep the snapshot's asset order; within one asset the selector's
+        # higher-ranked strategy is tried first instead of the registry order.
+        assets = {
+            symbol: i for i, symbol in enumerate(dict.fromkeys(s.symbol for s in snapshot.signals))
+        }
+        ordered = sorted(
+            snapshot.signals,
+            key=lambda c: (c.action != "SELL", assets[c.symbol], -(c.selection_score or 0)),
+        )
+        for candidate in ordered:
             asset = ASSET_MAP.get(candidate.symbol)
             reason, status, fill = candidate.reason, "HOLD", None
             try:
-                candidate.guard(int(time.time()), allow_fixture=self.allow_test_connectors)
+                candidate.guard(
+                    int(time.time()),
+                    allow_fixture=self.allow_test_connectors,
+                    entry=candidate.action != "SELL",
+                )
                 if snapshot.error or abs(int(time.time()) - snapshot.captured_at) > 90:
                     raise RiskRejected(snapshot.error or "Reference strategy snapshot is stale")
                 owned = next((p for p in self._positions(marks) if p["asset"] == asset), None)
@@ -264,6 +286,13 @@ class PaperRuntime:
                         raise RiskRejected("Entries paused or an exit takes precedence")
                     if asset not in self.params.target_assets:
                         raise RiskRejected("Mapped asset is excluded by the HSKSwap preferences")
+                    # Cheap pre-checks before any quote: the gateway would refuse these anyway.
+                    if owned:
+                        raise RiskRejected("A position in this asset is already open")
+                    if self.tick_entry:
+                        raise RiskRejected(
+                            "Entry cooldown: another entry already executed this tick"
+                        )
                     if self.ledger.filled_key(candidate.entry_key):
                         raise RiskRejected(
                             "This strategy's closed hourly bar already produced a fill"
@@ -302,6 +331,7 @@ class PaperRuntime:
                         )
                     finally:
                         self.library_intent = None
+                    self.tick_entry = fill["id"]
                     status = "ENTRY_EXECUTED"
             except (ValueError, LedgerError, DiscoveryError) as exc:
                 reason, status = str(exc), "BLOCKED"
@@ -315,6 +345,9 @@ class PaperRuntime:
                 "execution_status": status,
                 "expected_edge_bps": None,
                 "confidence": dec(candidate.confidence),
+                "selection_score": None
+                if candidate.selection_score is None
+                else dec(candidate.selection_score),
                 "reason": reason,
                 "inputs_snapshot": candidate.model_dump(mode="json"),
             }
@@ -437,6 +470,7 @@ class PaperRuntime:
     def tick(self, *, evaluate_entries=True, library: LibrarySnapshot | None = None) -> dict:
         self.tick_count += 1
         self.last_tick_at = int(time.time())
+        self.tick_entry = None  # Fill id of this tick's entry; the Guard cooldown allows one.
         prior_events = {e["id"] for e in self.ledger.decisions(100)}
         prior_fills = {f["id"] for f in self.ledger.fills()}
         try:
@@ -455,6 +489,13 @@ class PaperRuntime:
                     if position.get("strategy_stop_price")
                     and Decimal(position["mark"]) <= Decimal(position["strategy_stop_price"])
                     else exit_reason(position, self.params, self.last_tick_at)
+                    # A reversion trade's thesis is complete once the entry mean is reclaimed.
+                    or (
+                        "mean_reversion_target"
+                        if position.get("target_price")
+                        and Decimal(position["mark"]) >= Decimal(position["target_price"])
+                        else None
+                    )
                 )
                 if reason:
                     exiting = True
@@ -485,7 +526,10 @@ class PaperRuntime:
                         continue
                     compared.add(asset)
                     try:
-                        candidate.guard(int(time.time()), allow_fixture=self.allow_test_connectors)
+                        # Observational: needs a fresh reference price, not an entry-eligible rule.
+                        candidate.guard(
+                            int(time.time()), allow_fixture=self.allow_test_connectors, entry=False
+                        )
                         spread = compare_reference(
                             self.live,
                             asset,
@@ -506,14 +550,18 @@ class PaperRuntime:
                 library, marks, entries=evaluate_entries and not same_block, exiting=exiting
             )
             if not same_block:
+                open_assets = {p["asset"] for p in self._positions(marks)}
                 for asset in self.params.target_assets:
                     if "mean_reversion" not in self.params.active_strategies:
                         break
-                    prices = [
-                        Decimal(h["markets"][asset]["price"])
-                        for h in history
-                        if asset in h["markets"]
-                    ]
+                    # Only the unbroken recent run: a pause or restart must not blend old prices
+                    # into the rolling mean. A gap of more than three ticks breaks the run.
+                    prices = contiguous_prices(
+                        history,
+                        asset,
+                        now=self.last_tick_at,
+                        max_gap_seconds=max(3 * self.params.tick_seconds, 90),
+                    )
                     prices.append(Decimal(market["markets"][asset]["price"]))
                     nav = Decimal(self.ledger.pnl(marks)["nav_usdt"])
                     size = self._entry_size(nav)
@@ -529,39 +577,43 @@ class PaperRuntime:
                     signal = evaluate(asset, prices, z_threshold=z, modeled_cost_bps=cost)
                     payload = signal.model_dump(mode="json")
                     signals.append(payload)
-                    if (
-                        signal.action == "buy"
-                        and evaluate_entries
-                        and self.running
-                        and not exiting
-                        and not self.halted.is_set()
-                    ):
-                        try:
-                            amount = int(size * 10**self.ledger.stable.decimals)
-                            result = self.gateway.execute(
-                                "signal:" + signal.id,
-                                self.ledger.stable,
-                                self.live.tokens[asset],
-                                amount,
-                            )
-                            self.ledger.record(
-                                "signal_executed", {"signal": payload, "fill_id": result["id"]}
-                            )
-                            break
-                        except (RiskRejected, LedgerError, DiscoveryError) as exc:
-                            self.ledger.record(
-                                "risk_rejected", {"signal": payload, "reason": str(exc)}
-                            )
-                    else:
-                        self.ledger.record(
-                            "signal_skipped",
-                            {
-                                "signal": payload,
-                                "reason": "Entries paused"
-                                if self.halted.is_set()
-                                else signal.reason,
-                            },
+                    # Every asset is evaluated and recorded; cheap pre-checks precede any quote.
+                    blocked = (
+                        signal.reason
+                        if signal.action != "buy"
+                        else "Entries paused"
+                        if not evaluate_entries or not self.running or self.halted.is_set()
+                        else "An exit executed this tick; entries wait for the next tick"
+                        if exiting
+                        else "A position in this asset is already open"
+                        if asset in open_assets
+                        else "Entry cooldown: another entry already executed this tick"
+                        if self.tick_entry
+                        else None
+                    )
+                    if blocked:
+                        self.ledger.record("signal_skipped", {"signal": payload, "reason": blocked})
+                        continue
+                    try:
+                        amount = int(size * 10**self.ledger.stable.decimals)
+                        result = self.gateway.execute(
+                            "signal:" + signal.id,
+                            self.ledger.stable,
+                            self.live.tokens[asset],
+                            amount,
+                            origin=NativeOrigin(
+                                strategy_id="mean_reversion",
+                                signal_id=signal.id,
+                                target_mark=Decimal(signal.inputs_snapshot["mean"]),
+                            ),
                         )
+                        self.tick_entry = result["id"]
+                        open_assets.add(asset)
+                        self.ledger.record(
+                            "signal_executed", {"signal": payload, "fill_id": result["id"]}
+                        )
+                    except (RiskRejected, LedgerError, DiscoveryError) as exc:
+                        self.ledger.record("risk_rejected", {"signal": payload, "reason": str(exc)})
                 cycles = (
                     self.live.find_routes(self.ledger.stable, self.ledger.stable)
                     if "arbitrage" in self.params.active_strategies
@@ -599,6 +651,7 @@ class PaperRuntime:
                             and evaluate_entries
                             and self.running
                             and not exiting
+                            and not self.tick_entry
                             and not self.halted.is_set()
                         ):
                             gross_profit = quote.amount_out_raw - amount
@@ -606,9 +659,10 @@ class PaperRuntime:
                                 raise RiskRejected(
                                     "Modeled network expense exceeds 25% of expected cycle profit"
                                 )
-                            self.gateway.execute(
+                            result = self.gateway.execute(
                                 "cycle:" + cycle.id, self.ledger.stable, self.ledger.stable, amount
                             )
+                            self.tick_entry = result["id"]
                     except (DiscoveryError, RiskRejected, LedgerError) as exc:
                         self.ledger.record("arbitrage_rejected", {"reason": str(exc)})
             fills = self.ledger.fills()

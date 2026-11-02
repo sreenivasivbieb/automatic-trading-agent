@@ -26,7 +26,7 @@ from backend.models import (
 )
 from backend.portfolio import Portfolio
 from backend.research import ResearchBridge
-from backend.selection import SelectionConfig, rank_strategies
+from backend.selection import SelectionConfig, rank_strategies, selection_inputs
 from backend.settings import get_settings
 from backend.storage import Store, encode
 from backend.strategies import REGISTRY, indicators
@@ -253,27 +253,12 @@ class Engine:
             run["signals"] = [s.model_dump(mode="json") for s in ctx["signals"]]
             selector = SelectionConfig.model_validate(self.store.config("selection")[0])
             if selector.enabled:
-                review = (
-                    (self.store.config("model_reviews")[0] or {}).get(request.symbol)
-                    or self.store.config("model_review")[0]
-                    or {}
-                )
-                compatible = (
-                    ctx["market"].as_of is not None
-                    and review.get("symbol") == request.symbol
-                    and review.get("marketSource") == ctx["market"].source
-                    and review.get("marketAsOf") == ctx["market"].as_of.isoformat()
-                    and review.get("expiresAt", 0) > time.time()
-                )
-                ctx["model_review"] = review if compatible else None
-                run["model_review"] = (
-                    review
-                    if compatible
-                    else {
-                        "status": "UNAVAILABLE",
-                        "reason": "No matching fresh structured model review",
-                    }
-                )
+                inputs = selection_inputs(self.store, request.symbol, ctx["market"])
+                ctx["model_review"] = inputs["review"]
+                run["model_review"] = inputs["review"] or {
+                    "status": "UNAVAILABLE",
+                    "reason": "No matching fresh structured model review",
+                }
                 previous = self.store.get("cache", "selection:" + request.symbol)
                 selection = rank_strategies(
                     ctx["market"],
@@ -281,10 +266,8 @@ class Engine:
                     ctx["signals"],
                     selector,
                     previous=previous,
-                    contextual_advice={review["preferredStrategy"]: review.get("confidence", 0)}
-                    if compatible and review.get("preferredStrategy")
-                    else None,
-                    performance=self.store.get("cache", "strategy_performance:" + request.symbol),
+                    contextual_advice=inputs["contextual_advice"],
+                    performance=inputs["performance"],
                     clock=ctx["market"].as_of if ctx["market"].status == "FIXTURE" else now(),
                 )
                 run["selection"] = selection

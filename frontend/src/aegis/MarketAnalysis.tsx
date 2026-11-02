@@ -172,6 +172,8 @@ export function AegisMarketAnalysis() {
                     : `Expected net edge ${number(s.expected_edge_bps, 2)} bps`}{" "}
                   · rule-agreement score {number(Number(s.confidence) * 100, 1)}
                   % (heuristic, not a probability of profit)
+                  {s.selection_score != null &&
+                    ` · selector score ${number(Number(s.selection_score) * 100, 1)}%`}
                 </small>
               </article>
             ))}

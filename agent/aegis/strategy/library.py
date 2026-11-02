@@ -36,6 +36,8 @@ class LibrarySignal(StrictModel):
     stop_price: Decimal | None
     candle_hash: str
     cooldown_seconds: int = Field(ge=30, le=86400)
+    # Selector suitability score (0–1) for this strategy on this asset; orders same-asset entries.
+    selection_score: Decimal | None = Field(default=None, ge=0, le=1)
 
     @property
     def entry_key(self) -> str:
@@ -46,7 +48,9 @@ class LibrarySignal(StrictModel):
     def entry_prefix(self) -> str:
         return f"library:{self.strategy_id}:{self.symbol}:"
 
-    def guard(self, now: int, *, allow_fixture: bool = False) -> None:
+    def guard(self, now: int, *, allow_fixture: bool = False, entry: bool = True) -> None:
+        """Source/freshness checks always apply. Enablement and risk flags gate entries only:
+        a strategy's own exit must stay available when, for example, a trend filter fires."""
         if self.symbol not in ASSET_MAP:
             raise ValueError("No verified HSKSwap token mapping for " + self.symbol)
         fixture = (
@@ -66,6 +70,8 @@ class LibrarySignal(StrictModel):
             raise ValueError("Reference ticker or closed hourly history is stale")
         if not self.reference_price or self.reference_price <= 0:
             raise ValueError("A positive reference ticker is required")
+        if not entry:
+            return
         if not self.enabled:
             raise ValueError("Original strategy is disabled or its reference asset is excluded")
         if self.risk_flags:
