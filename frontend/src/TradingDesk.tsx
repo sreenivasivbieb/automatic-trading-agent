@@ -63,6 +63,7 @@ export function TradingDesk({
   act,
   busy,
   openIntent,
+  navigate,
 }: WorkspaceProps) {
   const [detail, setDetail] = useState<MarketDetail | null>(null),
     [timeframe, setTimeframe] = useState("1h"),
@@ -76,6 +77,7 @@ export function TradingDesk({
       reason: string;
     } | null>(null),
     [intent, setIntent] = useState<Intent | null>(null),
+    [analysis, setAnalysis] = useState<Run | null>(null),
     [dock, setDock] = useState("positions"),
     [alerts, setAlerts] = useState<PriceAlert[]>([]),
     [target, setTarget] = useState(""),
@@ -88,6 +90,7 @@ export function TradingDesk({
   }, [layout]);
   useEffect(() => {
     setDetail(null);
+    setAnalysis(null);
     setIntent((current) =>
       current?.proposal.asset.symbol === selected ? current : null,
     );
@@ -606,16 +609,19 @@ export function TradingDesk({
               }
               onClick={() =>
                 void act(async () => {
+                  setAnalysis(null);
+                  setIntent(null);
                   const run = await api<Run>("/runs", "POST", {
                     symbol: selected,
                     notional,
                   });
+                  setAnalysis(run);
                   setIntent(run.intent ?? null);
-                  if (!run.intent)
+                  if (run.status === "FAILED")
                     throw Error(
-                      `Analysis recorded ${run.decision ?? run.status}. No executable candidate. Inspect the Observatory.`,
+                      "Analysis recorded a failed stage. Open its recorded details for the provider or data error.",
                     );
-                })
+                }, "Analysis recorded. Its signal and risk outcomes are shown in the ticket.")
               }
             >
               <SlidersHorizontal size={14} /> Evaluate entry & preview
@@ -626,6 +632,30 @@ export function TradingDesk({
               disabled.
             </p>
           </div>
+          {analysis && (
+            <section className="desk-analysis-result" role="status">
+              <div className="inline gap wrap">
+                <strong>Analysis recorded</strong>
+                <Badge>{analysis.decision ?? analysis.status}</Badge>
+              </div>
+              <p>
+                {analysis.proposal?.rationale ??
+                  String(
+                    analysis.stages.find((s) => s.name === "Trader Decision")
+                      ?.output.reason ??
+                      "No enabled strategy produced an executable entry.",
+                  )}
+              </p>
+              <p>
+                {analysis.risk
+                  ? `Risk verdict: ${analysis.risk.verdict}.`
+                  : "No order proposed; risk and quote stages have no candidate to evaluate."}
+              </p>
+              <button onClick={() => navigate("observatory")}>
+                View recorded analysis
+              </button>
+            </section>
+          )}
           {intent && (
             <div className="desk-ticket-preview">
               <ExecutionPreview

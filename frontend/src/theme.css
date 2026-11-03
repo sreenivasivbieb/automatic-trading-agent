@@ -1965,6 +1965,53 @@ td > small {
 .research-brief-body .brief-rationale {
   margin: 0;
 }
+.modal-action-error,
+.inline-action-error {
+  margin: 0 0 20px;
+  padding: 14px 16px;
+  border: 1px solid var(--negative);
+  border-radius: 12px;
+  background: #3c222b;
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+.inline-action-error {
+  margin: 16px;
+}
+.execution-blocked {
+  padding: 24px;
+  display: grid;
+  gap: 16px;
+}
+.execution-blocked h3 {
+  font-size: 18px;
+}
+.execution-blocked p,
+.execution-blocked li {
+  font-size: 13px;
+  line-height: 1.7;
+}
+.execution-blocked p,
+.execution-blocked ul {
+  margin: 0;
+}
+.execution-blocked ul {
+  padding-left: 20px;
+}
+.execution-blocked .data-pairs {
+  padding: 0;
+}
+.risk-check-reason {
+  margin: 6px 0 0;
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+.chat-message.error {
+  border: 1px solid var(--negative);
+}
 .execution-layout > .panel,
 .execution-layout > .side-stack {
   min-width: 0;

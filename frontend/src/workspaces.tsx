@@ -880,41 +880,48 @@ export function NewsWorkspace({ data, act, busy }: WorkspaceProps) {
   // A manual response is authoritative until the shared poll supplies newer
   // data. Source changes never mix fixture stories with a live provider.
   useEffect(() => {
-    if (
-      refreshedFeed &&
-      (refreshedFeed.source !== data.news.source ||
-        Date.parse(data.news.retrieved_at) >
-          Date.parse(refreshedFeed.retrieved_at))
-    )
+    if (refreshedFeed && refreshedFeed.source !== data.news.source)
       setRefreshedFeed(null);
-    if (
-      refreshError &&
-      (refreshError.source !== data.news.source ||
-        Date.parse(data.news.retrieved_at) > refreshError.at)
-    )
+    if (refreshError && refreshError.source !== data.news.source)
       setRefreshError(null);
-  }, [data.news.source, data.news.retrieved_at, refreshedFeed, refreshError]);
+  }, [data.news.source, refreshedFeed, refreshError]);
   useEffect(() => {
-    if (!breaking) return;
     let active = true,
       pending = false;
-    setBreakingError(null);
+    if (breaking) setBreakingError(null);
     const load = async () => {
       if (pending) return;
       pending = true;
       try {
-        const result = await api<Dashboard["news"]>("/news?breaking=true");
+        const result = await api<Dashboard["news"]>(
+          "/news?breaking=" + breaking,
+        );
         if (active) {
-          setBreakingFeed(result);
-          setBreakingError(null);
+          if (breaking) {
+            setBreakingFeed(result);
+            setBreakingError(null);
+          } else {
+            setRefreshedFeed((current) =>
+              current &&
+              Date.parse(current.retrieved_at) > Date.parse(result.retrieved_at)
+                ? current
+                : result,
+            );
+            setRefreshError(null);
+          }
         }
       } catch (error) {
-        if (active)
-          setBreakingError(
-            error instanceof Error
-              ? error.message
-              : "Breaking feed unavailable",
-          );
+        if (active) {
+          const message =
+            error instanceof Error ? error.message : "News feed unavailable";
+          if (breaking) setBreakingError(message);
+          else
+            setRefreshError({
+              message,
+              source: data.news.source,
+              at: Date.now(),
+            });
+        }
       } finally {
         pending = false;
       }
@@ -929,11 +936,7 @@ export function NewsWorkspace({ data, act, busy }: WorkspaceProps) {
   const matchingBreaking =
       breakingFeed?.source === data.news.source ? breakingFeed : null,
     latest =
-      refreshedFeed?.source === data.news.source &&
-      Date.parse(refreshedFeed.retrieved_at) >=
-        Date.parse(data.news.retrieved_at)
-        ? refreshedFeed
-        : data.news,
+      refreshedFeed?.source === data.news.source ? refreshedFeed : data.news,
     feed = breaking ? matchingBreaking : latest,
     transportError = breaking
       ? breakingError
@@ -1195,6 +1198,10 @@ export function Strategies({
   const reference = data.markets.find(
     (market) => market.asset.symbol === selected,
   );
+  const savedEditing =
+    editing && data.strategies.find((s) => s.id === editing.id);
+  const configOutdated =
+    !!savedEditing && savedEditing.version !== editing?.version;
   const open = (strategy: Strategy) => {
     setEditing(strategy);
     setDraft({ ...strategy.config });
@@ -1369,7 +1376,11 @@ export function Strategies({
                   </div>
                 </details>
                 <div className="strategy-actions">
-                  <button className="text-button" onClick={() => open(s)}>
+                  <button
+                    className="text-button"
+                    onClick={() => open(s)}
+                    disabled={busy}
+                  >
                     <SlidersHorizontal size={13} />
                     Configure
                     <ChevronRight size={13} />
@@ -1458,11 +1469,41 @@ export function Strategies({
       )}
       {editing && draft && (
         <Modal
-          title={`Configure ${editing.name}`}
+          title={
+            editing.id === "spread_research_v1"
+              ? `${editing.name} requirements`
+              : `Configure ${editing.name}`
+          }
           close={() => setEditing(null)}
           wide
         >
           <p>{editing.provenance}</p>
+          {editing.id === "spread_research_v1" && (
+            <div className="inline-action-error">
+              <strong>Research-only engine</strong>
+              <p>
+                This engine cannot be enabled or configured for entries until
+                two compatible executable routes, fees and settlement costs are
+                verified. The native HSKSwap V3 scanner is available separately
+                in AEGIS.
+              </p>
+            </div>
+          )}
+          {configOutdated && savedEditing && (
+            <div className="inline-action-error" role="alert">
+              <p>
+                The saved configuration changed while this editor was open. Load
+                version {savedEditing.version} and review your values before
+                saving.
+              </p>
+              <button
+                className="button secondary"
+                onClick={() => open(savedEditing)}
+              >
+                Load latest saved version
+              </button>
+            </div>
+          )}
           <div className="form-grid">
             {(editing.id === "news_aware_v1"
               ? [
@@ -1490,6 +1531,7 @@ export function Strategies({
                   {label}
                   <input
                     type="number"
+                    disabled={editing.id === "spread_research_v1"}
                     step="any"
                     value={String(draft[key as keyof typeof draft])}
                     onChange={(e) =>
@@ -1499,7 +1541,10 @@ export function Strategies({
                 </label>
               ))}
           </div>
-          <fieldset className="asset-options">
+          <fieldset
+            className="asset-options"
+            disabled={editing.id === "spread_research_v1"}
+          >
             <legend>Permitted reference assets</legend>
             {["BTC", "ETH", "SOL"].map((a) => (
               <label key={a}>
@@ -1530,22 +1575,31 @@ export function Strategies({
             mandatory risk limits apply. Pending trade previews become invalid
             after a configuration change.
           </p>
-          <button
-            className="button primary"
-            disabled={busy || editing.id === "spread_research_v1"}
-            onClick={() =>
-              void act(async () => {
-                await api(`/strategies/${editing.id}`, "PUT", {
-                  expected_version: editing.version,
-                  config: draft,
-                });
-                setEditing(null);
-              }, "Strategy configuration saved and audited")
-            }
-          >
-            Save strategy configuration
-            <Check size={14} />
-          </button>
+          {editing.id === "spread_research_v1" ? (
+            <button
+              className="button secondary"
+              onClick={() => setEditing(null)}
+            >
+              Close requirements
+            </button>
+          ) : (
+            <button
+              className="button primary"
+              disabled={busy || configOutdated}
+              onClick={() =>
+                void act(async () => {
+                  await api(`/strategies/${editing.id}`, "PUT", {
+                    expected_version: editing.version,
+                    config: draft,
+                  });
+                  setEditing(null);
+                }, "Strategy configuration saved and audited")
+              }
+            >
+              Save strategy configuration
+              <Check size={14} />
+            </button>
+          )}
         </Modal>
       )}
     </>
@@ -1555,12 +1609,28 @@ export function Strategies({
 export function Observatory({ data, navigate, analyze, busy }: WorkspaceProps) {
   const [selectedStage, setSelectedStage] = useState<string | null>(null),
     [runs, setRuns] = useState<Run[]>([]),
-    [selectedRun, setSelectedRun] = useState<Run | null>(null);
+    [selectedRun, setSelectedRun] = useState<Run | null>(null),
+    [historyError, setHistoryError] = useState(""),
+    [historyRetry, setHistoryRetry] = useState(0);
   useEffect(() => {
-    void api<{ items: Run[] }>("/history/runs?limit=50").then((r) =>
-      setRuns(r.items),
-    );
-  }, [data.latest_run?.id]);
+    let alive = true;
+    void api<{ items: Run[] }>("/history/runs?limit=50")
+      .then((r) => {
+        if (alive) {
+          setRuns(r.items);
+          setHistoryError("");
+        }
+      })
+      .catch((e) => {
+        if (alive)
+          setHistoryError(
+            e instanceof Error ? e.message : "Run history is unavailable",
+          );
+      });
+    return () => {
+      alive = false;
+    };
+  }, [data.latest_run?.id, data.latest_run?.ended_at, historyRetry]);
   const run = selectedRun ?? data.latest_run;
   return (
     <>
@@ -1568,7 +1638,26 @@ export function Observatory({ data, navigate, analyze, busy }: WorkspaceProps) {
         <span className="muted">
           Actual LangGraph stage records · no private reasoning traces
         </span>
-        <button className="button primary" onClick={analyze} disabled={busy}>
+        {selectedRun && (
+          <button
+            className="button secondary"
+            onClick={() => {
+              setSelectedRun(null);
+              setSelectedStage(null);
+            }}
+          >
+            Return to latest analysis
+          </button>
+        )}
+        <button
+          className="button primary"
+          onClick={() => {
+            setSelectedRun(null);
+            setSelectedStage(null);
+            analyze();
+          }}
+          disabled={busy}
+        >
           <Play size={14} />
           Run analysis
         </button>
@@ -1723,6 +1812,17 @@ export function Observatory({ data, navigate, analyze, busy }: WorkspaceProps) {
         subtitle="Persisted across application restarts"
         className="section-gap"
       >
+        {historyError && (
+          <div className="inline-action-error" role="alert">
+            <p>{historyError}</p>
+            <button
+              className="button secondary"
+              onClick={() => setHistoryRetry((v) => v + 1)}
+            >
+              Retry run history
+            </button>
+          </div>
+        )}
         <div className="table-scroll">
           <table>
             <thead>
@@ -1946,132 +2046,182 @@ export function ExecutionPreview({
         subtitle={`Intent ${intent.id.slice(0, 22)} · ${intent.mode}`}
         action={<StatusBadge value={intent.state} />}
       >
-        <div className="swap-preview">
-          <div className="swap-token">
-            <span>You pay · exact input</span>
-            <div>
-              <strong>{number(quote?.input_amount, 8)}</strong>
-              <span className="inline gap">
-                <Coin symbol={quote?.input_token.symbol ?? "USD"} />
-                {quote?.input_token.symbol ?? "—"}
-              </span>
+        {quote ? (
+          <>
+            <div className="swap-preview">
+              <div className="swap-token">
+                <span>You pay · exact input</span>
+                <div>
+                  <strong>{number(quote?.input_amount, 8)}</strong>
+                  <span className="inline gap">
+                    <Coin symbol={quote?.input_token.symbol ?? "USD"} />
+                    {quote?.input_token.symbol ?? "—"}
+                  </span>
+                </div>
+              </div>
+              <div className="swap-arrow">
+                <ArrowDownUp size={17} />
+              </div>
+              <div className="swap-token">
+                <span>Expected receive · simulated</span>
+                <div>
+                  <strong>{number(quote?.output_amount, 8)}</strong>
+                  <span className="inline gap">
+                    <Coin
+                      symbol={
+                        quote?.output_token.symbol ??
+                        intent.proposal.asset.symbol
+                      }
+                    />
+                    {quote?.output_token.symbol ?? intent.proposal.asset.symbol}
+                  </span>
+                </div>
+              </div>
             </div>
-          </div>
-          <div className="swap-arrow">
-            <ArrowDownUp size={17} />
-          </div>
-          <div className="swap-token">
-            <span>Expected receive · simulated</span>
-            <div>
-              <strong>{number(quote?.output_amount, 8)}</strong>
-              <span className="inline gap">
-                <Coin
-                  symbol={
-                    quote?.output_token.symbol ?? intent.proposal.asset.symbol
-                  }
-                />
-                {quote?.output_token.symbol ?? intent.proposal.asset.symbol}
-              </span>
+            <div className="data-pairs execution-pairs">
+              <span>Approved notional</span>
+              <b>{money(intent.risk.approved_notional)}</b>
+              <span>Minimum received</span>
+              <b title={String(quote?.minimum_output)}>
+                {number(quote?.minimum_output, 8)} {quote?.output_token.symbol}
+              </b>
+              <span>Slippage assumption</span>
+              <b>{quote?.slippage_bps ?? "—"} bps</b>
+              <span>Price impact model</span>
+              <b>{percent(quote?.price_impact, 4)}</b>
+              <span>Trading fee</span>
+              <b>{money(quote?.trading_fee_usd, 4)}</b>
+              <span>Network cost</span>
+              <b>{money(quote?.network_fee_usd)} · no blockchain</b>
+              <span>Quote age / expiry</span>
+              <b className={expired ? "text-negative" : ""}>
+                {age === null
+                  ? "No quote"
+                  : `${age}s · ${expired ? "EXPIRED" : "valid for 20s"}`}
+              </b>
+              <span>Token identity</span>
+              <b>Reference assets · chain not assigned</b>
+              <span>Source / route</span>
+              <b>{quote?.source ?? "Unavailable"}</b>
             </div>
-          </div>
-        </div>
-        <div className="data-pairs execution-pairs">
-          <span>Approved notional</span>
-          <b>{money(intent.risk.approved_notional)}</b>
-          <span>Minimum received</span>
-          <b title={String(quote?.minimum_output)}>
-            {number(quote?.minimum_output, 8)} {quote?.output_token.symbol}
-          </b>
-          <span>Slippage assumption</span>
-          <b>{quote?.slippage_bps ?? "—"} bps</b>
-          <span>Price impact model</span>
-          <b>{percent(quote?.price_impact, 4)}</b>
-          <span>Trading fee</span>
-          <b>{money(quote?.trading_fee_usd, 4)}</b>
-          <span>Network cost</span>
-          <b>{money(quote?.network_fee_usd)} · no blockchain</b>
-          <span>Quote age / expiry</span>
-          <b className={expired ? "text-negative" : ""}>
-            {age === null
-              ? "No quote"
-              : `${age}s · ${expired ? "EXPIRED" : "valid for 20s"}`}
-          </b>
-          <span>Token identity</span>
-          <b>Reference assets · chain not assigned</b>
-          <span>Source / route</span>
-          <b>{quote?.source ?? "Unavailable"}</b>
-        </div>
-        <div className="route-note">
-          {quote?.route.join(" → ") ?? "Risk rejection prevented quoting."}
-        </div>
-        <div className="authorization-block">
-          <div className="inline gap">
-            <FlaskConical size={17} />
-            <strong>SIMULATION AUTHORIZATION</strong>
-          </div>
-          <p>
-            This action creates a local simulated fill and updates the simulated
-            ledger. No wallet signing, token approval or blockchain submission
-            occurs.
-          </p>
-          {intent.state === "AWAITING_AUTHORIZATION" ? (
-            <>
-              {expired ? (
-                <button
-                  className="button secondary full"
-                  disabled={busy}
-                  onClick={() =>
-                    void act(
-                      async () =>
-                        update(
-                          await api<Intent>("/execution/preview", "POST", {
-                            proposal_id: intent.proposal_id,
-                          }),
-                        ),
-                      "Risk and quote refreshed",
-                    )
-                  }
-                >
-                  <RefreshCw size={14} />
-                  Refresh risk check & quote
-                </button>
+            <div className="route-note">
+              {quote?.route.join(" → ") ?? "Risk rejection prevented quoting."}
+            </div>
+            <div className="authorization-block">
+              <div className="inline gap">
+                <FlaskConical size={17} />
+                <strong>SIMULATION AUTHORIZATION</strong>
+              </div>
+              <p>
+                This action creates a local simulated fill and updates the
+                simulated ledger. No wallet signing, token approval or
+                blockchain submission occurs.
+              </p>
+              {intent.state === "AWAITING_AUTHORIZATION" ? (
+                <>
+                  {expired ? (
+                    <button
+                      className="button secondary full"
+                      disabled={busy}
+                      onClick={() =>
+                        void act(
+                          async () =>
+                            update(
+                              await api<Intent>("/execution/preview", "POST", {
+                                proposal_id: intent.proposal_id,
+                              }),
+                            ),
+                          "Risk and quote refreshed",
+                        )
+                      }
+                    >
+                      <RefreshCw size={14} />
+                      Refresh risk check & quote
+                    </button>
+                  ) : (
+                    <button
+                      className="button primary full"
+                      disabled={busy}
+                      onClick={() =>
+                        void act(
+                          async () =>
+                            update(
+                              await api<Intent>(
+                                "/execution/authorize",
+                                "POST",
+                                {
+                                  intent_id: intent.id,
+                                  quote_id: quote?.id,
+                                  acknowledgement: "AUTHORIZE_SIMULATION",
+                                },
+                              ),
+                            ),
+                          "Simulated fill confirmed and portfolio reconciled",
+                        )
+                      }
+                    >
+                      <CheckCircle2 size={16} />
+                      Authorize simulated fill
+                    </button>
+                  )}
+                </>
+              ) : intent.state === "RECONCILED" ? (
+                <div className="fill-success">
+                  <CheckCircle2 size={18} />
+                  <span>
+                    Simulated fill reconciled
+                    <strong className="mono">{intent.receipt_id}</strong>
+                  </span>
+                </div>
               ) : (
-                <button
-                  className="button primary full"
-                  disabled={busy}
-                  onClick={() =>
-                    void act(
-                      async () =>
-                        update(
-                          await api<Intent>("/execution/authorize", "POST", {
-                            intent_id: intent.id,
-                            quote_id: quote?.id,
-                            acknowledgement: "AUTHORIZE_SIMULATION",
-                          }),
-                        ),
-                      "Simulated fill confirmed and portfolio reconciled",
-                    )
-                  }
-                >
-                  <CheckCircle2 size={16} />
-                  Authorize simulated fill
-                </button>
+                <p className="text-negative">
+                  {intent.risk.reasons.join(" ")}{" "}
+                  {intent.quote_errors?.join(" ")}
+                </p>
               )}
-            </>
-          ) : intent.state === "RECONCILED" ? (
-            <div className="fill-success">
-              <CheckCircle2 size={18} />
-              <span>
-                Simulated fill reconciled
-                <strong className="mono">{intent.receipt_id}</strong>
-              </span>
             </div>
-          ) : (
-            <p className="text-negative">
-              {intent.risk.reasons.join(" ")} {intent.quote_errors?.join(" ")}
+          </>
+        ) : (
+          <div className="execution-blocked">
+            <h3>
+              {intent.risk.verdict === "REJECTED"
+                ? "Trade blocked before quoting"
+                : "No executable quote available"}
+            </h3>
+            <p>
+              {intent.risk.verdict === "REJECTED"
+                ? "The risk engine rejected this proposal, so no swap quote was requested."
+                : "A validated quote has not been recorded for this intent. Execution remains unavailable."}
             </p>
-          )}
-        </div>
+            <ul>
+              {[...intent.risk.reasons, ...(intent.quote_errors ?? [])].map(
+                (reason, index) => (
+                  <li key={index}>{reason}</li>
+                ),
+              )}
+            </ul>
+            <div className="data-pairs">
+              <span>Requested notional</span>
+              <b>{money(intent.proposal.notional)}</b>
+              <span>Proposed asset</span>
+              <b>{intent.proposal.asset.symbol}</b>
+              <span>Observed reference price</span>
+              <b>{money(intent.proposal.reference_price)}</b>
+              <span>Market source</span>
+              <b>{intent.proposal.market_source}</b>
+              <span>Receipt</span>
+              <b>{intent.receipt_id ?? "Not submitted"}</b>
+            </div>
+            <p className="note">
+              Review the failed checks in Risk Controls. After an incident
+              review, clearing an emergency stop requires your explicit
+              confirmation. Run a fresh analysis to obtain a new proposal.
+            </p>
+            <a className="button secondary" href="#/risk">
+              Review risk controls
+            </a>
+          </div>
+        )}
       </Panel>
       <div className="side-stack">
         <Panel
@@ -2091,8 +2241,18 @@ export function ExecutionPreview({
                   <div>
                     <strong>{c.code.replaceAll("_", " ").toLowerCase()}</strong>
                     <small>
-                      Actual {c.actual} · limit {c.limit}
+                      {c.code === "TOKEN_IDENTITY" &&
+                      intent.mode === "SIMULATION" ? (
+                        "Reference asset allowed in SIMULATION. Signed execution requires verified token identity."
+                      ) : (
+                        <>
+                          Actual {c.actual} · limit {c.limit}
+                        </>
+                      )}
                     </small>
+                    {!c.passed && (
+                      <p className="risk-check-reason">{c.reason}</p>
+                    )}
                   </div>
                 </div>
               ))}
@@ -2130,12 +2290,30 @@ export function Executions(
 ) {
   const { data, act, busy, override, setOverride } = props;
   const [offset, setOffset] = useState(0),
-    [history, setHistory] = useState(data.executions);
+    [history, setHistory] = useState(data.executions),
+    [historyError, setHistoryError] = useState(""),
+    [retry, setRetry] = useState(0);
   useEffect(() => {
+    let alive = true;
     void api<typeof data.executions>(
       `/history/intents?limit=20&offset=${offset}`,
-    ).then(setHistory);
-  }, [offset, data.executions.total, data.audit.items[0]?.id]);
+    )
+      .then((value) => {
+        if (alive) {
+          setHistory(value);
+          setHistoryError("");
+        }
+      })
+      .catch((e) => {
+        if (alive)
+          setHistoryError(
+            e instanceof Error ? e.message : "Execution history is unavailable",
+          );
+      });
+    return () => {
+      alive = false;
+    };
+  }, [offset, data.executions.total, data.audit.items[0]?.id, retry]);
   const current = override ?? history.items[0];
   return (
     <>
@@ -2170,6 +2348,17 @@ export function Executions(
         action={<Badge>{history.total} recorded intents</Badge>}
         className="section-gap"
       >
+        {historyError && (
+          <div className="inline-action-error" role="alert">
+            <p>{historyError}</p>
+            <button
+              className="button secondary"
+              onClick={() => setRetry((v) => v + 1)}
+            >
+              Retry execution history
+            </button>
+          </div>
+        )}
         <div className="table-scroll">
           <table>
             <thead>

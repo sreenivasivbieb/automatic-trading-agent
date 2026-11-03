@@ -52,12 +52,45 @@ export async function api<T>(
         headers: { ...options.headers, "X-Terminal-CSRF": csrf },
       });
     }
-    const data = await response.json();
-    if (!response.ok)
+    let data;
+    try {
+      data = await response.json();
+    } catch {
       throw new Error(
-        data.error?.message ?? `Request failed (${response.status})`,
+        `Backend returned an unreadable response (${response.status}). Check that make demo is running and restart it after backend changes.`,
       );
+    }
+    if (!response.ok) {
+      const details = Array.isArray(data.error?.details)
+        ? data.error.details
+            .slice(0, 3)
+            .map(
+              (item: { location?: string[]; message?: string }) =>
+                `${
+                  item.location
+                    ?.filter((p) => p !== "body")
+                    .join(".")
+                    .replaceAll("_", " ") || "Request"
+                }: ${item.message || "invalid value"}`,
+            )
+            .join("; ")
+        : "";
+      throw new Error(
+        (data.error?.message ?? `Request failed (${response.status})`) +
+          (details ? ". " + details : ""),
+      );
+    }
     return data as T;
+  } catch (error) {
+    if (error instanceof DOMException && error.name === "AbortError")
+      throw new Error(
+        "The request timed out. It may still have been recorded; inspect the latest state before retrying a change.",
+      );
+    if (error instanceof TypeError)
+      throw new Error(
+        "Could not reach the backend. Start make demo, wait for the API to be ready, and retry.",
+      );
+    throw error;
   } finally {
     window.clearTimeout(timeout);
   }

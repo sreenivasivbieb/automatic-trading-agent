@@ -1,6 +1,17 @@
-import { useEffect, useRef, type ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useRef,
+  type ReactNode,
+} from "react";
 import { ArrowDownRight, ArrowUpRight, Inbox, X } from "lucide-react";
 import type { Amount } from "./types";
+
+export const ActionFeedbackContext = createContext<{
+  text: string;
+  error: boolean;
+} | null>(null);
 
 export const money = (value: Amount | null | undefined, digits = 2) =>
   value === null || value === undefined
@@ -154,6 +165,16 @@ export function Modal({
   wide?: boolean;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
+  const body = useRef<HTMLDivElement>(null);
+  const feedback = useContext(ActionFeedbackContext);
+  const initialFeedback = useRef(feedback);
+  const error =
+    feedback?.error && feedback !== initialFeedback.current
+      ? feedback.text
+      : "";
+  useEffect(() => {
+    if (error) body.current?.scrollTo({ top: 0 });
+  }, [error]);
   useEffect(() => {
     const dialog = ref.current;
     const trigger = document.activeElement;
@@ -184,7 +205,14 @@ export function Modal({
           <X size={19} />
         </button>
       </div>
-      <div className="modal-body">{children}</div>
+      <div className="modal-body" ref={body}>
+        {error && (
+          <p className="modal-action-error" role="alert">
+            {error}
+          </p>
+        )}
+        {children}
+      </div>
     </dialog>
   );
 }

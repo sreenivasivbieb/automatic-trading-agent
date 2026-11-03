@@ -52,7 +52,7 @@ import type {
   Run,
   Status,
 } from "./types";
-import { Panel, StatusBadge } from "./ui";
+import { ActionFeedbackContext, Panel, StatusBadge } from "./ui";
 import {
   Executions,
   Markets,
@@ -204,6 +204,7 @@ interface ChatMessage {
   role: "user" | "assistant";
   content: string;
   tool?: string;
+  error?: boolean;
 }
 
 function Chat({
@@ -234,20 +235,36 @@ function Chat({
     setMessages((v) => [...v, { id: Date.now(), role: "user", content: text }]);
     try {
       await act(async () => {
-        const response = await api<{ response: string; tool: string }>(
-          "/chat",
-          "POST",
-          { message: text },
-        );
-        setMessages((v) => [
-          ...v,
-          {
-            id: Date.now() + 1,
-            role: "assistant",
-            content: response.response,
-            tool: response.tool,
-          },
-        ]);
+        try {
+          const response = await api<{ response: string; tool: string }>(
+            "/chat",
+            "POST",
+            { message: text },
+          );
+          setMessages((v) => [
+            ...v,
+            {
+              id: Date.now() + 1,
+              role: "assistant",
+              content: response.response,
+              tool: response.tool,
+            },
+          ]);
+        } catch (error) {
+          setMessages((rows) => [
+            ...rows,
+            {
+              id: Date.now() + 1,
+              role: "assistant",
+              content:
+                error instanceof Error
+                  ? error.message
+                  : "The command could not complete. Check the backend and retry.",
+              error: true,
+            },
+          ]);
+          throw error;
+        }
       });
     } finally {
       setPending(false);
@@ -261,7 +278,7 @@ function Chat({
         </span>
         <div>
           <strong>Krono assistant</strong>
-          <small>Validated command router · no signing authority</small>
+          <small>Command mode · no API key required</small>
         </div>
         <button
           className="icon-button right"
@@ -273,7 +290,10 @@ function Chat({
       </div>
       <div className="chat-messages">
         {messages.map((m) => (
-          <div className={`chat-message ${m.role}`} key={m.id}>
+          <div
+            className={`chat-message ${m.role}${m.error ? " error" : ""}`}
+            key={m.id}
+          >
             <span className="eyebrow">
               {m.role === "assistant" ? "KRONO ASSISTANT" : "YOU"}
             </span>
@@ -332,8 +352,9 @@ function Chat({
         </button>
       </form>
       <small className="chat-policy">
-        Tab memory only. Typed tool actions are audited. Raw messages are not
-        stored.
+        Command mode uses recorded research data. Free-form AI tool calling is
+        available in AEGIS with a configured model provider. Typed actions are
+        audited; raw messages stay in this tab.
       </small>
     </aside>
   );
@@ -376,7 +397,8 @@ function AppContent({
     [sidebar, setSidebar] = useState(false),
     [override, setOverride] = useState<Intent | null>(null),
     [account, setAccount] = useState<string | null>(null);
-  const fetching = useRef(false);
+  const fetching = useRef<Promise<void> | null>(null);
+  const refreshRequested = useRef(false);
   const switchWorkspace = (workspace: Workspace, next: Page = "overview") => {
     const page = workspace === "platform" ? "platform" : next;
     setRoute({ workspace, page });
@@ -403,26 +425,38 @@ function AppContent({
     },
     [route.workspace, setRoute],
   );
-  const reload = useCallback(async () => {
-    if (!isResearch) return;
-    if (fetching.current) return;
-    fetching.current = true;
-    try {
-      const [dashboard, serverStatus] = await Promise.all([
-        api<Dashboard>("/dashboard"),
-        api<Status>("/status"),
-      ]);
-      setData(dashboard);
-      setStatus(serverStatus);
-      setConnectionError(null);
-    } catch (e) {
-      setConnectionError(
-        e instanceof Error ? e.message : "Backend connection unavailable",
-      );
-    } finally {
-      fetching.current = false;
-    }
-  }, [isResearch]);
+  const reload = useCallback(
+    async (afterMutation = false) => {
+      if (!isResearch) return;
+      if (afterMutation) refreshRequested.current = true;
+      if (fetching.current) return fetching.current;
+      const request = (async () => {
+        do {
+          refreshRequested.current = false;
+          try {
+            const [dashboard, serverStatus] = await Promise.all([
+              api<Dashboard>("/dashboard"),
+              api<Status>("/status"),
+            ]);
+            setData(dashboard);
+            setStatus(serverStatus);
+            setConnectionError(null);
+          } catch (e) {
+            setConnectionError(
+              e instanceof Error ? e.message : "Backend connection unavailable",
+            );
+          }
+        } while (refreshRequested.current);
+      })();
+      fetching.current = request;
+      try {
+        await request;
+      } finally {
+        fetching.current = null;
+      }
+    },
+    [isResearch],
+  );
   useEffect(() => {
     void reload();
     const id = setInterval(
@@ -488,10 +522,10 @@ function AppContent({
   const act = useCallback(
     async (work: () => Promise<unknown>, message?: string) => {
       setBusy(true);
+      setToast(null);
       try {
         await work();
         if (message) setToast({ text: message, error: false });
-        await reload();
       } catch (e) {
         setToast({
           text:
@@ -501,6 +535,8 @@ function AppContent({
           error: true,
         });
       } finally {
+        // Failed actions can still record a run or a rejection. Refresh that evidence too.
+        await reload(true);
         setBusy(false);
       }
     },
@@ -947,7 +983,7 @@ function AppContent({
               }
             />
           ) : base ? (
-            <>
+            <ActionFeedbackContext.Provider value={toast}>
               {(status!.providers.market === "fixture" ||
                 status!.providers.news === "fixture") && (
                 <div className="simulation-notice">
@@ -992,7 +1028,7 @@ function AppContent({
                 />
               )}{" "}
               {page === "settings" && <Settings {...base} />}
-            </>
+            </ActionFeedbackContext.Provider>
           ) : (
             <div className="initial-loading">
               <KronoMark />

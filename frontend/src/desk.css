@@ -336,6 +336,20 @@
 .desk-ticket-preview {
   padding: 0 8px;
 }
+.desk-analysis-result {
+  margin: 0 16px 16px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  display: grid;
+  gap: 12px;
+}
+.desk-analysis-result p {
+  font-size: 12px;
+  line-height: 1.7;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
 .desk-ticket-preview .execution-layout {
   display: block;
 }
