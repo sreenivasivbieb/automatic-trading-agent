@@ -1,0 +1,339 @@
+{
+  "checked_at": "2026-11-03T16:40:58.951884+00:00",
+  "status": "PASS",
+  "scope": "Reported research/news/chat UI repairs, strategy-control and target-filter correctness, persistent local trade archives, regression and read-only live checks. This is not full signed-autonomous-trading track completion.",
+  "base_revision": "3edd97252264abed1ebfb78b0a84118721cd5351",
+  "tested_runtime_revision": "3c5d24071439430ea95095decded27b56b47612a",
+  "source_snapshot_sha256": "a63165e405e377a2125fac54b5a063644969228f882e368fbe8e31984acc3f69",
+  "source_fingerprint_method": "SHA-256 of compact sorted JSON mapping changed source/test/config paths to SHA-256; docs/evidence excluded",
+  "source_files": {
+    ".gitignore": "0cc3657f2bb0f939c2c4b1e8b445765b60a31d78de2cfc40862e19efbb8da7ed",
+    "Makefile": "bc95255c1c0f3c0c22a5724678d0e0212b0c958ec7580ff93380065016d49b1f",
+    "agent/aegis/execution/gateway.py": "77ce8e90318a19e25fe58f534f99412923c875448f37cf1f3b06266569a9d637",
+    "agent/aegis/history.py": "96098fc4bbdaf709d3a6ce90857829a8e068a26cc6070de11eee551289b8411b",
+    "agent/aegis/nl/tools.py": "106f3600bda975c13643ee30198836fb3ce8dacfa6a8bbed6c12fa588acc64b3",
+    "agent/aegis/runtime.py": "2553f3e69435a14259fa5c7a06e172804ee298f0f4ea7ba2ff16baca28910002",
+    "agent/aegis/store/db.py": "b692f2c6b7c0374381ae0b00f899d1b9dbfc1ce16e4d6468dff91ab3cf98ecef",
+    "agent/tests/test_chat_commands.py": "f68b75fdcbc5bcdb4cf5e98def0fbacc70ec00e16f25bf06c9e9e96187fe954b",
+    "agent/tests/test_entry_filter_guards.py": "8f9f994c579e84eeb8b7f37c453fb1e62a5e423427adaa4bef5425fbb6b7cd46",
+    "agent/tests/test_paper_archive.py": "f81a74ef2501bf7b5f216e8dd7eb1604bce804318a9252cce80e555d0e300fbf",
+    "backend/aegis_bridge.py": "33e8aed8ca01847acc13360d48979aaa0263c144cb8934ae9c68dadf849efc5d",
+    "backend/api.py": "c02e8a8c9a134f73decb7fee6b67b0ba5214ec9fd3312d2843c9e430c3fa4564",
+    "backend/execution.py": "c8287313080e9b052805333023998af07c009babbde0da1bd25d118c1c269383",
+    "backend/storage.py": "7a30f1dcda40146fac2b5a07108efc1953f28e92c8fc995bc87744f1c524a87b",
+    "backend/tests/test_api_backtest.py": "fcbc52a9b6d0d24b107f242154bfc2a7b242ecc79633d3559d7eb837dcf1254c",
+    "backend/tests/test_archive_boundaries.py": "6ce48d789f91edc2a31a09ad295461da03df8c5d053ec66bccf32bde011b04a9",
+    "backend/tests/test_local_database.py": "885f1951bb8ca5400e7ae9b9811e1234ca1614006ab4e3e405679e96ac9ba36c",
+    "backend/tests/test_strategy_engine_controls.py": "2261688dba56286f00f808a42a478823b800d7e3a7c00f5eea3100282bafdb81",
+    "backend/tests/test_trade_history.py": "074791a86bfd376bbdbf9297a7f3cc37128cffe5e8e812b35679c9cd1dc3b935",
+    "backend/trade_history.py": "3aa5740d1d805164f68dbdffd86d7265d44ab925e97333a642eacc744634409f",
+    "e2e/layout-news.spec.ts": "917439c555a97630d1f9a51e48231850bbe472dd41947f273899059b3247738c",
+    "e2e/research-flows.spec.ts": "b590eaf902290f66eb7937d0d459eed39b99ee517abcd2d776ed3f9a43337574",
+    "e2e/research-layout.spec.ts": "2fc73f2089289e219072a6189fc14f3b3d39aa8ad3071a442c1cd9043f62e08e",
+    "e2e/strategy-controls.spec.ts": "9b58af5006e284d0cb71ae182632996f7c1127423ba59a65fd3d0d9d5bd43dcc",
+    "e2e/trade-history.spec.ts": "9cd4ec5db52ac1eb3a36a4cdcc9d66779e9968f18e6930dddbf0b086d7ce31ff",
+    "frontend/src/AegisDesk.tsx": "b89c8e4a67374463ab13129e0b0476c346e3990704c4aa9b5b19ec3fe29161a5",
+    "frontend/src/App.tsx": "1cb6c194f049dcc704fb45d6255ada399c6ad866a3b828e7376c7c3177d57bb1",
+    "frontend/src/ResearchBrief.tsx": "63f33b5dfe9d4b35772d99983d13554afa5bd2a11e7aef33aa510ad6ca823eb3",
+    "frontend/src/TradeHistory.tsx": "c0948342ffacafd6a89a4f328b769b8cd2ba5bee0ddadc538c4ddb35c6ed7450",
+    "frontend/src/TradingDesk.tsx": "b812bb306d657d9084eff1410b0f728a792ff588c8d97fc532acdabcdf752c6d",
+    "frontend/src/aegis/types.ts": "be20844f3b1829f5594af336f53b444736cb3438c079a83bff0bad558b27319e",
+    "frontend/src/api.ts": "fbce4f2796b91f13edd5b118d85f6e274499e3049fc1bf47f276187b32cac94a",
+    "frontend/src/desk.css": "7dbf5e94104efbe82f6efca3be0240b356439ef6e05bdc4a88bbdb48287dad47",
+    "frontend/src/theme.css": "027d04c61bdd2f8b6a3d2c63d1d4a08f703cacc1229e0dbc65f82c7c67e854ce",
+    "frontend/src/ui.tsx": "ec8e7e3ea1659b4636fc986439c24751a6edf25c999a3b811b56a0670e706fa8",
+    "frontend/src/workspaces.tsx": "cfef1dc3b3519ea05b0069523b4e7f8f57d80cb9222715d31f689a5b4d95d06a",
+    "scripts/local_database.py": "bd06f544f4ddc1d769f9862ba3559e1d931ae37ccb672e298edbf00bc6650c7f"
+  },
+  "modified_or_added_files": [
+    ".gitignore",
+    "Makefile",
+    "README.md",
+    "agent/aegis/execution/gateway.py",
+    "agent/aegis/history.py",
+    "agent/aegis/nl/tools.py",
+    "agent/aegis/runtime.py",
+    "agent/aegis/store/db.py",
+    "agent/tests/test_chat_commands.py",
+    "agent/tests/test_entry_filter_guards.py",
+    "agent/tests/test_paper_archive.py",
+    "backend/aegis_bridge.py",
+    "backend/api.py",
+    "backend/execution.py",
+    "backend/storage.py",
+    "backend/tests/test_api_backtest.py",
+    "backend/tests/test_archive_boundaries.py",
+    "backend/tests/test_local_database.py",
+    "backend/tests/test_strategy_engine_controls.py",
+    "backend/tests/test_trade_history.py",
+    "backend/trade_history.py",
+    "docs/SOURCE_REFERENCE.md",
+    "docs/VERIFICATION.md",
+    "docs/evidence/integration-repair-validation.json",
+    "docs/evidence/news-flow-verification.json",
+    "docs/evidence/screenshots/repaired-news-desktop.png",
+    "docs/evidence/screenshots/repaired-news-mobile.png",
+    "e2e/layout-news.spec.ts",
+    "e2e/research-flows.spec.ts",
+    "e2e/research-layout.spec.ts",
+    "e2e/strategy-controls.spec.ts",
+    "e2e/trade-history.spec.ts",
+    "frontend/src/AegisDesk.tsx",
+    "frontend/src/App.tsx",
+    "frontend/src/ResearchBrief.tsx",
+    "frontend/src/TradeHistory.tsx",
+    "frontend/src/TradingDesk.tsx",
+    "frontend/src/aegis/types.ts",
+    "frontend/src/api.ts",
+    "frontend/src/desk.css",
+    "frontend/src/theme.css",
+    "frontend/src/ui.tsx",
+    "frontend/src/workspaces.tsx",
+    "scripts/local_database.py"
+  ],
+  "regressions": {
+    "python": {
+      "passed": 449,
+      "subtests_passed": 10,
+      "skipped": 1,
+      "scope": "backend/tests, agent/tests and three retained legacy suites; live connector opt-in remains skipped"
+    },
+    "browser": {
+      "passed": 52,
+      "scope": "Isolated labeled fixture API; all research/AEGIS/platform flows, mobile layout, independent news/cache recovery, engine toggles, history detail/download/filter/pagination"
+    },
+    "solidity": {
+      "passed": 57,
+      "skipped": 1,
+      "scope": "Local Guard/Oracle/DecisionLog suites; live fork opt-in remains skipped"
+    },
+    "ruff_check": "PASS",
+    "ruff_format": "PASS",
+    "source_reference": "PASS",
+    "typescript_and_vite_build": "PASS",
+    "restart_smoke": {
+      "verified_at": "2026-11-03T16:36:42.552928+00:00",
+      "status": "PASSED",
+      "mode": "SIMULATION",
+      "frontend_served": true,
+      "frontend_index_sha256": "2ec1f0369e7105690814433bd049dded5be65d05cbe71ce56cd1ad738525747c",
+      "simulated_fills_before_restart": 1,
+      "simulated_fills_after_restart": 1,
+      "cash_persisted": true,
+      "equity_persisted": true,
+      "scheduler_after_restart": "PAUSED",
+      "live_enabled": false,
+      "blockchain_submission_attempted": false
+    },
+    "archive_tests": {
+      "status": "PASS",
+      "scope": "Retention beyond recent-row limits; restart without re-crediting; exact EVM integers; original settings/news evidence; auth/bounds; average-cost PnL; inclusive UTC dates; private DB/WAL/SHM; consistent backup/restore"
+    },
+    "publication_scan": {
+      "status": "PASS",
+      "files_checked": 593,
+      "issues": [],
+      "scope": "Git-tracked and unignored candidate files; bounded credential patterns and runtime-path policy. Not a complete security audit."
+    },
+    "personal_path_scan": {
+      "status": "PASS",
+      "files_checked": 44,
+      "issues": [],
+      "scope": "Changed/unignored publication candidates, personal home and temporary absolute paths; secret patterns checked separately"
+    },
+    "local_readme_links": {
+      "status": "PASS",
+      "links_checked": 55,
+      "missing": []
+    }
+  },
+  "repairs": [
+    "Padded research brief, readable desk tabs/controls and responsive panels preserve original artwork/navigation.",
+    "Forced post-mutation dashboard refresh waits for in-flight reads; modal validation errors and history retry stay visible.",
+    "Analyze HOLD results are recorded and visible; quote-less rejections explain blockers instead of displaying empty swap amounts.",
+    "News loads independently with latest/breaking, filters, original publisher details, provider limits and stale-cache retry.",
+    "Research chat reads actual simulation positions/PnL and explains command mode; AEGIS validates complete mixed requests atomically and handles target exclusions.",
+    "Permanent paginated SQLite archives expose original fill/quote/settings/risk/run/news/audit evidence and local JSON exports.",
+    "Engine status is current local configuration; supported versioned toggles and blocked/unavailable badges prevent silent engine blockers.",
+    "Cycle analysis and final prefill reject excluded intermediate assets or a removed strategy; protective exits remain active."
+  ],
+  "live_read_only": {
+    "news": {
+      "record": "news-flow-verification.json",
+      "status": "PASS",
+      "checks": [
+        {
+          "name": "latest",
+          "status": "AVAILABLE",
+          "articles": 3,
+          "limited": true,
+          "max_results": 3,
+          "retrieved_at": "2026-11-03T16:33:16.886334Z",
+          "published_at": [
+            "2026-11-03T16:30:00Z",
+            "2026-11-03T16:29:20Z",
+            "2026-11-03T16:29:16.752000Z"
+          ]
+        },
+        {
+          "name": "filters_and_publisher_evidence",
+          "status": "PASS",
+          "assets": [
+            "BTC",
+            "ETH",
+            "SOL",
+            "HSK"
+          ],
+          "categories": [
+            "macro",
+            "mainstream",
+            "ethereum"
+          ],
+          "original_publisher_url": "https://www.zerohedge.com/political/obama-judge-orders-federal-officials-stop-sending-lists-noncitizen-voters-states"
+        },
+        {
+          "name": "breaking",
+          "status": "AVAILABLE",
+          "articles": 10,
+          "visible_recent": 10,
+          "limited": false,
+          "retrieved_at": "2026-11-03T16:33:18.699130Z"
+        },
+        {
+          "name": "manual_refresh",
+          "status": "AVAILABLE",
+          "articles": 10,
+          "feed": "breaking"
+        }
+      ],
+      "widths": [
+        1880,
+        1512,
+        1280,
+        1024,
+        768,
+        390,
+        320
+      ],
+      "browser_errors": []
+    },
+    "research": {
+      "checks": [
+        {
+          "view": "news",
+          "status": "AVAILABLE",
+          "stories": 3,
+          "limited": true
+        },
+        {
+          "view": "configure-invalid",
+          "error_inside_dialog": 1,
+          "message": "Request failed schema validation. config.fast period: Input should be less than or equal to 30"
+        },
+        {
+          "view": "analysis",
+          "status": "COMPLETED",
+          "decision": "HOLD",
+          "stages": [
+            {
+              "name": "Market Data",
+              "status": "COMPLETED"
+            },
+            {
+              "name": "News Intelligence",
+              "status": "COMPLETED"
+            },
+            {
+              "name": "Analyst Team",
+              "status": "COMPLETED"
+            },
+            {
+              "name": "Bull/Bear Research",
+              "status": "SKIPPED"
+            },
+            {
+              "name": "Strategy Evaluation",
+              "status": "COMPLETED"
+            },
+            {
+              "name": "Trader Decision",
+              "status": "COMPLETED"
+            },
+            {
+              "name": "Risk Manager",
+              "status": "SKIPPED"
+            },
+            {
+              "name": "Quote Validation",
+              "status": "SKIPPED"
+            },
+            {
+              "name": "Executor",
+              "status": "SKIPPED"
+            },
+            {
+              "name": "Reconciliation",
+              "status": "SKIPPED"
+            }
+          ]
+        }
+      ],
+      "widths": [
+        1880,
+        1504,
+        1280,
+        1024,
+        768,
+        390,
+        320
+      ],
+      "browser_errors": [],
+      "expected_http_errors": [
+        {
+          "path": "/api/strategies/momentum_v1",
+          "status": 422
+        }
+      ]
+    },
+    "public_decision_2": {
+      "verified": true,
+      "scope": "Exact revealed payload hash and confirmed canonical receipt; this does not independently establish profit or truthful rationale.",
+      "chain_id": 133,
+      "decision_id": 2,
+      "decision_hash": "0x1f534eaef2ec3b563598bf2ef548f69d3aab91e6de1bf8ebfaa73d220ef971a8",
+      "execution_hash": "0xa98617e956557a0599983ec6d698bc1d7496dbdad0033d1e87dd4ca915892736",
+      "consumed_by_vault": true,
+      "committed_block": 35183377,
+      "revealed_block": 35183405,
+      "revealed_at": 1793553466,
+      "payload_bytes": 2398,
+      "reveal_transaction": "0x2a23302898edd33571f08f5759c4f3fc20fa529f4345a622188e603dff6adf93",
+      "explorer": "https://testnet-explorer.hskchain.net/tx/0x2a23302898edd33571f08f5759c4f3fc20fa529f4345a622188e603dff6adf93"
+    },
+    "local_app": {
+      "status": "PASS",
+      "past_paper_fills_accessible": 16,
+      "all_retained_details_read": 16,
+      "signed_execution_enabled": false,
+      "emergency_state_changed_by_validation": false
+    },
+    "models_invoked": false,
+    "transactions_sent": 0
+  },
+  "remaining_implementation_boundaries": [
+    "The website scheduler executes paper entries; the separately proven signed gateway is not an autonomous signed-entry scheduler.",
+    "The configured verified pool graph contains no closed arbitrage cycle. Cross-venue reference comparisons have no funded executable second leg.",
+    "Four library engines use reference-market candles and verified HSKSwap entry quotes. Arbitrage Detection is explicitly unavailable; there are not seven enabled native pool algorithms.",
+    "Rule confidence is heuristic. No sustained-profit or calibrated-alpha result is established.",
+    "Current controls support WHSK/WETH/WBTC targets with USDT settlement and 15-300-second scan bounds; USDC, 600-second scans and minimum-edge changes are refused.",
+    "Positions and PnL represent separate paper/simulation accounts, not continuously reconciled signed-vault holdings.",
+    "Position stops exit positions; portfolio daily-loss/drawdown breakers pause entries. No new one-hour or 24/7 signed soak is claimed.",
+    "LLM provider adapters are protocol-tested; credential-backed model and Telegram delivery were not invoked.",
+    "Sepolia execution and the supplied organizer prize/network-acceptance narrative were not implemented or validated.",
+    "Historical 15/15 checkpoint records retain their narrower stated scopes and are not a claim of complete production readiness."
+  ],
+  "screenshots": [
+    "screenshots/repaired-news-desktop.png",
+    "screenshots/repaired-news-mobile.png"
+  ]
+}

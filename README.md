@@ -22,6 +22,8 @@ The original research home, coin artwork and strategy library remain available. 
 | Conversational strategy and P&L control | [Validated tools](agent/aegis/nl/tools.py), [AI controller](agent/aegis/nl/agent.py), [persistent ledger](agent/aegis/store/db.py)                                               | Chat: positions, P&L, size, frequency, risk, target assets and active strategies   |
 | Verifiable decisions and human control  | [DecisionLog](contracts/src/DecisionLog.sol), [exact-byte verifier](agent/aegis/verify_decision.py), confirmation previews                                                       | Public decision links, Observatory and owner Wallet panel                          |
 
+**Execution scope:** the website's autonomous loop uses paper funds. The signed gateway and public testnet proof are separate from that scheduler. The configured pool graph currently has no closed arbitrage cycle, and reference-market spreads are observations without a funded second leg. Starting the agent therefore does not guarantee a signal or a fill. The [current integration audit](docs/VERIFICATION.md#current-integration-audit) distinguishes working flows from the remaining signed-automation work.
+
 ## Start the project
 
 Requires **Python 3.12, uv and Node.js 22.12+**. Setup installs locked dependencies into the project environment.
@@ -54,6 +56,8 @@ In **Agent Observatory**, open **Read evidence report** for a structured brief o
 
 **News Intelligence** supports search, asset/category filters, source details, latest/breaking feeds and manual refresh. Refresh failures keep cached stories marked stale and offer retry. A read-only check on **3 November 2026** returned three latest stories under the provider's free allowance and ten breaking stories. Allowances and availability are shown from the API response.
 
+News loads independently of the shared dashboard. It needs **no AI API key**: `NEWS_PROVIDER=cryptocurrency.cv` uses the provider's public allowance. An optional server-side `NEWS_API_KEY` uses your authorized news-provider plan. Saved **Settings → Data providers** controls which feed is active. Filters search the retrieved stories; an empty HSK filter means no matching story was supplied.
+
 Use the **Execution workspace** selector to switch to **HSKSwap · AEGIS paper**. Research and AEGIS retain separate balances and ledgers. The [demo script](docs/DEMO_SCRIPT.md) opens with this research walkthrough before the HSKSwap flow.
 
 ### Start automatic HSKSwap trading
@@ -64,7 +68,23 @@ Use the **Execution workspace** selector to switch to **HSKSwap · AEGIS paper**
 4. Click **Start paper agent**. The loop then monitors and evaluates at the configured interval without further clicks.
 5. Inspect **Positions**, **Execution History** and **Agent Observatory** for fills, P&L and rejection reasons.
 
+Entry checkboxes and library engines are separate controls. **Strategy engines** shows current readiness and provides versioned enable/disable buttons for supported engines. A checked entry displays its disabled/unavailable blocker explicitly. Arbitrage Detection remains unavailable until its required executable legs are configured. Target filters are checked before entry analysis and again before filling, including intermediate assets in a cycle; removing an asset keeps its protective exit rules active.
+
 A new AEGIS ledger starts with **100 virtual USDT** and entries paused. Fills, holdings, preferences, position timers and risk baselines persist. Every restart pauses new entries; a latched emergency remains active until reviewed. PANIC blocks entries and requests bounded stable exits, subject to fresh quotes and risk checks.
+
+### Permanent local trade history
+
+Open **Execution History → Past trades** in Research or **Paper execution ledger** in AEGIS. Search receipts, strategies or sources; filter by asset, side and UTC dates; page through all retained fills. **View details** shows exact amounts, original quotes and V3 telemetry, captured execution settings, related audit events, and retained research/news citations. **Download trade evidence** exports that individual record as JSON. Analysis, HOLD decisions and rejected previews remain in their decision feeds and do not appear as completed trades.
+
+The authoritative SQLite files are `.runtime/terminal.sqlite3` for Research simulation and `.runtime/aegis-paper.sqlite3` for AEGIS paper. `TERMINAL_DB` and `AEGIS_DB` can select other local paths. The accounts stay separate. Existing fills are retained across restarts without the dashboard's recent-row limit; older records explicitly identify missing settings snapshots instead of borrowing today's configuration.
+
+```bash
+make db-init    # Create missing schemas; retain existing funds, settings and history
+make db-status  # Read-only SQLite integrity and record counts
+make db-backup  # Private, verified snapshots under .runtime/backups/
+```
+
+Backups use SQLite's backup API so committed WAL data is included while the app runs. Database files and their WAL/SHM sidecars are ignored by Git. Keys and signer journals are kept outside these browser exports. On-chain proofs remain in the separate public verifier and deployment evidence.
 
 ### Inspect the executable market details
 
@@ -98,6 +118,8 @@ The same validated controls serve web chat and the optional private Telegram ada
 - **Pause**, **PANIC**, or **close all positions**. Closing produces a separate human-confirmed preview.
 
 An out-of-range request such as **25 USDT on 100 USDT NAV** is refused. Risk presets apply bounded settings, and explicit values in the same request take precedence. Monitoring frequency does not override trade-frequency caps.
+
+The bounded AEGIS command router works without a key. It supports **“Pause the agent”**, **“Stop trading WETH”**, portfolio/P&L questions and last-trade explanations. Current target assets are WHSK/WETH/WBTC with USDT settlement and a 15–300 second scan interval. USDC settlement, a ten-minute scan interval and changing the minimum spread threshold are explicitly refused; mixed requests are validated before any setting changes.
 
 Running-strategy controls include:
 
@@ -205,6 +227,8 @@ Mainnet deployment and signing require separate owner authorization and **`--bro
 
 Copy `.env.example` to ignored `.env`, configure the selected provider and restart:
 
+**Research Ask Krono** is a key-free command interface for recorded analysis, portfolio/P&L, risk and supported controls. Unknown requests explain its limits. **AEGIS chat** can additionally use a configured tool-calling model for free-form phrasing. Setting a model key alone does not change Research chat into a general assistant.
+
 | Provider               | Configuration                                                                                                                   |
 | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
 | Deterministic fallback | Default `AEGIS_LLM_PROVIDER=none`; no model key required                                                                        |
@@ -214,6 +238,8 @@ Copy `.env.example` to ignored `.env`, configure the selected provider and resta
 | Ordered fallback       | `AEGIS_LLM_FALLBACKS=openai,bedrock`, or opt-in `AEGIS_LLM_PROVIDER=auto`                                                       |
 
 Use a tool-capable model available to your account. The UI distinguishes readiness, **Active (Tool-Calling)** after successful tool use, and **Deterministic Fallback**. A provider failure after a tool starts retains the tool result and does not replay the mutation. Actual model entitlement and external delivery require credentials.
+
+For Anthropic, set `AEGIS_LLM_PROVIDER=anthropic`, `ANTHROPIC_API_KEY` and `AEGIS_ANTHROPIC_MODEL` in your local `.env`, then restart `make demo`. Keep API keys, wallet keys and passwords out of chat and Git.
 
 Telegram is opt-in: configure `AEGIS_TELEGRAM_BOT_TOKEN`, the owner's private `AEGIS_TELEGRAM_CHAT_ID`, `TERMINAL_API_TOKEN` and `AEGIS_API_URL`, then run `make telegram` with those variables loaded. The adapter uses the same authenticated paper API and human-confirmation boundary. Never put wallet keys or passwords in chat.
 
@@ -232,9 +258,9 @@ Research, HSKSwap paper and the optional AWS tenant platform use separate execut
 
 ## Validation and submission material
 
-The **3 November 2026** validation of this working tree (base **`4987d73`**) passed **405 Python tests plus 10 subtests**, **38 browser tests**, Ruff and the frontend production build. The Guard suite has **57 passing Solidity tests**. The normal Python suite skips one explicitly opt-in live connector test; the Solidity suite skips its opt-in live-fork test. See the scoped [frontend/reference validation](docs/evidence/frontend-reference-validation.json).
+The **3 November 2026** integration validation passed **449 Python tests plus 10 subtests**, **52 browser tests**, Ruff, formatting, generated source-reference checks and the frontend production build. The Guard suite has **57 passing Solidity tests**. SQLite archive/backup tests and production restart checks also pass. The normal Python suite skips one explicitly opt-in live connector test; the Solidity suite skips its opt-in live-fork test. See the [integration validation](docs/evidence/integration-repair-validation.json) for changed files and exact scope; the earlier [frontend/reference validation](docs/evidence/frontend-reference-validation.json) remains a historical record.
 
-Separate live checks verified source-backed research/news in the browser and read-only mainnet quotes for **WHSK, WETH and WBTC**. Each asset inspection used one pinned block, returned actual pool telemetry and passed quote preflight. These checks used isolated virtual ledgers, invoked no models and sent **zero transactions**. They do not refresh the historical public testnet receipts or establish profitability.
+Separate live checks verified source-backed research/news in Chromium, including latest/breaking feeds, filters, publisher links, manual refresh and seven screen widths. Earlier read-only mainnet route checks for **WHSK, WETH and WBTC** retain their own recorded blocks. These UI checks used isolated virtual ledgers, invoked no models and sent **zero transactions**. Public decision #2's exact revealed hash, 2,398 payload bytes and vault-consumption flag were also rechecked read-only; the historical swap accounting remains scoped to its original evidence. None of these checks establishes profitability.
 
 ```bash
 .venv/bin/python -m pytest backend/tests agent/tests legacy_tests/test_regime_detection.py legacy_tests/test_backtest_engine.py legacy_tests/test_portfolio_intelligence.py -q

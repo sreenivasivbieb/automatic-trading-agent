@@ -1,0 +1,90 @@
+{
+  "checked_at": "2026-11-03T16:33:16.084Z",
+  "status": "PASS",
+  "source": "Live cryptocurrency.cv through isolated backend",
+  "models_invoked": false,
+  "transactions_sent": 0,
+  "checks": [
+    {
+      "name": "latest",
+      "status": "AVAILABLE",
+      "articles": 3,
+      "limited": true,
+      "max_results": 3,
+      "retrieved_at": "2026-11-03T16:33:16.886334Z",
+      "published_at": [
+        "2026-11-03T16:30:00Z",
+        "2026-11-03T16:29:20Z",
+        "2026-11-03T16:29:16.752000Z"
+      ]
+    },
+    {
+      "name": "filters_and_publisher_evidence",
+      "status": "PASS",
+      "assets": [
+        "BTC",
+        "ETH",
+        "SOL",
+        "HSK"
+      ],
+      "categories": [
+        "macro",
+        "mainstream",
+        "ethereum"
+      ],
+      "original_publisher_url": "https://www.zerohedge.com/political/obama-judge-orders-federal-officials-stop-sending-lists-noncitizen-voters-states"
+    },
+    {
+      "name": "breaking",
+      "status": "AVAILABLE",
+      "articles": 10,
+      "visible_recent": 10,
+      "limited": false,
+      "retrieved_at": "2026-11-03T16:33:18.699130Z"
+    },
+    {
+      "name": "manual_refresh",
+      "status": "AVAILABLE",
+      "articles": 10,
+      "feed": "breaking"
+    }
+  ],
+  "layout": [
+    {
+      "width": 1880,
+      "document": 1880,
+      "clipped": []
+    },
+    {
+      "width": 1512,
+      "document": 1512,
+      "clipped": []
+    },
+    {
+      "width": 1280,
+      "document": 1280,
+      "clipped": []
+    },
+    {
+      "width": 1024,
+      "document": 1024,
+      "clipped": []
+    },
+    {
+      "width": 768,
+      "document": 768,
+      "clipped": []
+    },
+    {
+      "width": 390,
+      "document": 390,
+      "clipped": []
+    },
+    {
+      "width": 320,
+      "document": 320,
+      "clipped": []
+    }
+  ],
+  "browser_errors": []
+}
