@@ -200,6 +200,14 @@ test("HSK filtering, clear filters and long article evidence stay usable on mobi
   await page.route("**/api/dashboard", (route) =>
     route.fulfill({ json: { ...original, news } }),
   );
+  // News owns an independent feed request; supply the same explicit fixture
+  // there so this long-content layout check does not depend on poll timing.
+  await page.route(
+    (url) =>
+      url.pathname === "/api/news" &&
+      url.searchParams.get("breaking") === "false",
+    (route) => route.fulfill({ json: news }),
+  );
   await page.reload();
   await page.setViewportSize({ width: 320, height: 844 });
   await page.getByLabel("Filter news asset").selectOption("HSK");
