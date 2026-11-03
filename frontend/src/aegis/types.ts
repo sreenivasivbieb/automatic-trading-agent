@@ -151,6 +151,8 @@ export type AegisState = {
     name: string;
     enabled: boolean;
     version: number;
+    entry_available?: boolean;
+    unavailable_reason?: string | null;
   }[];
   library_error?: string | null;
   trades_this_hour: number;

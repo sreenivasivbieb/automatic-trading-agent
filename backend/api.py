@@ -395,7 +395,14 @@ def create_app(db_path=None, *, testing=False, transport=None, api_token=None, a
 
     @app.get("/api/aegis/state")
     async def aegis_state(request: Request):
-        return request.app.state.aegis.view()
+        from backend.aegis_bridge import strategy_catalog
+
+        # Engine switches are local configuration, not the last market snapshot.
+        # Reading this screen must not trigger a quote or an autonomous tick.
+        return {
+            **request.app.state.aegis.view(),
+            "library_catalog": strategy_catalog(request.app.state.engine.store),
+        }
 
     @app.get("/api/aegis/market-details", response_model=MarketDetails)
     async def aegis_market_details(

@@ -19,6 +19,7 @@ import type {
   Preview,
 } from "./aegis/types";
 import { inputRange, utcTime as at } from "./aegis/types";
+import type { Strategy } from "./types";
 
 function Curve({ rows }: { rows: State["equity_curve"] }) {
   if (rows.length < 2)
@@ -134,6 +135,33 @@ export function AegisDesk({
   // Input limits come from the backend AgentParams model, never from copied numbers.
   const bounds = (field: keyof Params) =>
     inputRange(state.param_bounds?.[field]);
+  const entryStrategies = [
+    ...(state.native_strategies ?? []).map((strategy) => ({
+      ...strategy,
+      enabled: true,
+      entry_available: true,
+      unavailable_reason: null,
+    })),
+    ...(state.library_catalog ?? []),
+  ];
+  const toggleEngine = (
+    strategy: NonNullable<State["library_catalog"]>[number],
+  ) =>
+    void act(async () => {
+      const current = await api<{ items: Strategy[] }>("/strategies");
+      const engine = current.items.find((item) => item.id === strategy.id);
+      if (!engine || engine.version !== strategy.version)
+        throw new Error(
+          "This strategy engine changed. Its current status has been refreshed; review it and retry.",
+        );
+      await api(`/strategies/${strategy.id}`, "PUT", {
+        expected_version: strategy.version,
+        config: { ...engine.config, enabled: !strategy.enabled },
+      });
+      setNotice(
+        `${strategy.name} engine ${strategy.enabled ? "disabled" : "enabled"}. Entry selection and risk gates still apply.`,
+      );
+    });
   return (
     <div className="aegis-workspace">
       <div className="aegis-disclosure">
@@ -680,13 +708,11 @@ export function AegisDesk({
                   </fieldset>
                   <fieldset>
                     <legend>Active entry strategies</legend>
-                    {[
-                      ...(state.native_strategies ?? []),
-                      ...(state.library_catalog ?? []),
-                    ].map((strategy) => (
+                    {entryStrategies.map((strategy) => (
                       <label className="inline gap" key={strategy.id}>
                         <input
                           type="checkbox"
+                          aria-label={`${strategy.name} entries`}
                           checked={
                             form.active_strategies?.includes(strategy.id) ??
                             true
@@ -706,11 +732,20 @@ export function AegisDesk({
                           }
                         />
                         {strategy.name} entries
+                        {strategy.entry_available === false ? (
+                          <Badge tone="accent">
+                            Unavailable · research only
+                          </Badge>
+                        ) : !strategy.enabled ? (
+                          <Badge tone="accent">Blocked · engine disabled</Badge>
+                        ) : null}
                       </label>
                     ))}
                     <small>
-                      Filters new AEGIS entries. Existing strategy rules and
-                      position safety exits remain active.
+                      These checkboxes select entry strategies; library engines
+                      must also be enabled below. An unavailable or disabled
+                      engine cannot enter even when selected. Existing position
+                      safety exits remain active.
                     </small>
                   </fieldset>
                   <button
@@ -802,12 +837,25 @@ export function AegisDesk({
             </p>
             {state.library_error && <p role="alert">{state.library_error}</p>}
             {state.library_catalog?.map((strategy) => (
-              <div className="inline gap" key={strategy.id}>
-                <strong>{strategy.name}</strong>
-                <Badge>
-                  {strategy.enabled ? "Enabled" : "Disabled"} · v
-                  {strategy.version}
-                </Badge>
+              <div key={strategy.id}>
+                <div className="inline gap">
+                  <strong>{strategy.name}</strong>
+                  <Badge>
+                    {strategy.enabled ? "Enabled" : "Disabled"} · v
+                    {strategy.version}
+                  </Badge>
+                  <button
+                    className="button secondary"
+                    disabled={busy || strategy.entry_available === false}
+                    onClick={() => toggleEngine(strategy)}
+                    aria-label={`${strategy.enabled ? "Disable" : "Enable"} ${strategy.name} engine`}
+                  >
+                    {strategy.enabled ? "Disable engine" : "Enable engine"}
+                  </button>
+                </div>
+                {strategy.unavailable_reason && (
+                  <p className="muted">{strategy.unavailable_reason}</p>
+                )}
               </div>
             ))}
             <button

@@ -15,6 +15,27 @@ from backend.strategies import REGISTRY, evaluate, indicators
 INACTIVE = "INACTIVE_IN_AEGIS"
 
 
+def strategy_catalog(store) -> list[dict]:
+    """Current engine configuration only: no market fetch, evaluation or execution."""
+    result = []
+    for strategy_id, metadata in REGISTRY.items():
+        raw, version = store.config("strategy:" + strategy_id)
+        available = strategy_id != "spread_research_v1"
+        result.append(
+            {
+                "id": strategy_id,
+                "name": metadata["name"],
+                "enabled": raw["enabled"],
+                "version": version,
+                "entry_available": available,
+                "unavailable_reason": None
+                if available
+                else "Compatible executable buy/sell routes, fees, gas and a funded settlement model are not configured. This engine remains research-only.",
+            }
+        )
+    return result
+
+
 async def collect_library(engine, state: dict) -> LibrarySnapshot:
     # Run on the API event loop: the terminal's SQLite connection never crosses into the RPC thread.
     await engine.refresh_markets()
@@ -22,18 +43,13 @@ async def collect_library(engine, state: dict) -> LibrarySnapshot:
     news = NewsFeed(
         articles=[], status="UNAVAILABLE", source="not_used_by_library", retrieved_at=clock
     )
-    catalog, configurations = [], {}
-    for strategy_id, metadata in REGISTRY.items():
-        raw, version = engine.store.config("strategy:" + strategy_id)
-        configurations[strategy_id] = StrategyConfig.model_validate(raw)
-        catalog.append(
-            {
-                "id": strategy_id,
-                "name": metadata["name"],
-                "enabled": raw["enabled"],
-                "version": version,
-            }
+    catalog = strategy_catalog(engine.store)
+    configurations = {
+        strategy_id: StrategyConfig.model_validate(
+            engine.store.config("strategy:" + strategy_id)[0]
         )
+        for strategy_id in REGISTRY
+    }
     versions = {item["id"]: item["version"] for item in catalog}
     positions = {p["asset"]: p for p in state.get("positions", [])}
     active = set((state.get("params") or {}).get("active_strategies", ALL_STRATEGIES))

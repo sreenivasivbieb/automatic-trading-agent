@@ -226,6 +226,24 @@ class PaperRuntime:
             return  # Risk-reducing exits keep per-trade/liquidity/slippage gates, even while paused.
         if self.halted.is_set() or self.emergency.is_set() or not self.running:
             raise RiskRejected("Entries are paused or emergency stop is latched")
+        if (
+            quote.route.tokens[0] == self.ledger.stable
+            and quote.route.tokens[-1] == self.ledger.stable
+        ):
+            if "arbitrage" not in self.params.active_strategies:
+                raise RiskRejected("V3 arbitrage is excluded by the live AEGIS selection")
+            excluded = sorted(
+                {
+                    token.asset_id
+                    for token in quote.route.tokens
+                    if token != self.ledger.stable
+                    and token.asset_id not in self.params.target_assets
+                }
+            )
+            if excluded:
+                raise RiskRejected(
+                    "Cycle route includes disabled target assets: " + ", ".join(excluded)
+                )
         nav = Decimal(self.ledger.pnl(marks)["nav_usdt"])
         positions = self._positions(marks)
         entry_check(
@@ -779,6 +797,19 @@ class PaperRuntime:
                 )
                 for route in cycles:
                     try:
+                        excluded = sorted(
+                            {
+                                token.asset_id
+                                for token in route.tokens
+                                if token != self.ledger.stable
+                                and token.asset_id not in self.params.target_assets
+                            }
+                        )
+                        if excluded:
+                            raise RiskRejected(
+                                "Cycle route includes disabled target assets: "
+                                + ", ".join(excluded)
+                            )
                         amount = int(
                             self._entry_size(Decimal(self.ledger.pnl(marks)["nav_usdt"]))
                             * 10**self.ledger.stable.decimals
