@@ -7,11 +7,9 @@ test("entry selections disclose blocked engines and supported engine toggles sta
   await expect(
     page.getByRole("heading", { name: "Strategy engines", exact: true }),
   ).toBeVisible();
-  const fieldset = page
-    .locator("fieldset")
-    .filter({
-      has: page.getByText("Active entry strategies", { exact: true }),
-    });
+  const fieldset = page.locator("fieldset").filter({
+    has: page.getByText("Active entry strategies", { exact: true }),
+  });
   await expect(fieldset.getByRole("checkbox")).toHaveCount(7);
   await expect(fieldset).toContainText("Unavailable · research only");
   await expect(
