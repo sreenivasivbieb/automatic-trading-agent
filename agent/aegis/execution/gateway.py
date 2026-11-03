@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from decimal import ROUND_UP, Decimal
 
-from aegis.connectors.base import Token
+from aegis.connectors.base import Quote, Token
 from aegis.connectors.paper import PaperConnector
 from aegis.connectors.rpc import DiscoveryError
 from aegis.risk.engine import RiskEngine, RiskRejected
@@ -23,6 +23,7 @@ class ExecutionGateway:
         *,
         allow_test_connectors: bool = False,
         before_fill: Callable | None = None,
+        record_context: Callable[[Quote], dict] | None = None,
     ):
         if connector.name != "paper" or ledger.stable.chain_id != connector.chain_id:
             raise ValueError("This gateway only supports paper execution on the ledger's chain")
@@ -30,6 +31,7 @@ class ExecutionGateway:
             raise ValueError("Fixture connectors are not allowed in the demo path")
         self.connector, self.ledger, self.risk = connector, ledger, risk or RiskEngine()
         self.before_fill = before_fill
+        self.record_context = record_context
 
     def marks(
         self, extra: tuple[Token, ...] = (), *, block_hash: str | None = None
@@ -115,6 +117,11 @@ class ExecutionGateway:
             )
             if self.before_fill is not None:
                 self.before_fill(quote, marks)
+            context = {
+                "quote_risk_limits": self.risk.limits.model_dump(mode="json"),
+                "execution_terms": self.connector.terms.model_dump(mode="json"),
+                **(self.record_context(quote) if self.record_context else {}),
+            }
             apply = (
                 self.ledger.apply_cycle
                 if quote.route.tokens[0] == quote.route.tokens[-1]
@@ -128,6 +135,7 @@ class ExecutionGateway:
                 network_fee_raw=gas_raw,
                 marks=marks,
                 max_trade_bps=self.risk.limits.max_trade_bps,
+                execution_context=context,
                 **(
                     {
                         "origin": origin.model_copy(

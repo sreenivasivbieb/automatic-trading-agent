@@ -227,6 +227,17 @@ class Execution:
                     "exit_policy": proposal.exit_policy,
                     "stop_price": str(proposal.stop_price),
                     "strategy_ids": proposal.strategy_ids,
+                    "execution_context": {
+                        "risk_limits": self.risk()[0].model_dump(mode="json"),
+                        "config_versions": proposal.config_versions,
+                        "strategies": {
+                            name: self.store.config("strategy:" + name)[0]
+                            for name in proposal.strategy_ids
+                            if self.store.config("strategy:" + name)[0] is not None
+                        },
+                        "simulation": get_settings().simulation.model_dump(mode="json"),
+                        "runtime_fingerprint": proposal.runtime_fingerprint,
+                    },
                 }
                 self.store.put("ledger", ledger["id"], ledger)
                 intent["state"] = "CONFIRMED"

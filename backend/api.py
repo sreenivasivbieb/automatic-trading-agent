@@ -22,6 +22,7 @@ from pydantic import Field
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from aegis.data import field_bounds
+from aegis.history import TradeDetail, TradeFilters, TradePage
 from aegis.market_details import MarketDetails
 from aegis.service import AegisService
 from backend.analytics import aggregate, chart_indicators, correlations
@@ -51,6 +52,7 @@ from backend.selection import SelectionConfig
 from backend.settings import ProviderRefresh, get_settings
 from backend.storage import Store
 from backend.strategies import REGISTRY, indicators
+from backend.trade_history import research_detail, research_history
 
 logger = logging.getLogger("terminal")
 logger.setLevel(logging.WARNING if os.getenv("TERMINAL_QUIET_LOGS") == "true" else logging.INFO)
@@ -847,6 +849,24 @@ def create_app(db_path=None, *, testing=False, transport=None, api_token=None, a
         e: Engine = Depends(engine),
     ):
         return e.store.history(kind, limit, offset)
+
+    @app.get("/api/trades", response_model=TradePage)
+    async def trades(
+        request: Request,
+        workspace: Literal["research", "aegis"] = "research",
+        filters: TradeFilters = Depends(),
+    ):
+        if workspace == "aegis":
+            return await request.app.state.aegis.call("trade_history", filters.model_dump())
+        return research_history(request.app.state.engine.store, filters)
+
+    @app.get("/api/trades/{workspace}/{trade_id}", response_model=TradeDetail)
+    async def trade_detail(
+        workspace: Literal["research", "aegis"], trade_id: str, request: Request
+    ):
+        if workspace == "aegis":
+            return await request.app.state.aegis.call("trade_detail", trade_id)
+        return research_detail(request.app.state.engine.store, trade_id)
 
     @app.post("/api/execution/preview")
     async def preview(body: PreviewRequest, e: Engine = Depends(engine)):

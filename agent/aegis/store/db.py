@@ -21,13 +21,15 @@ class PaperLedger:
     def __init__(self, path: Path, stable: Token, initial_cash_raw: int):
         if initial_cash_raw <= 0:
             raise LedgerError("Initial virtual cash must be positive")
-        path.parent.mkdir(parents=True, exist_ok=True)
+        path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
         self.stable = stable
         self.db = sqlite3.connect(path, timeout=10, isolation_level=None)
         self.db.row_factory = sqlite3.Row
         self.db.execute("PRAGMA journal_mode=WAL")
         self.db.execute("PRAGMA synchronous=FULL")
         self.db.execute("PRAGMA busy_timeout=10000")
+        if str(path) != ":memory:":
+            path.chmod(0o600)
         self.db.executescript("""
             CREATE TABLE IF NOT EXISTS metadata(key TEXT PRIMARY KEY, value TEXT NOT NULL);
             CREATE TABLE IF NOT EXISTS balances(asset TEXT PRIMARY KEY, token_json TEXT NOT NULL, amount_raw TEXT NOT NULL, cost_usdt TEXT NOT NULL);
@@ -36,6 +38,9 @@ class PaperLedger:
             CREATE TABLE IF NOT EXISTS decisions(id TEXT PRIMARY KEY, created_at INTEGER NOT NULL, status TEXT NOT NULL, payload_json TEXT NOT NULL);
             CREATE TABLE IF NOT EXISTS observations(id INTEGER PRIMARY KEY, created_at INTEGER NOT NULL, payload_json TEXT NOT NULL);
             CREATE TABLE IF NOT EXISTS managed_positions(asset TEXT PRIMARY KEY, opened_at INTEGER NOT NULL, peak_price TEXT NOT NULL);
+            CREATE INDEX IF NOT EXISTS fills_created_at ON fills(json_extract(result_json,'$.created_at'));
+            CREATE INDEX IF NOT EXISTS decisions_fill_id ON decisions(json_extract(payload_json,'$.fill_id'));
+            CREATE INDEX IF NOT EXISTS decisions_signal_id ON decisions(json_extract(payload_json,'$.signal.id'));
         """)
         self.db.execute("BEGIN IMMEDIATE")
         try:
@@ -237,6 +242,7 @@ class PaperLedger:
         marks: dict[str, Decimal],
         max_trade_bps: int,
         origin: dict | None = None,
+        execution_context: dict | None = None,
     ) -> dict:
         if output_raw <= 0 or network_fee_raw < 0 or not 0 < max_trade_bps <= 3000:
             raise LedgerError("Invalid fill amount, fee or NAV cap")
@@ -337,6 +343,8 @@ class PaperLedger:
                 }
                 if origin is not None:
                     result["origin"] = origin
+                if execution_context is not None:
+                    result["execution_context"] = execution_context
                 self.db.execute(
                     "INSERT INTO fills VALUES(?,?,?,?)",
                     (fill_id, key, request_hash, json.dumps(result)),
@@ -364,6 +372,7 @@ class PaperLedger:
         network_fee_raw: int,
         marks: dict[str, Decimal],
         max_trade_bps: int,
+        execution_context: dict | None = None,
     ) -> dict:
         """Atomic same-settlement cycle; fees are deducted once and no intermediate holding is minted."""
         if quote.route.tokens[0] != self.stable or quote.route.tokens[-1] != self.stable:
@@ -415,6 +424,8 @@ class PaperLedger:
                 "lp_fee_charged_again": False,
                 "realized_pnl_usdt": str(Decimal(profit_raw) / 10**self.stable.decimals),
             }
+            if execution_context is not None:
+                result["execution_context"] = execution_context
             self.db.execute(
                 "INSERT INTO fills VALUES(?,?,?,?)",
                 (fill_id, key, request_hash, json.dumps(result)),

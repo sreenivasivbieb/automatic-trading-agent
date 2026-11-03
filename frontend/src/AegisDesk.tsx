@@ -3,6 +3,7 @@ import { LoaderCircle, Pause, Play, RefreshCw } from "lucide-react";
 import { api } from "./api";
 import { AegisWallet } from "./AegisWallet";
 import { AegisVerifier } from "./AegisVerifier";
+import { TradeHistory } from "./TradeHistory";
 import { Badge, Empty, Panel, number } from "./ui";
 import "./aegis.css";
 
@@ -779,52 +780,7 @@ export function AegisDesk({
         </>
       )}
       {show("desk", "executions") && (
-        <>
-          <Panel
-            title="Paper execution ledger"
-            subtitle="Idempotent local receipts; these are not public transaction hashes"
-          >
-            {!state.fills.length ? (
-              <Empty
-                title="No paper fills yet"
-                description="Executed signals and confirmed unwinds appear here with the original quote block."
-              />
-            ) : (
-              <div className="table-wrap">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>Time</th>
-                      <th>Route</th>
-                      <th>Receipt</th>
-                      <th>Quote block</th>
-                      <th>Modeled network fee</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {state.fills.map((f) => (
-                      <tr key={f.id}>
-                        <td>{at(f.created_at)}</td>
-                        <td>
-                          {f.quote.route.tokens
-                            .map((t) => t.asset_id)
-                            .join(" → ")}
-                        </td>
-                        <td>
-                          <code title={f.receipt}>
-                            {f.receipt.slice(0, 20)}…
-                          </code>
-                        </td>
-                        <td>{f.quote.block_number}</td>
-                        <td>{number(f.modeled_network_fee_usdt, 6)} USDT</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </Panel>
-        </>
+        <TradeHistory workspace="aegis" refreshKey={state.fills[0]?.id} />
       )}
       {show("strategies") && (
         <Panel

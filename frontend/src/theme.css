@@ -2199,3 +2199,93 @@ td > small {
   font-size: 13px;
   line-height: 1.8;
 }
+.trade-history {
+  min-width: 0;
+}
+.trade-history-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 20px;
+  align-items: end;
+}
+.trade-history-filters > label {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+.trade-history-filters > .search-input {
+  display: flex;
+  flex: 1 1 260px;
+  align-items: center;
+}
+.trade-history-filters input,
+.trade-history-filters select {
+  min-height: 38px;
+  max-width: 100%;
+}
+.trade-history-filters input[type="date"] {
+  min-width: 0;
+  width: 155px;
+}
+.trade-history .pagination {
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.trade-detail {
+  display: grid;
+  gap: 18px;
+  min-width: 0;
+}
+.trade-news-sources li {
+  margin-bottom: 12px;
+  overflow-wrap: anywhere;
+}
+.trade-news-sources small {
+  display: block;
+  color: var(--muted);
+  margin-top: 4px;
+}
+.trade-detail-heading {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+}
+.trade-detail-heading h3 {
+  margin: 10px 0 6px;
+}
+.trade-detail-heading p {
+  margin: 0;
+  color: var(--muted);
+}
+.trade-facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin: 0;
+}
+.trade-facts dt {
+  color: var(--muted);
+  font-size: 12px;
+  margin-bottom: 6px;
+}
+.trade-facts dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+  line-height: 1.6;
+}
+@media (max-width: 600px) {
+  .trade-facts {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .trade-history-filters {
+    padding: 16px;
+  }
+  .trade-history-filters > label:not(.search-input) {
+    flex: 1 1 120px;
+  }
+}

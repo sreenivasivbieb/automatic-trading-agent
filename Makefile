@@ -11,6 +11,16 @@ setup:
 demo:
 	npm run dev
 
+.PHONY: db-init db-status db-backup
+db-init:
+	$(PYTHON) -m scripts.local_database init
+
+db-status:
+	$(PYTHON) -m scripts.local_database status
+
+db-backup:
+	$(PYTHON) -m scripts.local_database backup $(ARGS)
+
 prices:
 	PYTHONPATH=agent $(PYTHON) -m aegis.prices --network $(NETWORK) $(ARGS)
 

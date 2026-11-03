@@ -12,6 +12,7 @@ from pathlib import Path
 
 from pydantic import ValidationError
 
+from aegis.connectors.base import Quote
 from aegis.connectors.hskswap_v3 import HSKSwapConnector
 from aegis.connectors.paper import PaperConnector
 from aegis.connectors.rpc import DiscoveryError
@@ -95,6 +96,7 @@ class PaperRuntime:
             self.ledger,
             allow_test_connectors=allow_test_connectors,
             before_fill=self._before_fill,
+            record_context=self._fill_context,
         )
         self.ledger.record(
             "recovered_paused",
@@ -105,6 +107,34 @@ class PaperRuntime:
         self.halted.set()
         self.ledger.close()
         self.live.close()
+
+    def _fill_context(self, quote: Quote) -> dict:
+        return {
+            "params_version": self.version,
+            "params": self.params.model_dump(mode="json"),
+            "reviewed_caps": CAPS,
+            "position_exit_policies": {
+                token.asset_id: self._position_params(token.asset_id).model_dump(mode="json")
+                for token in quote.route.tokens
+                if token.asset_id in SUPPORTED_ASSETS
+            },
+            "reference_signal": self.library_intent.model_dump(mode="json")
+            if self.library_intent
+            else None,
+            "emergency": self.emergency.is_set(),
+        }
+
+    def trade_history(self, filters: dict) -> dict:
+        from aegis.history import TradeFilters, paper_history
+
+        return paper_history(self.ledger, TradeFilters.model_validate(filters)).model_dump(
+            mode="json"
+        )
+
+    def trade_detail(self, trade_id: str) -> dict:
+        from aegis.history import paper_detail
+
+        return paper_detail(self.ledger, trade_id).model_dump(mode="json")
 
     def _position_params(self, asset: str, overrides: dict | None = None) -> AgentParams:
         """Exit rules in force for one open position: live preferences, unless a change was

@@ -27,6 +27,7 @@ import { api } from "./api";
 import { CandleChart, EquityChart, Sparkline } from "./charts";
 import { PerformancePreview } from "./discovery";
 import { ResearchBrief } from "./ResearchBrief";
+import { TradeHistory } from "./TradeHistory";
 import type {
   Article,
   Backtest,
@@ -2424,6 +2425,7 @@ export function Executions(
           </button>
         </div>
       </Panel>
+      <TradeHistory workspace="research" refreshKey={data.audit.items[0]?.id} />
     </>
   );
 }

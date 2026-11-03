@@ -52,6 +52,7 @@ class Store:
         self.db = sqlite3.connect(path, check_same_thread=False, isolation_level=None)
         self.db.row_factory = sqlite3.Row
         self.db.execute("PRAGMA journal_mode=WAL")
+        self.db.execute("PRAGMA synchronous=FULL")
         self.db.execute("PRAGMA foreign_keys=ON")
         self.db.execute("PRAGMA busy_timeout=5000")
         self.db.executescript("""
@@ -67,6 +68,8 @@ class Store:
         CREATE INDEX IF NOT EXISTS audit_time ON audit(at);
         CREATE INDEX IF NOT EXISTS ledger_time ON ledger(at);
         CREATE INDEX IF NOT EXISTS risk_proposal ON risks(proposal_id);
+        CREATE INDEX IF NOT EXISTS ledger_asset ON ledger(json_extract(payload,'$.asset.asset_id'));
+        CREATE INDEX IF NOT EXISTS runs_intent ON runs(json_extract(payload,'$.intent_id'));
         """)
         if path != ":memory:":
             Path(path).chmod(0o600)
@@ -161,7 +164,7 @@ class Store:
                 )
 
     def get(self, table: str, identifier: str):
-        if table not in {"runs", "proposals", "intents", "cache"}:
+        if table not in {"runs", "proposals", "intents", "ledger", "cache"}:
             raise ValueError("Unknown record type")
         key = "key" if table == "cache" else "id"
         with self.lock:
