@@ -64,9 +64,7 @@ class PaperRuntime:
         self.live = connector or HSKSwapConnector(load_network("mainnet"))
         self.halted, self.emergency = halted or threading.Event(), emergency or threading.Event()
         self.halted.set()  # Every restart requires an explicit paper resume.
-        self.ledger = PaperLedger(
-            path, self.live.tokens["USDT"], 100 * 10 ** self.live.tokens["USDT"].decimals
-        )
+        self.ledger = PaperLedger(path, self.live.tokens["USDT"], self._initial_cash_raw(path))
         self.params = AgentParams.model_validate(self.ledger.metadata("agent_params", {}))
         self.version = self.ledger.metadata("params_version", 1)
         self.running = False
@@ -91,16 +89,24 @@ class PaperRuntime:
             r["amount_raw"] and r["token"] != self.ledger.stable
             for r in self.ledger.balances().values()
         )
-        self.gateway = ExecutionGateway(
-            PaperConnector(self.live),
-            self.ledger,
-            allow_test_connectors=allow_test_connectors,
-            before_fill=self._before_fill,
-            record_context=self._fill_context,
-        )
+        self.gateway = self._build_gateway()
         self.ledger.record(
             "recovered_paused",
-            {"mode": "paper", "reason": "Process started; entries require explicit resume"},
+            {"mode": self.mode, "reason": "Process started; entries require explicit resume"},
+        )
+
+    mode = "paper"
+
+    def _initial_cash_raw(self, path: Path) -> int:
+        return 100 * 10 ** self.live.tokens["USDT"].decimals
+
+    def _build_gateway(self):
+        return ExecutionGateway(
+            PaperConnector(self.live),
+            self.ledger,
+            allow_test_connectors=self.allow_test_connectors,
+            before_fill=self._before_fill,
+            record_context=self._fill_context,
         )
 
     def close(self):
@@ -577,7 +583,7 @@ class PaperRuntime:
                 "asset": token.asset_id,
                 "reason": reason,
                 "amount_in_raw": str(amount),
-                "mode": "paper",
+                "mode": self.mode,
             },
         )
         result = self.gateway.execute(key, token, self.ledger.stable, amount)
@@ -868,7 +874,7 @@ class PaperRuntime:
                 {
                     "pipeline": self.pipeline,
                     "block_number": market["block_number"],
-                    "mode": "paper",
+                    "mode": self.mode,
                     "reason": self.pipeline[-1]["summary"],
                 },
             )
@@ -905,7 +911,7 @@ class PaperRuntime:
         observations = self.ledger.observations(300)
         fills = self.ledger.fills()
         return {
-            "mode": "paper",
+            "mode": self.mode,
             "chain_id": self.live.chain_id,
             "running": self.running,
             "paused": self.halted.is_set(),
@@ -1051,7 +1057,7 @@ class PaperRuntime:
                 "changes": {},
                 "params_version": self.version,
                 "params": values,
-                "mode": "paper",
+                "mode": self.mode,
                 "applied": True,
             }
         changed_exits = [f for f in EXIT_FIELDS if f in changes]
@@ -1094,7 +1100,7 @@ class PaperRuntime:
                 "params_changed",
                 {
                     "changes": changes,
-                    "mode": "paper",
+                    "mode": self.mode,
                     "on_chain": False,
                     "source": source,
                     "exit_scope": exit_scope if changed_exits else None,
@@ -1109,7 +1115,7 @@ class PaperRuntime:
             "changes": changes,
             "params_version": self.version,
             "params": values,
-            "mode": "paper",
+            "mode": self.mode,
             "applied": True,
         }
 
@@ -1182,7 +1188,7 @@ class PaperRuntime:
         }
         self.ledger.set_metadata("params_preview", pending)
         self.ledger.record(
-            "params_previewed", {"source": source, "impact": impact, "mode": "paper"}
+            "params_previewed", {"source": source, "impact": impact, "mode": self.mode}
         )
         return {
             "kind": "params_change",
@@ -1197,7 +1203,7 @@ class PaperRuntime:
             },
             "impact": impact,
             "params_version": self.version,
-            "mode": "paper",
+            "mode": self.mode,
         }
 
     def confirm_params(
@@ -1242,7 +1248,7 @@ class PaperRuntime:
         self.ledger.set_metadata("pending_exits", follow_ups)
         if close_removed or trim_to_size:
             self.ledger.record(
-                "pending_exits_scheduled", {"pending_exits": follow_ups, "mode": "paper"}
+                "pending_exits_scheduled", {"pending_exits": follow_ups, "mode": self.mode}
             )
         return {**result, "exit_scope": exit_scope, "pending_exits": follow_ups}
 
@@ -1305,7 +1311,7 @@ class PaperRuntime:
                 "confirmation": token,
                 "expires_at": pending["expires_at"],
                 "positions": self.view()["positions"],
-                "mode": "paper",
+                "mode": self.mode,
                 "requires_confirmation": True,
             }
         elif action == "close_all_confirm":
@@ -1325,7 +1331,7 @@ class PaperRuntime:
         else:
             raise ValueError("Unsupported paper control")
         self.ledger.record(
-            "control_changed", {"action": action, "mode": "paper", "paused": self.halted.is_set()}
+            "control_changed", {"action": action, "mode": self.mode, "paused": self.halted.is_set()}
         )
         return self.view()
 

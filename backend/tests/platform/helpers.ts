@@ -14,6 +14,9 @@ export const alice: Principal = { userId: randomUUID(), username: "alice" },
   bob: Principal = { userId: randomUUID(), username: "bob" };
 export const config: Config = {
   NODE_ENV: "test",
+  KRONO_LLM_PROVIDER: "bedrock",
+  GROQ_MODEL: "openai/gpt-oss-120b",
+  GROQ_BASE_URL: "https://api.groq.com/openai/v1",
   AWS_REGION: "ap-south-1",
   KRONO_ENV: "development",
   KRONO_PORT: 8790,

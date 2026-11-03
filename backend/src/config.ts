@@ -36,6 +36,11 @@ const envSchema = z.object({
   KRONO_AGENT_LOG_GROUP: z.string().min(3),
   KRONO_COORDINATION_QUEUE_URL: z.string().url(),
   KRONO_ANALYSIS_QUEUE_URL: z.string().url().optional(),
+  // Model backend for platform conversations: Bedrock (MiniMax) or Groq's OpenAI-compatible API.
+  KRONO_LLM_PROVIDER: z.enum(["bedrock", "groq"]).default("bedrock"),
+  GROQ_API_KEY: z.string().optional(),
+  GROQ_MODEL: z.string().min(3).default("openai/gpt-oss-120b"),
+  GROQ_BASE_URL: z.string().url().default("https://api.groq.com/openai/v1"),
   BEDROCK_MODEL_ID: z.string().min(3).default("minimax.minimax-m2.5"),
   BEDROCK_MAX_OUTPUT_TOKENS: z.coerce
     .number()

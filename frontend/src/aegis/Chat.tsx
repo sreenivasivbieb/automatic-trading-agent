@@ -35,8 +35,8 @@ export function AegisChat() {
         <div>
           <strong>AEGIS assistant</strong>
           <small>
-            {state?.ai_engine?.label ?? "AI Engine: Deterministic Fallback"} ·
-            PAPER
+            {state?.ai_engine?.label ?? "AI Engine: Deterministic Fallback"} ·{" "}
+            {state?.mode === "testnet" ? "TESTNET" : "PAPER"}
           </small>
         </div>
         <button

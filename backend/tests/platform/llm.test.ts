@@ -175,3 +175,113 @@ test("Conversation builds a persisted draft with typed tools; profile context su
     await app.close();
   }
 });
+
+test("Groq provider maps tool calls to the platform format and accounts tokens", async () => {
+  const { GroqProvider, toOpenAIMessages } =
+    await import("../../src/integrations/llm/groq.provider.js");
+  const store = new MemoryTenantStore(),
+    usage = new TokenUsageService(store, config),
+    sent: Array<{ url: string; body: Record<string, unknown>; auth: string }> =
+      [];
+  const groqConfig = {
+    ...config,
+    KRONO_LLM_PROVIDER: "groq" as const,
+    GROQ_API_KEY: "gsk_test",
+  };
+  const fetcher = (async (url: string, init: RequestInit) => {
+    sent.push({
+      url,
+      body: JSON.parse(String(init.body)),
+      auth: (init.headers as Record<string, string>).authorization,
+    });
+    return new Response(
+      JSON.stringify({
+        choices: [
+          {
+            finish_reason: "tool_calls",
+            message: {
+              content: null,
+              tool_calls: [
+                {
+                  id: "call_1",
+                  type: "function",
+                  function: { name: "list_agents", arguments: '{"limit":2}' },
+                },
+              ],
+            },
+          },
+        ],
+        usage: { prompt_tokens: 20, completion_tokens: 5 },
+      }),
+      { status: 200 },
+    );
+  }) as unknown as typeof fetch;
+  const provider = new GroqProvider(groqConfig, usage, fetcher);
+  const response = await provider.converse({
+    context: {
+      userId: alice.userId,
+      sessionId: randomUUID(),
+      requestId: randomUUID(),
+    },
+    system: "trusted",
+    messages: [{ role: "user", content: [{ text: "list my agents" }] }],
+    tools: [
+      {
+        name: "list_agents",
+        description: "List",
+        inputSchema: { type: "object" },
+      },
+    ],
+  });
+  assert.equal(sent[0].url, "https://api.groq.com/openai/v1/chat/completions");
+  assert.equal(sent[0].auth, "Bearer gsk_test");
+  assert.equal(sent[0].body.model, "openai/gpt-oss-120b");
+  assert.equal(response.stopReason, "tool_use");
+  assert.deepEqual(response.message.content, [
+    {
+      toolUse: {
+        toolUseId: "call_1",
+        name: "list_agents",
+        input: { limit: 2 },
+      },
+    },
+  ]);
+  const row = await store.get<{ tokens: number }>(
+    alice,
+    "USAGE",
+    new Date().toISOString().slice(0, 10),
+  );
+  assert.equal(row?.data.tokens, 25);
+  assert.deepEqual(
+    toOpenAIMessages("s", [
+      {
+        role: "assistant",
+        content: [{ toolUse: { toolUseId: "c", name: "t", input: {} } }],
+      },
+      {
+        role: "user",
+        content: [
+          { toolResult: { toolUseId: "c", content: [{ text: "ok" }] } },
+        ],
+      },
+    ]).slice(1),
+    [
+      {
+        role: "assistant",
+        content: null,
+        tool_calls: [
+          {
+            id: "c",
+            type: "function",
+            function: { name: "t", arguments: "{}" },
+          },
+        ],
+      },
+      { role: "tool", tool_call_id: "c", content: "ok" },
+    ],
+  );
+  assert.throws(
+    () => new GroqProvider({ ...groqConfig, GROQ_API_KEY: undefined }, usage),
+    /requires GROQ_API_KEY/,
+  );
+});

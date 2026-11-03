@@ -82,3 +82,7 @@ prove-hsk-mainnet:
 
 hsk-deployment-status:
 	$(PYTHON) -m scripts.deploy_and_verify_hsk status --network $(DEPLOY_NETWORK) $(ARGS)
+
+.PHONY: testnet-funding
+testnet-funding:
+	$(PYTHON) -m scripts.testnet_funding $(ARGS)

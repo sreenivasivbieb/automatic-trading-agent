@@ -13,6 +13,7 @@ _OPENAI_COMPATIBLE = (
     "glm",
     "ollama",
     "openrouter",
+    "groq",
 )
 
 

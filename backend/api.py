@@ -138,9 +138,22 @@ class DecisionProof(Model):
     reveal_tx: str = Field(pattern=r"^0x[0-9a-fA-F]{64}$")
 
 
-def create_app(db_path=None, *, testing=False, transport=None, api_token=None, aegis_factory=None):
+def create_app(
+    db_path=None,
+    *,
+    testing=False,
+    transport=None,
+    api_token=None,
+    aegis_factory=None,
+    testnet_factory=None,
+):
     if aegis_factory is not None and not testing:
         raise ValueError("Connector injection is restricted to isolated test applications")
+    if testnet_factory is not None:
+        if aegis_factory is not None:
+            raise ValueError("Choose either a test connector or the signed testnet runtime")
+        # Only scripts.testnet_server passes this, after an interactive local keystore unlock.
+        aegis_factory = testnet_factory
     settings = get_settings()
     sessions = {}
     counters = {"requests": 0, "errors": 0}
@@ -198,7 +211,9 @@ def create_app(db_path=None, *, testing=False, transport=None, api_token=None, a
         if not testing:
             engine.scheduler_task = asyncio.create_task(engine.scheduler_loop())
         aegis_path = (
-            Path(db_path).with_name("aegis-paper.sqlite3")
+            Path(os.getenv("AEGIS_TESTNET_DB", str(ROOT / ".runtime/aegis-testnet.sqlite3")))
+            if testnet_factory is not None
+            else Path(db_path).with_name("aegis-paper.sqlite3")
             if db_path
             else Path(os.getenv("AEGIS_DB", str(ROOT / ".runtime/aegis-paper.sqlite3")))
         )
@@ -624,7 +639,10 @@ def create_app(db_path=None, *, testing=False, transport=None, api_token=None, a
                 "risk_decisions": e.store.history("risks", 1)["total"],
             },
             "exchange": request.app.state.exchange.configuration(),
-            "research": {"enabled": e.research.llm is not None, "reason": e.research.error},
+            "research": {
+                "enabled": e.research.llm is not None,
+                "reason": e.research.error or e.research.unconfigured,
+            },
             "conversation_policy": "Tab memory only. Typed tool audit events are persisted; raw messages are not.",
             "at": now(),
         }
