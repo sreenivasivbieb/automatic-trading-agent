@@ -50,6 +50,14 @@ class Store:
             Path(path).parent.mkdir(parents=True, exist_ok=True, mode=0o700)
         self.lock = threading.RLock()
         self.db = sqlite3.connect(path, check_same_thread=False, isolation_level=None)
+        if path != ":memory:":
+            # SQLite gives new WAL/SHM files the database's permissions. Tighten
+            # before the first write, and also repair retained older sidecars.
+            Path(path).chmod(0o600)
+            for suffix in ("-wal", "-shm"):
+                sidecar = Path(str(path) + suffix)
+                if sidecar.exists():
+                    sidecar.chmod(0o600)
         self.db.row_factory = sqlite3.Row
         self.db.execute("PRAGMA journal_mode=WAL")
         self.db.execute("PRAGMA synchronous=FULL")
@@ -71,8 +79,6 @@ class Store:
         CREATE INDEX IF NOT EXISTS ledger_asset ON ledger(json_extract(payload,'$.asset.asset_id'));
         CREATE INDEX IF NOT EXISTS runs_intent ON runs(json_extract(payload,'$.intent_id'));
         """)
-        if path != ":memory:":
-            Path(path).chmod(0o600)
 
     @contextmanager
     def transaction(self):

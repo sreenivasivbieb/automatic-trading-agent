@@ -24,12 +24,16 @@ class PaperLedger:
         path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
         self.stable = stable
         self.db = sqlite3.connect(path, timeout=10, isolation_level=None)
+        if str(path) != ":memory:":
+            path.chmod(0o600)
+            for suffix in ("-wal", "-shm"):
+                sidecar = Path(str(path) + suffix)
+                if sidecar.exists():
+                    sidecar.chmod(0o600)
         self.db.row_factory = sqlite3.Row
         self.db.execute("PRAGMA journal_mode=WAL")
         self.db.execute("PRAGMA synchronous=FULL")
         self.db.execute("PRAGMA busy_timeout=10000")
-        if str(path) != ":memory:":
-            path.chmod(0o600)
         self.db.executescript("""
             CREATE TABLE IF NOT EXISTS metadata(key TEXT PRIMARY KEY, value TEXT NOT NULL);
             CREATE TABLE IF NOT EXISTS balances(asset TEXT PRIMARY KEY, token_json TEXT NOT NULL, amount_raw TEXT NOT NULL, cost_usdt TEXT NOT NULL);

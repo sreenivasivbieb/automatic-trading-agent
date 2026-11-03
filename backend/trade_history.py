@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime, timezone
 from decimal import Decimal, localcontext
 
 from aegis.history import (
@@ -87,8 +86,11 @@ def research_history(store, filters: TradeFilters) -> TradePage:
         args.append(filters.side)
     for operator, value in ((">=", filters.since), ("<=", filters.until)):
         if value is not None:
-            where.append(f"at{operator}?")
-            args.append(datetime.fromtimestamp(value, timezone.utc).isoformat())
+            # Filters are inclusive Unix seconds, matching the paper archive.
+            # ISO text ordering would drop 23:59:59.x from a Through-date and
+            # would compare equivalent timestamps with different offsets badly.
+            where.append(f"unixepoch(at){operator}?")
+            args.append(value)
     clause = " WHERE " + " AND ".join(where) if where else ""
     with store.lock:
         deltas = realized_deltas(store.financial_history("ledger"))

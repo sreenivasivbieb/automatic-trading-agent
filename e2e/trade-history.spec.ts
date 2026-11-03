@@ -143,3 +143,92 @@ test("past-trade transport failures can be retried without masking the rest of e
   await expect(panel.getByRole("alert")).toHaveCount(0);
   await expect(panel).toContainText("retained fills");
 });
+
+test("archive pagination and UTC date, side and asset filters send the displayed selection", async ({
+  page,
+}) => {
+  // Explicit read-response fixture for controls; no trades are inserted or authorized.
+  const records = Array.from({ length: 31 }, (_, index) => ({
+    id: `archive-control-${index}`,
+    workspace: "research",
+    mode: "SIMULATION",
+    at: index < 25 ? "2026-01-01T12:00:00Z" : "2026-01-02T23:59:59.999999Z",
+    asset: index < 25 ? "BTC" : "ETH",
+    side: index < 25 ? "BUY" : "SELL",
+    input_asset: "USD",
+    output_asset: "BTC",
+    amount_in: "100",
+    amount_out: "0.001",
+    strategy_ids: ["explicit_browser_history_fixture"],
+    trading_fee: "0.3",
+    network_fee: "0.01",
+    realized_pnl: "0",
+    currency: "USD",
+    quote_block: null,
+    receipt: `sim:archive-control-${index}`,
+    transaction_hash: null,
+    source: "explicit_browser_history_fixture",
+  }));
+  const queries: URLSearchParams[] = [];
+  await page.route(
+    (url) => url.pathname === "/api/trades",
+    (route) => {
+      const params = new URL(route.request().url()).searchParams;
+      queries.push(params);
+      const matches = records.filter(
+        (record) =>
+          (!params.get("asset") || record.asset === params.get("asset")) &&
+          (!params.get("side") || record.side === params.get("side")) &&
+          (!params.get("q") || record.id.includes(params.get("q")!)) &&
+          (!params.get("since") ||
+            Math.floor(Date.parse(record.at) / 1000) >=
+              Number(params.get("since"))) &&
+          (!params.get("until") ||
+            Math.floor(Date.parse(record.at) / 1000) <=
+              Number(params.get("until"))),
+      );
+      const offset = Number(params.get("offset") ?? 0);
+      return route.fulfill({
+        json: {
+          items: matches.slice(offset, offset + 20),
+          total: matches.length,
+          total_stored: records.length,
+          limit: 20,
+          offset,
+          assets: ["BTC", "ETH", "SOL"],
+          storage: "SQLite",
+          note: "Explicit browser read-response fixture.",
+        },
+      });
+    },
+  );
+  await page.goto("/#/executions");
+  const panel = page.locator(".trade-history");
+  await expect(panel.locator("tbody tr")).toHaveCount(20);
+  await expect(panel).toContainText("1–20 of 31 matching fills");
+  await panel.getByRole("button", { name: "Next trades", exact: true }).click();
+  await expect(panel.locator("tbody tr")).toHaveCount(11);
+  await expect(panel).toContainText("21–31 of 31 matching fills");
+  await expect(
+    panel.getByRole("button", { name: "Next trades", exact: true }),
+  ).toBeDisabled();
+  expect(queries.at(-1)?.get("offset")).toBe("20");
+  await panel.getByLabel("Filter past trades by asset").selectOption("ETH");
+  await expect(panel.locator("tbody tr")).toHaveCount(6);
+  await expect(
+    panel.getByRole("button", { name: "Previous trades", exact: true }),
+  ).toBeDisabled();
+  await panel.getByLabel("Filter past trades by side").selectOption("SELL");
+  await panel.getByLabel("Past trades from date").fill("2026-01-02");
+  await panel.getByLabel("Past trades through date").fill("2026-01-02");
+  await expect.poll(() => queries.at(-1)?.get("until")).toBe("1767398399");
+  await expect(panel.locator("tbody tr")).toHaveCount(6);
+  expect(queries.at(-1)?.get("since")).toBe("1767312000");
+  expect(queries.at(-1)?.get("side")).toBe("SELL");
+  expect(queries.at(-1)?.get("asset")).toBe("ETH");
+  await panel.getByRole("button", { name: "Clear trade filters" }).click();
+  await expect(panel.locator("tbody tr")).toHaveCount(20);
+  await panel.getByLabel("Search past trades").fill("archive-control-30");
+  await expect(panel.locator("tbody tr")).toHaveCount(1);
+  await expect(panel).toContainText("1–1 of 1 matching fills");
+});
