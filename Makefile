@@ -11,6 +11,10 @@ setup:
 demo:
 	npm run dev
 
+.PHONY: demo-testnet
+demo-testnet:
+	npm run dev -- --testnet --i-understand-testnet $(ARGS)
+
 .PHONY: db-init db-status db-backup
 db-init:
 	$(PYTHON) -m scripts.local_database init

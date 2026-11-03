@@ -5,19 +5,22 @@ const python = ".venv/bin/python";
 if (!existsSync(python)) throw new Error("Run uv sync --python 3.12 first.");
 if (!process.env.TERMINAL_TEST_RUN && existsSync(".env"))
   process.loadEnvFile(".env");
+const args = process.argv.slice(2);
+const testnet = args.includes("--testnet");
+if (testnet && (!args.includes("--i-understand-testnet") || process.env.TERMINAL_TEST_RUN === "1"))
+  throw new Error("Use the explicit local testnet command outside the fixture application.");
+if (!testnet && args.length)
+  throw new Error("Unknown development launcher arguments.");
+const backendArgs = testnet
+  ? ["-m", "scripts.testnet_server", ...args.filter(arg => arg !== "--testnet")]
+  : [
+      "-m", "uvicorn",
+      process.env.TERMINAL_TEST_RUN === "1" ? "e2e.aegis_server:app" : "backend.api:app",
+      "--host", "127.0.0.1", "--port", process.env.TERMINAL_PORT ?? "8787",
+    ];
 const backend = spawn(
   python,
-  [
-    "-m",
-    "uvicorn",
-    process.env.TERMINAL_TEST_RUN === "1"
-      ? "e2e.aegis_server:app"
-      : "backend.api:app",
-    "--host",
-    "127.0.0.1",
-    "--port",
-    process.env.TERMINAL_PORT ?? "8787",
-  ],
+  backendArgs,
   { stdio: "inherit", env: process.env },
 );
 const frontend = spawn(

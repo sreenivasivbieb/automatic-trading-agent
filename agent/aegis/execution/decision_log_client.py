@@ -18,14 +18,16 @@ class DecisionLogClient:
     def __init__(self, client):
         self.client = client
 
-    def commit(self, key: str, payload: bytes, execution_hash: bytes):
+    def commit(self, key: str, payload: bytes, execution_hash: bytes, *, before_sign=None):
         h = Web3.keccak(payload)
         function = (
             self.client.log.functions.commitKeeper(h, execution_hash)
             if self.client.role == "keeper"
             else self.client.log.functions.commit(h, execution_hash)
         )
-        receipt = self.client.send(key + ":commit", function)
+        receipt = self.client.send(
+            key + ":commit", function, **({"before_sign": before_sign} if before_sign else {})
+        )
         events = self.client.log.events.Committed().process_receipt(receipt, errors=DISCARD)
         matches = [
             e
