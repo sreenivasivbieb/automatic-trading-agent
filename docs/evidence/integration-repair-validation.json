@@ -329,11 +329,28 @@
     "Positions and PnL represent separate paper/simulation accounts, not continuously reconciled signed-vault holdings.",
     "Position stops exit positions; portfolio daily-loss/drawdown breakers pause entries. No new one-hour or 24/7 signed soak is claimed.",
     "LLM provider adapters are protocol-tested; credential-backed model and Telegram delivery were not invoked.",
-    "Sepolia execution and the supplied organizer prize/network-acceptance narrative were not implemented or validated.",
+    "The supplied organizer faucet guide allows Sepolia USDC testing and describes post-hackathon mainnet migration. Sepolia execution remains unconfigured; the existing HashKey testnet deployment is the primary signed test target.",
     "Historical 15/15 checkpoint records retain their narrower stated scopes and are not a claim of complete production readiness."
   ],
   "screenshots": [
     "screenshots/repaired-news-desktop.png",
     "screenshots/repaired-news-mobile.png"
-  ]
+  ],
+  "network_guidance_clarification": {
+    "source": "Organizer Testnet Faucet Guide \u2014 USDC & HSK supplied by the project owner in this conversation on 2026-11-03",
+    "hashkey_testnet_execution_chain_id": 133,
+    "mainnet_data_chain_id": 177,
+    "sepolia_payment_testing_allowed": true,
+    "sepolia_execution_implemented": false,
+    "sepolia_usdc_address_documented_by_circle": "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238",
+    "mainnet_deployment_required_for_current_testnet_demo_under_supplied_guide": false,
+    "migration_timing_in_supplied_guide": "Post-hackathon",
+    "technical_sources": [
+      "https://developers.circle.com/stablecoins/usdc-contract-addresses",
+      "https://faucet.circle.com/",
+      "https://docs.hskchain.net/docs/Build-on-HashKey-Chain/network-info"
+    ],
+    "runtime_changed": false,
+    "transactions_sent": 0
+  }
 }

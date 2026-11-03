@@ -221,6 +221,20 @@ The recorded proof is complete and needs no new deployment, deposit, wrap or swa
 
 Configured networks are **177 / `https://mainnet.hsk.xyz`** and **133 / `https://testnet.hsk.xyz`**. Verified token addresses and decimals come from [config/networks.yaml](config/networks.yaml); testnet USDT has 18 decimals and mainnet USDT has six. Testnet receipt verification stays on the pinned RPC and gives inconsistent node views a bounded reconciliation window. Project-local tools come from `make contracts-setup`.
 
+### Hackathon testnet and faucet plan
+
+The organizer faucet guide supplied by the project owner permits smart-contract development/testing on HashKey testnet and Ethereum Sepolia, and describes mainnet migration after the hackathon. Under that guide, the current demonstration can use testnet funds. A mainnet deployment is not a prerequisite for this testnet demonstration.
+
+| Purpose                                | Network                     | Krono configuration                                                                                                                                      |
+| -------------------------------------- | --------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| HSKSwap market observations            | HashKey mainnet · 177       | Read-only pool data and quotes; the paper account uses virtual funds.                                                                                    |
+| Public guarded execution               | HashKey testnet · 133       | Existing Vault, Oracle, DecisionLog and verified swap proof. Test HSK pays gas; the recorded route uses WHSK/testnet USDT.                               |
+| Optional official USDC payment testing | Ethereum Sepolia · 11155111 | Allowed by the supplied guide. Circle test USDC and Sepolia ETH belong to this separate network; Sepolia execution is not currently configured in Krono. |
+
+Circle lists Ethereum Sepolia USDC at **`0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238`** in its [official contract directory](https://developers.circle.com/stablecoins/usdc-contract-addresses). Select **USDC → Ethereum Sepolia** at the [Circle faucet](https://faucet.circle.com/) for that optional payment test. HashKey's [network documentation](https://docs.hskchain.net/docs/Build-on-HashKey-Chain/network-info) confirms testnet chain 133 and links its test-HSK faucet instructions.
+
+The guide does not require adding USDC payments to the AI Agent Trading project. Our primary signed test target remains the existing HashKey deployment. The website's autonomous signed-entry integration is still outstanding; faucet availability and a successful bounded swap proof do not implement that scheduler. Every signed testnet trade must use a fresh quote and risk checks from chain 133.
+
 Mainnet deployment and signing require separate owner authorization and **`--broadcast --i-understand-live`**. No public mainnet deployment or autonomous signed-entry scheduler is claimed. A local-fork run from `make verify-signed-fork` has local receipts and no public explorer transactions.
 
 ## AI providers and Telegram
