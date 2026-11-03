@@ -14,6 +14,7 @@ import { AwsRuntime } from "./runtime/aws-runtime.js";
 import type { RuntimeProvider } from "./runtime/runtime.interface.js";
 import { createBedrockClient } from "./integrations/llm/bedrock.client.js";
 import { MiniMaxProvider } from "./integrations/llm/minimax.provider.js";
+import { GroqProvider } from "./integrations/llm/groq.provider.js";
 import { TokenUsageService } from "./integrations/llm/token-usage.service.js";
 import { ConversationService } from "./integrations/llm/conversation.service.js";
 import { ToolRegistry } from "./integrations/llm/tool-registry.js";
@@ -56,11 +57,13 @@ export function createPlatform(
     agents = new AgentService(store, runtime, c, profiles);
   const llm =
     overrides?.llm ??
-    new MiniMaxProvider(
-      createBedrockClient(c),
-      c,
-      new TokenUsageService(store, c),
-    );
+    (c.KRONO_LLM_PROVIDER === "groq"
+      ? new GroqProvider(c, new TokenUsageService(store, c))
+      : new MiniMaxProvider(
+          createBedrockClient(c),
+          c,
+          new TokenUsageService(store, c),
+        ));
   const tools = new ToolRegistry(agents, profiles),
     conversations = new ConversationService(
       store,

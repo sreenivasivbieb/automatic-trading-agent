@@ -690,7 +690,7 @@ function AppContent({
               </strong>
               <small>
                 {isAegis
-                  ? `${aegis.state?.data_status === "LIVE" ? "Live pool data" : aegis.state?.data_status || "Awaiting data"} · PAPER`
+                  ? `${aegis.state?.data_status === "LIVE" ? "Live pool data" : aegis.state?.data_status || "Awaiting data"} · ${aegis.state?.mode === "testnet" ? "TESTNET" : "PAPER"}`
                   : status?.research.enabled
                     ? "Research provider configured"
                     : "LLM research unconfigured"}
@@ -760,7 +760,11 @@ function AppContent({
                   value={route.workspace}
                   onChange={(e) => switchWorkspace(e.target.value as Workspace)}
                 >
-                  <option value="aegis">HSKSwap · 177 · PAPER</option>
+                  <option value="aegis">
+                    {aegis.state?.mode === "testnet"
+                      ? "HSKSwap · 133 · TESTNET"
+                      : "HSKSwap · 177 · PAPER"}
+                  </option>
                   <option value="research">Research · SIMULATION</option>
                   {page === "platform" && (
                     <option value="platform">Agent platform · AWS</option>
@@ -782,7 +786,11 @@ function AppContent({
             </span>
             <span className="mode-label">
               <FlaskConical size={12} />
-              {isAegis ? "PAPER" : "SIMULATION"}
+              {isAegis
+                ? aegis.state?.mode === "testnet"
+                  ? "TESTNET"
+                  : "PAPER"
+                : "SIMULATION"}
             </span>
             {page !== "platform" &&
               !!(isAegis ? aegis.ownerAccount : account) && (
@@ -1045,7 +1053,15 @@ function AppContent({
             </span>
             <span>
               KRONO / v0.1 <span className="footer-divider">|</span>{" "}
-              <StatusBadge value={isAegis ? "PAPER" : "SIMULATION"} />
+              <StatusBadge
+                value={
+                  isAegis
+                    ? aegis.state?.mode === "testnet"
+                      ? "TESTNET"
+                      : "PAPER"
+                    : "SIMULATION"
+                }
+              />
             </span>
           </footer>
         </main>

@@ -233,7 +233,17 @@ The organizer faucet guide supplied by the project owner permits smart-contract 
 
 Circle lists Ethereum Sepolia USDC at **`0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238`** in its [official contract directory](https://developers.circle.com/stablecoins/usdc-contract-addresses). Select **USDC → Ethereum Sepolia** at the [Circle faucet](https://faucet.circle.com/) for that optional payment test. HashKey's [network documentation](https://docs.hskchain.net/docs/Build-on-HashKey-Chain/network-info) confirms testnet chain 133 and links its test-HSK faucet instructions.
 
-The guide does not require adding USDC payments to the AI Agent Trading project. Our primary signed test target remains the existing HashKey deployment. The website's autonomous signed-entry integration is still outstanding; faucet availability and a successful bounded swap proof do not implement that scheduler. Every signed testnet trade must use a fresh quote and risk checks from chain 133.
+Run `make testnet-funding` before `make demo-testnet`. It reads (never signs) the registered owner, agent and Guard Vault balances on chain 133, the vault pause state, and prints the faucet step for each gap. Add `ARGS="--sepolia 0xYourWallet"` to also read Sepolia ETH and Circle test USDC for a wallet.
+
+**Claiming test funds:**
+
+1. **Test HSK (HashKey testnet gas):** add HashKey testnet (chain 133, RPC `https://testnet.hsk.xyz`) to your wallet, open the [HashKey faucet](https://faucet.hsk.xyz/faucet), paste the address and claim. Fund the **agent** address for commit/swap/reveal gas and the **owner** for deposits and pause/resume.
+2. **Vault funds:** the faucet only dispenses HSK. Deposit and wrap HSK into the vault from **AEGIS → Wallet** (owner), then convert part to testnet USDT through a bounded exit ([CONTRACTS.md](docs/CONTRACTS.md)). Resume the vault from the same panel.
+3. **Circle test USDC (optional, Ethereum Sepolia):** switch the wallet to Sepolia, open the [Circle faucet](https://faucet.circle.com/), choose **USDC → Ethereum Sepolia**, paste the address and click **Send USDC**. Claim [Sepolia ETH](https://cloud.google.com/application/web3/faucet/ethereum/sepolia) for gas. Sepolia is a separate network; Krono does not trade there.
+
+Testnet tokens have no monetary value. Never paste a private key into a faucet or chat.
+
+The guide does not require adding USDC payments to the AI Agent Trading project. Our primary signed test target remains the existing HashKey deployment. `make demo-testnet` runs the website's autonomous loop with signed settlement: the same strategies, risk gates and chat controls, with every fill a commit → guarded Guard Vault swap → reveal on chain 133 ([testnet runtime](agent/aegis/testnet/runtime.py)). It starts paused, unlocks only the registered agent keystore at a local prompt, mirrors vault receipts in its own database and refuses to start if the vault holds no testnet USDT. The owner must also resume the vault. This scheduler is covered by local tests with a fake signer; a sustained run against chain 133 is not yet recorded. Every signed testnet trade must use a fresh quote and risk checks from chain 133.
 
 Mainnet deployment and signing require separate owner authorization and **`--broadcast --i-understand-live`**. No public mainnet deployment or autonomous signed-entry scheduler is claimed. A local-fork run from `make verify-signed-fork` has local receipts and no public explorer transactions.
 
@@ -243,15 +253,18 @@ Copy `.env.example` to ignored `.env`, configure the selected provider and resta
 
 **Research Ask Krono** is a key-free command interface for recorded analysis, portfolio/P&L, risk and supported controls. Unknown requests explain its limits. **AEGIS chat** can additionally use a configured tool-calling model for free-form phrasing. Setting a model key alone does not change Research chat into a general assistant.
 
-| Provider               | Configuration                                                                                                                   |
-| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| Deterministic fallback | Default `AEGIS_LLM_PROVIDER=none`; no model key required                                                                        |
-| Anthropic              | `AEGIS_LLM_PROVIDER=anthropic`, `ANTHROPIC_API_KEY` or `AEGIS_ANTHROPIC_API_KEY`, `AEGIS_ANTHROPIC_MODEL`                       |
-| OpenAI-compatible      | `AEGIS_LLM_PROVIDER=openai`, `OPENAI_API_KEY` or `AEGIS_OPENAI_API_KEY`, `AEGIS_OPENAI_MODEL`, optional `AEGIS_OPENAI_BASE_URL` |
-| AWS Bedrock            | `AEGIS_LLM_PROVIDER=bedrock`, `AEGIS_BEDROCK_MODEL`, `AEGIS_BEDROCK_REGION`, local AWS credentials/profile                      |
-| Ordered fallback       | `AEGIS_LLM_FALLBACKS=openai,bedrock`, or opt-in `AEGIS_LLM_PROVIDER=auto`                                                       |
+| Provider               | Configuration                                                                                                                      |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| Deterministic fallback | Default `AEGIS_LLM_PROVIDER=none`; no model key required                                                                           |
+| Anthropic              | `AEGIS_LLM_PROVIDER=anthropic`, `ANTHROPIC_API_KEY` or `AEGIS_ANTHROPIC_API_KEY`, `AEGIS_ANTHROPIC_MODEL`                          |
+| OpenAI-compatible      | `AEGIS_LLM_PROVIDER=openai`, `OPENAI_API_KEY` or `AEGIS_OPENAI_API_KEY`, `AEGIS_OPENAI_MODEL`, optional `AEGIS_OPENAI_BASE_URL`    |
+| Groq                   | `AEGIS_LLM_PROVIDER=groq`, `GROQ_API_KEY` or `AEGIS_GROQ_API_KEY`; optional `AEGIS_GROQ_MODEL` (default `llama-3.3-70b-versatile`) |
+| AWS Bedrock            | `AEGIS_LLM_PROVIDER=bedrock`, `AEGIS_BEDROCK_MODEL`, `AEGIS_BEDROCK_REGION`, local AWS credentials/profile                         |
+| Ordered fallback       | `AEGIS_LLM_FALLBACKS=openai,bedrock`, or opt-in `AEGIS_LLM_PROVIDER=auto`                                                          |
 
 Use a tool-capable model available to your account. The UI distinguishes readiness, **Active (Tool-Calling)** after successful tool use, and **Deterministic Fallback**. A provider failure after a tool starts retains the tool result and does not replay the mutation. Actual model entitlement and external delivery require credentials.
+
+For Groq, create a key at [console.groq.com/keys](https://console.groq.com/keys), set `GROQ_API_KEY` in your local `.env` (`AEGIS_LLM_PROVIDER=groq` is already selected there), then restart `make demo`. Groq uses the same OpenAI-compatible tool-calling adapter and validated tools.
 
 For Anthropic, set `AEGIS_LLM_PROVIDER=anthropic`, `ANTHROPIC_API_KEY` and `AEGIS_ANTHROPIC_MODEL` in your local `.env`, then restart `make demo`. Keep API keys, wallet keys and passwords out of chat and Git.
 

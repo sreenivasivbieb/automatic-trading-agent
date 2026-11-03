@@ -176,6 +176,8 @@ def test_missing_provider_credentials_keeps_zero_key_controls_available(monkeypa
         "AEGIS_ANTHROPIC_API_KEY",
         "OPENAI_API_KEY",
         "AEGIS_OPENAI_API_KEY",
+        "GROQ_API_KEY",
+        "AEGIS_GROQ_API_KEY",
         "AEGIS_BEDROCK_MODEL",
     ]:
         monkeypatch.delenv(name, raising=False)
@@ -191,3 +193,21 @@ def test_only_restricts_targets_with_a_trading_verb_not_a_read():
     assert call.name == "set_params" and call.arguments["target_assets"] == ["WETH"]
     focus = interpret("Focus target assets on WHSK and WETH arbitrage spreads")
     assert focus.arguments["target_assets"] == ["WHSK", "WETH"]
+
+
+def test_groq_provider_uses_openai_compatible_endpoint(monkeypatch):
+    monkeypatch.setenv("AEGIS_LLM_PROVIDER", "groq")
+    monkeypatch.setenv("AEGIS_LLM_FALLBACKS", "")
+    monkeypatch.setenv("GROQ_API_KEY", "gsk_test_placeholder")
+    monkeypatch.delenv("AEGIS_GROQ_API_KEY", raising=False)
+    monkeypatch.delenv("AEGIS_GROQ_MODEL", raising=False)
+    monkeypatch.delenv("AEGIS_GROQ_BASE_URL", raising=False)
+    agent = ControlAgent.from_environment()
+    try:
+        assert [(name, model) for name, model, _ in agent.providers] == [
+            ("groq", "llama-3.3-70b-versatile")
+        ]
+        assert agent.providers[0][2].url == "https://api.groq.com/openai/v1/chat/completions"
+        assert agent.status()["configured_providers"] == ["groq"]
+    finally:
+        agent.close()

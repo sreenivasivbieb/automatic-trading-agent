@@ -208,7 +208,6 @@ class Engine:
                 ctx["indicators"] = None
                 return "BLOCKED", {
                     "reason": str(exc),
-                    "social": "UNAVAILABLE",
                     "macro": "UNAVAILABLE",
                     "fundamentals": "UNAVAILABLE",
                 }
@@ -217,7 +216,6 @@ class Engine:
                 "news": {
                     "relevant": len([a for a in ctx["news"].articles if request.symbol in a.assets])
                 },
-                "social": "UNAVAILABLE: no independent social provider",
                 "macro": "UNAVAILABLE",
                 "fundamentals": "UNAVAILABLE",
                 "method": "Deterministic analyst evidence; optional upstream LLM debate follows.",

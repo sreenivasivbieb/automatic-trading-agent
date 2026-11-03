@@ -110,8 +110,17 @@ export function inputRange(bounds?: FieldBounds): {
 export type AegisState = {
   available: boolean;
   reason?: string;
-  mode: "paper";
+  mode: "paper" | "testnet";
   chain_id: number;
+  live_enabled?: boolean;
+  disclosure?: string;
+  public_deployment?: {
+    chain_id: number;
+    agent: string;
+    owner: string;
+    [contract: string]: string | number | { address: string; explorer: string };
+  } | null;
+  vault_balances?: { at: number; balances: Record<string, string | null> };
   running: boolean;
   paused: boolean;
   emergency: boolean;

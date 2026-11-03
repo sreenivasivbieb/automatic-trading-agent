@@ -162,7 +162,7 @@ def build_brief(run: dict) -> ResearchBrief:
         )
     gaps = [
         f"{name.capitalize()} evidence unavailable in this run."
-        for name in ("social", "macro", "fundamentals")
+        for name in ("macro", "fundamentals")
         if str(analyst.get(name, "UNAVAILABLE")).startswith("UNAVAILABLE")
     ]
     if news.get("evidence") and not citations:

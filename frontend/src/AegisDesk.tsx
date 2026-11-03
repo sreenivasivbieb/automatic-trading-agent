@@ -1,3 +1,4 @@
+import { StructuredView } from "./StructuredView";
 import { useEffect, useState } from "react";
 import { LoaderCircle, Pause, Play, RefreshCw } from "lucide-react";
 import { api } from "./api";
@@ -132,6 +133,7 @@ export function AegisDesk({
       </Panel>
     );
   const active = !state.paused && !state.emergency;
+  const signed = state.mode === "testnet";
   // Input limits come from the backend AgentParams model, never from copied numbers.
   const bounds = (field: keyof Params) =>
     inputRange(state.param_bounds?.[field]);
@@ -165,15 +167,42 @@ export function AegisDesk({
   return (
     <div className="aegis-workspace">
       <div className="aegis-disclosure">
-        <Badge tone="accent">PAPER</Badge>
+        <Badge tone="accent">{signed ? "TESTNET" : "PAPER"}</Badge>
         <span>
-          Live HSKSwap quotes · virtual funds · modeled costs · local decision
-          records
+          {signed
+            ? "HashKey chain 133 · signed Guard Vault swaps · commit → swap → reveal per fill"
+            : "Live HSKSwap quotes · virtual funds · modeled costs · local decision records"}
         </span>
         <Badge>
           {state.data_status === "LIVE" ? "LIVE DATA" : state.data_status}
         </Badge>
       </div>
+      {signed && state.public_deployment && (
+        <p role="note" className="simulation-notice">
+          {state.disclosure}{" "}
+          {(["AegisVault", "DecisionLog"] as const).map((name) => {
+            const record = state.public_deployment?.[name];
+            return record && typeof record === "object" ? (
+              <a
+                key={name}
+                href={record.explorer}
+                target="_blank"
+                rel="noreferrer"
+              >
+                {name}{" "}
+              </a>
+            ) : null;
+          })}
+          {state.vault_balances && (
+            <span>
+              · Vault:{" "}
+              {Object.entries(state.vault_balances.balances)
+                .map(([asset, value]) => `${asset} ${value ?? "unavailable"}`)
+                .join(" · ")}
+            </span>
+          )}
+        </p>
+      )}
       {state.data_status === "TEST_FIXTURE" && (
         <p role="note" className="simulation-notice">
           Isolated test connector. These prices and fills are test fixtures.
@@ -201,7 +230,9 @@ export function AegisDesk({
                 ? "Emergency stop latched"
                 : state.paused
                   ? "Entries paused"
-                  : "Autonomous paper trading"}
+                  : signed
+                    ? "Autonomous testnet trading"
+                    : "Autonomous paper trading"}
           </strong>
           <p className="muted">
             {state.block_number
@@ -234,13 +265,19 @@ export function AegisDesk({
                     "AUTHORIZE_PAPER_AUTOMATION",
                   ),
                 active
-                  ? "Paper entries paused."
-                  : "Paper automation enabled; virtual funds only.",
+                  ? `${signed ? "Testnet" : "Paper"} entries paused.`
+                  : signed
+                    ? "Testnet automation enabled; each fill signs a Guard Vault swap on chain 133."
+                    : "Paper automation enabled; virtual funds only.",
               )
             }
           >
             {active ? <Pause size={14} /> : <Play size={14} />}
-            {active ? "Pause entries" : "Start paper agent"}
+            {active
+              ? "Pause entries"
+              : signed
+                ? "Start testnet agent"
+                : "Start paper agent"}
           </button>
         </div>
       </div>
@@ -807,7 +844,7 @@ export function AegisDesk({
                         )}
                       </div>
                     )}
-                    <pre>{JSON.stringify(d.payload, null, 2)}</pre>
+                    <StructuredView data={d.payload} />
                   </details>
                 ))}
             </div>

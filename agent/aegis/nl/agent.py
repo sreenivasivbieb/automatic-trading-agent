@@ -158,7 +158,7 @@ class ControlAgent:
         if primary == "none":
             return cls()
         names = (
-            ["anthropic", "openai", "bedrock"]
+            ["anthropic", "groq", "openai", "bedrock"]
             if primary == "auto"
             else [primary, *filter(None, os.getenv("AEGIS_LLM_FALLBACKS", "").lower().split(","))]
         )
@@ -186,6 +186,20 @@ class ControlAgent:
                             ),
                         )
                     )
+            elif name == "groq":
+                key = os.getenv("AEGIS_GROQ_API_KEY") or os.getenv("GROQ_API_KEY")
+                model = os.getenv("AEGIS_GROQ_MODEL") or "llama-3.3-70b-versatile"
+                if key:
+                    providers.append(
+                        (
+                            name,
+                            model,
+                            OpenAICompatible(
+                                key,
+                                os.getenv("AEGIS_GROQ_BASE_URL", "https://api.groq.com/openai/v1"),
+                            ),
+                        )
+                    )
             elif name == "bedrock":
                 model = os.getenv("AEGIS_BEDROCK_MODEL")
                 region = (
@@ -203,7 +217,7 @@ class ControlAgent:
                     )
             else:
                 raise ValueError(
-                    "AEGIS_LLM_PROVIDER/FALLBACKS must select none, auto, anthropic, openai or bedrock"
+                    "AEGIS_LLM_PROVIDER/FALLBACKS must select none, auto, anthropic, groq, openai or bedrock"
                 )
         return cls(providers=providers)
 

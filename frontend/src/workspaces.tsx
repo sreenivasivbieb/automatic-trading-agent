@@ -1,3 +1,4 @@
+import { StructuredView } from "./StructuredView";
 import { useEffect, useState } from "react";
 import {
   Activity,
@@ -1733,13 +1734,9 @@ export function Observatory({ data, navigate, analyze, busy }: WorkspaceProps) {
                   )}
                 </b>
               </div>
-              <pre className="evidence-output">
-                {JSON.stringify(
-                  run.stages.find((s) => s.name === selectedStage)?.output,
-                  null,
-                  2,
-                )}
-              </pre>
+              <StructuredView
+                data={run.stages.find((s) => s.name === selectedStage)?.output}
+              />
             </Panel>
           )}
           <ResearchBrief key={run.id} run={run} />
@@ -3156,7 +3153,7 @@ export function Settings({ data, status, act, busy }: WorkspaceProps) {
                 <time>{timestamp(a.at)}</time>
                 <ChevronRight size={13} />
               </summary>
-              <pre>{JSON.stringify(a.details, null, 2)}</pre>
+              <StructuredView data={a.details} empty="No event details" />
             </details>
           ))}
         </div>

@@ -247,7 +247,11 @@ class PaperLedger:
         max_trade_bps: int,
         origin: dict | None = None,
         execution_context: dict | None = None,
+        settlement: dict | None = None,
     ) -> dict:
+        """Record one fill. ``settlement`` marks a swap the Guard Vault already executed on-chain:
+        the confirmed receipt is authoritative, so quote expiry and the ledger's NAV cap (both
+        enforced by the contract before signing) are not re-applied after the fact."""
         if output_raw <= 0 or network_fee_raw < 0 or not 0 < max_trade_bps <= 3000:
             raise LedgerError("Invalid fill amount, fee or NAV cap")
         self.db.execute("BEGIN IMMEDIATE")
@@ -256,7 +260,7 @@ class PaperLedger:
             if previous is not None:
                 self.db.execute("COMMIT")
                 return previous
-            if int(time.time()) > quote.expires_at:
+            if settlement is None and int(time.time()) > quote.expires_at:
                 raise LedgerError("Quote expired before ledger commit")
             with localcontext() as ctx:
                 ctx.prec = 78
@@ -287,12 +291,16 @@ class PaperLedger:
                 input_value = (
                     Decimal(quote.amount_in_raw) / 10**first.decimals * marks[first.address.lower()]
                 )
-                if input_value * 10000 > nav * max_trade_bps:
+                if settlement is None and input_value * 10000 > nav * max_trade_bps:
                     raise LedgerError(
                         "Trade exceeds current NAV cap inside the atomic ledger transaction"
                     )
                 if incoming["amount_raw"] < quote.amount_in_raw:
-                    raise LedgerError("Insufficient paper token balance")
+                    raise LedgerError(
+                        "Insufficient paper token balance"
+                        if settlement is None
+                        else "Ledger mirror lacks the vault input; reconcile vault balances"
+                    )
                 removed_cost = (
                     incoming["cost_usdt"]
                     if quote.amount_in_raw == incoming["amount_raw"]
@@ -331,9 +339,9 @@ class PaperLedger:
                 fill_id = str(uuid4())
                 result = {
                     "id": fill_id,
-                    "mode": "paper",
-                    "receipt": "paper:" + fill_id,
-                    "transaction_hash": None,
+                    "mode": settlement["mode"] if settlement else "paper",
+                    "receipt": settlement["receipt"] if settlement else "paper:" + fill_id,
+                    "transaction_hash": settlement["transaction_hash"] if settlement else None,
                     "created_at": int(time.time()),
                     "chain_id": self.stable.chain_id,
                     "quote": quote.model_dump(mode="json"),
@@ -349,11 +357,20 @@ class PaperLedger:
                     result["origin"] = origin
                 if execution_context is not None:
                     result["execution_context"] = execution_context
+                if settlement is not None:
+                    result["settlement"] = settlement
+                    result["fee_methodology"] = (
+                        "Confirmed Guard Vault receipt: output is the contract-reconciled balance "
+                        "delta. Commit/swap/reveal gas is paid by the agent hot key, outside vault NAV."
+                    )
                 self.db.execute(
                     "INSERT INTO fills VALUES(?,?,?,?)",
                     (fill_id, key, request_hash, json.dumps(result)),
                 )
-                self.record("paper_filled", {"fill_id": fill_id, "quote_id": quote.id})
+                self.record(
+                    "signed_filled" if settlement else "paper_filled",
+                    {"fill_id": fill_id, "quote_id": quote.id},
+                )
                 self.db.execute("COMMIT")
                 return result
         except Exception:

@@ -13,6 +13,7 @@ dependencies = [
   "pandas>=2.2,<3",
   "langgraph>=0.6.6,<0.7",
   "langchain-core>=0.3.84,<1",
+  "langchain-openai>=0.3.35,<0.4",
   "backtrader>=1.9.78",
   "boto3>=1.40,<2",
   "web3>=7.14,<8",

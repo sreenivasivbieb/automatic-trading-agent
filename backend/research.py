@@ -44,8 +44,19 @@ class ResearchBridge:
     def __init__(self, llm=None):
         self.llm = llm
         self.error = None
+        self.unconfigured = None
         self.semaphore = asyncio.Semaphore(2)
-        if llm is None and os.getenv("RESEARCH_ENABLED", "false").lower() == "true":
+        enabled = os.getenv("RESEARCH_ENABLED", "false").lower() == "true"
+        if (
+            llm is None
+            and enabled
+            and os.getenv("LLM_PROVIDER", "").lower() == "groq"
+            and not os.getenv("GROQ_API_KEY")
+        ):
+            # A missing key is configuration, not a provider failure: skip instead of blocking.
+            enabled = False
+            self.unconfigured = "Groq research is selected but GROQ_API_KEY is empty. Add the key to .env and restart; deterministic analysis remains available."
+        if llm is None and enabled:
             try:
                 from tradingagents.llm_clients import create_llm_client
 
@@ -64,14 +75,16 @@ class ResearchBridge:
                 "bear": None,
                 "trader": None,
                 "reason": self.error
-                or "LLM research is not configured. Deterministic analysis remains available; social, macro and fundamentals are unavailable.",
+                or self.unconfigured
+                or "LLM research is not configured. Deterministic analysis remains available; macro and fundamentals are unavailable.",
             }
         state = {
             "company_of_interest": "crypto reference market",
             "trade_date": "current evidence packet",
             "market_report": market_report,
             "news_report": news_report,
-            "sentiment_report": "Social data unavailable. News lexicon sentiment is not independent social evidence.",
+            # No social-media source is used; news sentiment is carried in news_report.
+            "sentiment_report": "",
             "fundamentals_report": "Unavailable",
             "macro_report": "Unavailable",
             "investment_debate_state": {

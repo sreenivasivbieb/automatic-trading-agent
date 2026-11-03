@@ -1,3 +1,4 @@
+import { StructuredView } from "../StructuredView";
 import { Badge, Panel, number } from "../ui";
 import type { AegisState } from "./types";
 
@@ -90,9 +91,7 @@ export function ClosedLoopStatus({ state }: { state: AegisState }) {
                 </Badge>
               </summary>
               <p>{step.summary}</p>
-              {step.evidence && (
-                <pre>{JSON.stringify(step.evidence, null, 2)}</pre>
-              )}
+              {step.evidence && <StructuredView data={step.evidence} />}
             </details>
           </li>
         ))}

@@ -259,12 +259,16 @@ export function TradeHistory({
   const [retry, setRetry] = useState(0);
   const [selected, setSelected] = useState<Trade | null>(null);
   useEffect(() => {
+    // Only an actual search change returns to the first page; the initial mount and
+    // unchanged text must not undo a pagination click made within the debounce window.
+    const next = query.trim();
+    if (next === search) return;
     const timer = window.setTimeout(() => {
-      setSearch(query.trim());
+      setSearch(next);
       setOffset(0);
     }, 250);
     return () => window.clearTimeout(timer);
-  }, [query]);
+  }, [query, search]);
   useEffect(() => {
     let active = true;
     const params = new URLSearchParams({
