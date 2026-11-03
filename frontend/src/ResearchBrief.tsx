@@ -177,62 +177,65 @@ export function ResearchBrief({ run }: { run: Run }) {
           )
         }
       >
-        {error ? (
-          <div role="alert" className="brief-error">
-            <p>{error}</p>
-            <button
-              className="button secondary"
-              onClick={() => setRetry((v) => v + 1)}
-            >
-              Retry research brief
-            </button>
-          </div>
-        ) : !report ? (
-          <p className="muted" role="status">
-            Compiling recorded evidence…
-          </p>
-        ) : (
-          <>
-            <div className="inline gap wrap">
-              <StatusBadge value={report.decision} />
-              <Badge>{report.execution_status.replaceAll("_", " ")}</Badge>
-              <Badge>{report.mode}</Badge>
-              <Badge>
-                {receipt === "Snapshot integrity verified"
-                  ? "Local snapshot verified"
-                  : "Local snapshot unverified"}
-              </Badge>
+        <div className="research-brief-body">
+          {error ? (
+            <div role="alert" className="brief-error">
+              <p>{error}</p>
+              <button
+                className="button secondary"
+                onClick={() => setRetry((v) => v + 1)}
+              >
+                Retry research brief
+              </button>
             </div>
-            <p className="brief-rationale">{report.rationale}</p>
-            <div className="brief-summary">
-              <div>
-                <span>Recorded rule signals</span>
-                <strong>
-                  {report.agreement.BUY} buy · {report.agreement.SELL} sell ·{" "}
-                  {report.agreement.HOLD} hold
-                </strong>
+          ) : !report ? (
+            <p className="muted" role="status">
+              Compiling recorded evidence…
+            </p>
+          ) : (
+            <>
+              <div className="inline gap wrap">
+                <StatusBadge value={report.decision} />
+                <Badge>{report.execution_status.replaceAll("_", " ")}</Badge>
+                <Badge>{report.mode}</Badge>
+                <Badge>
+                  {receipt === "Snapshot integrity verified"
+                    ? "Local snapshot verified"
+                    : "Local snapshot unverified"}
+                </Badge>
               </div>
-              <div>
-                <span>Risk verdict</span>
-                <strong>{risk?.verdict.replaceAll("_", " ")}</strong>
+              <p className="brief-rationale">{report.rationale}</p>
+              <div className="brief-summary">
+                <div>
+                  <span>Recorded rule signals</span>
+                  <strong>
+                    {report.agreement.BUY} buy · {report.agreement.SELL} sell ·{" "}
+                    {report.agreement.HOLD} hold
+                  </strong>
+                </div>
+                <div>
+                  <span>Risk verdict</span>
+                  <strong>{risk?.verdict.replaceAll("_", " ")}</strong>
+                </div>
+                <div>
+                  <span>Approved notional</span>
+                  <strong>
+                    {risk?.approved_notional == null
+                      ? "Not evaluated"
+                      : money(risk.approved_notional)}
+                  </strong>
+                </div>
+                <div>
+                  <span>Evidence sources</span>
+                  <strong>
+                    {report.citations.length} captured · {report.gaps.length}{" "}
+                    gaps
+                  </strong>
+                </div>
               </div>
-              <div>
-                <span>Approved notional</span>
-                <strong>
-                  {risk?.approved_notional == null
-                    ? "Not evaluated"
-                    : money(risk.approved_notional)}
-                </strong>
-              </div>
-              <div>
-                <span>Evidence sources</span>
-                <strong>
-                  {report.citations.length} captured · {report.gaps.length} gaps
-                </strong>
-              </div>
-            </div>
-          </>
-        )}
+            </>
+          )}
+        </div>
       </Panel>
       {open && report && risk && (
         <Modal

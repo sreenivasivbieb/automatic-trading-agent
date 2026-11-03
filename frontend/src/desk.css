@@ -5,6 +5,7 @@
   border-radius: 18px;
   background: #1b1b1e;
   overflow: hidden;
+  container: research-desk / inline-size;
 }
 .desk-ticker {
   display: flex;
@@ -23,15 +24,16 @@
   flex: 1;
   min-width: max-content;
   border-right: 1px solid #3b3644;
-  font-size: 11px;
+  font-size: 12px;
 }
 .desk-ticker small {
-  font-size: 8px;
+  font-size: 11px;
   color: #b3a8c2;
 }
 .desk-surface {
   display: grid;
-  grid-template-columns: 180px minmax(300px, 1fr) var(--ticket-width);
+  grid-template-columns: 180px minmax(0, 1fr) minmax(260px, var(--ticket-width));
+  align-items: start;
 }
 .desk-watchlist {
   border-right: 1px solid #3b3644;
@@ -39,7 +41,7 @@
   min-width: 0;
 }
 .desk-panel-title {
-  font-size: 10px;
+  font-size: 12px;
   letter-spacing: 0.8px;
   font-weight: 650;
   padding: 15px;
@@ -63,7 +65,7 @@
   min-width: 0;
   background: transparent;
   border: 0;
-  font-size: 10px;
+  font-size: 12px;
 }
 .desk-watchlist > button {
   width: 100%;
@@ -75,7 +77,7 @@
   border-left: 2px solid transparent;
   border-radius: 0;
   padding: 15px 11px;
-  font-size: 11px;
+  font-size: 12px;
 }
 .desk-watchlist > button.selected {
   background: #332c41;
@@ -88,15 +90,36 @@
 }
 .desk-watchlist small {
   display: block;
-  font-size: 9px;
+  font-size: 11px;
   margin-top: 7px;
 }
 .desk-market-notes {
   padding: 20px 12px;
   color: #b7adca;
-  font-size: 10px;
+  font-size: 12px;
   overflow-wrap: anywhere;
   line-height: 1.8;
+}
+.desk-market-notes p {
+  margin: 6px 0 12px;
+}
+.desk-market-notes small {
+  display: block;
+  font-size: 12px;
+}
+.desk-market-notes .json-details {
+  margin-top: 16px;
+  padding: 12px;
+  min-width: 0;
+}
+.desk-market-notes .json-details summary {
+  font-size: 12px;
+}
+.desk-market-notes .json-details pre {
+  font-size: 11px;
+  white-space: pre;
+  overflow: auto;
+  max-width: 100%;
 }
 .desk-chart-panel {
   min-width: 0;
@@ -107,12 +130,16 @@
   align-items: center;
   padding: 13px;
   border-bottom: 1px solid #3b3644;
+  flex-wrap: wrap;
+  gap: 12px;
 }
 .desk-chart-head > div {
   display: flex;
   align-items: center;
   gap: 12px;
   font-size: 12px;
+  flex-wrap: wrap;
+  min-width: 0;
 }
 .desk-chart-head strong {
   font-size: 14px;
@@ -130,9 +157,9 @@
   border-bottom: 1px solid #37323f;
 }
 .desk-chart-tools button {
-  font-size: 9px;
+  font-size: 12px;
   padding: 6px 8px;
-  min-height: 26px;
+  min-height: 36px;
   border-radius: 6px;
   background: transparent;
   color: #b8afc9;
@@ -159,37 +186,45 @@
   gap: 12px;
   padding: 9px 12px;
   color: #b8aec6;
-  font-size: 8px;
+  font-size: 12px;
+  flex-wrap: wrap;
+  line-height: 1.6;
   border-bottom: 1px solid #3b3644;
 }
 .desk-dock-tabs {
   display: flex;
-  gap: 12px;
-  padding: 8px 10px;
+  gap: 4px;
+  padding: 10px 12px;
+  flex-wrap: wrap;
   border-bottom: 1px solid #3b3644;
 }
 .desk-dock-tabs button {
   background: transparent;
-  border-radius: 0;
-  font-size: 10px;
+  border: 0;
+  border-radius: 8px 8px 0 0;
+  font-size: 12px;
   color: #afa5bd;
-  padding: 8px 0;
+  padding: 10px 12px;
+  min-height: 40px;
+  flex: 0 0 auto;
+  white-space: nowrap;
   text-transform: capitalize;
   border-bottom: 2px solid transparent;
 }
 .desk-dock-tabs button.active {
-  border-color: #c7a6ff;
+  border-bottom-color: #c7a6ff;
   color: #dcc7ff;
+  background: #393041;
 }
 .desk-dock-content {
   min-height: 180px;
   max-height: 300px;
   overflow: auto;
-  font-size: 10px;
+  font-size: 12px;
 }
 .desk-dock-content table {
   width: 100%;
-  font-size: 10px;
+  font-size: 12px;
 }
 .desk-dock-content th,
 .desk-dock-content td {
@@ -203,7 +238,7 @@
   font-size: 13px;
 }
 .desk-dock-content .empty-state p {
-  font-size: 10px;
+  font-size: 12px;
 }
 .desk-activity-row {
   display: flex;
@@ -216,15 +251,15 @@
   border-radius: 0;
   border-bottom: 1px solid #35303c;
   background: transparent;
-  font-size: 10px;
+  font-size: 12px;
   text-align: left;
 }
 .desk-activity-row small {
-  font-size: 9px;
+  font-size: 12px;
   color: #afa5bd;
 }
 .desk-activity-row strong {
-  font-size: 10px;
+  font-size: 12px;
 }
 .desk-alert-form {
   display: flex;
@@ -239,7 +274,7 @@
 .desk-alert-form input,
 .desk-alert-form select,
 .desk-alert-form button {
-  font-size: 10px;
+  font-size: 12px;
   padding: 8px;
 }
 .desk-ticket {
@@ -257,7 +292,8 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
-  font-size: 10px;
+  font-size: 12px;
+  min-width: 0;
   color: #c9bdd7;
 }
 .desk-ticket-form input,
@@ -276,13 +312,13 @@
 }
 .desk-ticket-form small,
 .desk-ticket-form p {
-  font-size: 9px;
+  font-size: 12px;
   line-height: 1.9;
   color: #b5a9c4;
   margin: 0;
 }
 .desk-ticket-form > button {
-  font-size: 11px;
+  font-size: 13px;
   justify-content: center;
   padding: 13px;
 }
@@ -292,7 +328,7 @@
 }
 .desk-sizing button {
   flex: 1;
-  font-size: 10px;
+  font-size: 12px;
   padding: 6px;
   background: #37303f;
   border: 1px solid #51445e;
@@ -304,7 +340,7 @@
   display: block;
 }
 .desk-ticket-preview .panel {
-  padding: 12px;
+  min-width: 0;
   margin-bottom: 10px;
 }
 .desk-ticket-preview .panel-head {
@@ -317,24 +353,24 @@
   font-size: 21px;
 }
 .desk-ticket-preview .quote-details {
-  font-size: 9px;
+  font-size: 12px;
 }
 .desk-ticket-preview .quote-details > div {
   grid-template-columns: 1fr;
   gap: 5px;
 }
 .desk-ticket-preview .risk-checks {
-  font-size: 9px;
+  font-size: 12px;
 }
 .desk-ticket-preview .risk-checks > div {
   flex-wrap: wrap;
 }
 .desk-ticket-preview .panel-note {
-  font-size: 9px;
+  font-size: 12px;
 }
 .desk-layout {
   margin: 18px;
-  font-size: 10px;
+  font-size: 12px;
   color: #c4b5d4;
 }
 .desk-layout summary {
@@ -352,7 +388,7 @@
   padding: 14px;
 }
 .chart-indicator-note {
-  font-size: 9px;
+  font-size: 12px;
   padding: 8px 12px;
   color: #b7acca;
 }
@@ -360,9 +396,9 @@
   outline: 2px solid #c6a7fc;
   outline-offset: -2px;
 }
-@media (max-width: 1350px) {
+@container research-desk (max-width: 1050px) {
   .desk-surface {
-    grid-template-columns: 145px minmax(300px, 1fr);
+    grid-template-columns: 180px minmax(0, 1fr);
   }
   .desk-ticket {
     grid-column: 1/-1;
@@ -372,24 +408,29 @@
   .desk-ticket-form {
     display: grid;
     grid-template-columns: 1fr 1fr;
+    align-items: start;
   }
   .desk-ticket-form p,
   .desk-ticket-form small {
     grid-column: 1/-1;
+  }
+  .desk-ticket-form > button,
+  .desk-ticket-form .desk-sizing {
+    grid-column: 1 / -1;
   }
   .desk-ticket-preview .execution-layout {
     display: grid;
     grid-template-columns: 1fr 1fr;
   }
   .desk-watchlist > button {
-    font-size: 10px;
+    font-size: 12px;
     padding: 13px 8px;
   }
   .desk-watchlist .coin {
     display: none;
   }
 }
-@media (max-width: 760px) {
+@container research-desk (max-width: 680px) {
   .desk-surface {
     display: block;
   }
@@ -398,22 +439,21 @@
   }
   .desk-chart-head > div {
     gap: 7px;
-    font-size: 10px;
+    font-size: 12px;
     flex-wrap: wrap;
   }
   .desk-chart-head strong {
     font-size: 12px;
   }
   .desk-dock-tabs {
-    gap: 12px;
-    overflow: auto;
+    gap: 4px;
   }
   .desk-dock-tabs button {
     white-space: nowrap;
   }
   .desk-chart-caption {
     flex-direction: column;
-    font-size: 9px;
+    font-size: 12px;
   }
   .desk-ticket-form {
     display: flex;
@@ -428,7 +468,7 @@
     padding: 12px;
   }
   .desk-dock-content {
-    font-size: 10px;
+    font-size: 12px;
   }
 }
 
