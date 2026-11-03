@@ -969,7 +969,60 @@ def create_app(db_path=None, *, testing=False, transport=None, api_token=None, a
     async def chat(body: ChatRequest, e: Engine = Depends(engine)):
         message = body.message.lower().strip()
         tool, data, response = "read_status", {}, ""
-        if any(
+        explain = re.search(
+            r"^(?:why|explain|show).*?\b(?:last|latest)\b.*?\b(?:decision|trade|swap)\b", message
+        )
+        if re.search(
+            r"private.?key|seed phrase|recovery phrase|withdraw|ignore.*rules|disable.*(?:risk|guard)",
+            message,
+        ):
+            response = "SIMULATION: chat cannot accept wallet credentials, withdraw funds or bypass safeguards. Use the reviewed execution workflow."
+        elif explain:
+            if "risk" in message:
+                tool, data = "read_risk_decisions", e.store.history("risks", 1)
+                response = (
+                    "; ".join(data["items"][0]["reasons"])
+                    if data["items"]
+                    else "No risk decision is recorded; an analysis needs an order candidate first."
+                )
+            else:
+                fills = e.store.history("ledger", 1)["items"]
+                runs = e.store.history("runs", 1)["items"]
+                if fills and re.search(r"\b(?:trade|swap)\b", message):
+                    tool = "explain_latest_trade"
+                    fill = fills[0]
+                    intent = e.store.get("intents", fill["intent_id"]) or {}
+                    data = {"fill": fill, "intent": intent}
+                    response = (
+                        f"Last SIMULATION fill: {fill['side']} {fill['quantity']} {fill['asset']['symbol']} at {fill['price']}. "
+                        + (intent.get("proposal") or {}).get(
+                            "rationale",
+                            "Inspect the recorded intent and risk checks for its evidence.",
+                        )
+                    )
+                else:
+                    tool = "read_latest_run"
+                    data = {"run": runs[0] if runs else None}
+                    if runs:
+                        latest = runs[0]
+                        reason = (
+                            (latest.get("proposal") or {}).get("rationale")
+                            or next(
+                                (
+                                    s["output"].get("reason")
+                                    for s in latest["stages"]
+                                    if s["name"] == "Trader Decision"
+                                ),
+                                None,
+                            )
+                            or "No executable consensus was recorded."
+                        )
+                        response = f"{latest['symbol']}: {latest.get('decision', 'UNAVAILABLE')}. {reason} Run {latest['id'][:8]} is recorded in the Observatory."
+                    else:
+                        response = "No research cycle is recorded yet. Analyze a supported asset to create its evidence packet."
+                    if re.search(r"\b(?:trade|swap)\b", message):
+                        response = "No simulated fills have been recorded. " + response
+        elif any(
             word in message
             for word in (
                 "buy ",
@@ -987,8 +1040,6 @@ def create_app(db_path=None, *, testing=False, transport=None, api_token=None, a
             data = e.control(SchedulerAction(action="pause"))
             response = "New entries are paused at the backend. Existing positions are held for review; no liquidation was sent."
         elif "lower" in message and (match := re.search(r"(\d+(?:\.\d+)?)\s*%", message)):
-            from decimal import Decimal
-
             fraction = Decimal(match.group(1)) / 100
             current, version = e.execution.risk()
             if not 0 < fraction < current.max_equity_per_trade:
@@ -1066,12 +1117,23 @@ def create_app(db_path=None, *, testing=False, transport=None, api_token=None, a
                 " | ".join(f"{s['name']}: {s['description']}" for s in data["strategies"])
                 + ". Run comparable chronological holdouts before interpreting performance."
             )
-        elif "exposure" in message or "portfolio" in message or "holding" in message:
+        elif re.search(
+            r"\b(?:exposure|portfolio|holdings?|positions?|pnl|p&l|profit|loss)\b", message
+        ):
             tool = "read_portfolio"
+            await e.refresh_markets()
             data = e.portfolio.view(e.markets)
+
+            def amount(value):
+                return "unavailable" if value is None else f"{Decimal(str(value)):,.2f}"
+
             response = (
-                f"Simulation equity: {data['equity']}; exposure: {data['exposure']}; positions: {len(data['positions'])}. "
-                + "; ".join(f"{s}: {v}" for s, v in data["asset_values"].items())
+                f"Simulation equity: {amount(data['equity'])} USD; exposure: {amount(data['exposure'])} USD; positions: {len(data['positions'])}. "
+                f"Realized P&L: {amount(data['realized_pnl'])} USD; unrealized P&L: {amount(data['unrealized_pnl'])} USD; daily net P&L: {amount(data['daily_pnl'])} USD; recorded fees: {amount(data['fees'])} USD. "
+                + (
+                    "; ".join(f"{s}: {amount(v)} USD" for s, v in data["asset_values"].items())
+                    or "No open simulation positions."
+                )
             )
         elif "reject" in message:
             tool = "read_risk_decisions"
@@ -1084,11 +1146,16 @@ def create_app(db_path=None, *, testing=False, transport=None, api_token=None, a
         else:
             tool = "read_latest_run"
             data = e.store.history("runs", 1)
-            response = "Inspect recorded signals in the Observatory. " + (
-                "Latest rationale: "
-                + data["items"][0].get("proposal", {}).get("rationale", "No executable consensus.")
-                if data["items"]
-                else "Run Analyze BTC to create an evidence packet."
+            response = (
+                "SIMULATION command mode: ask for positions/P&L, analyze BTC/ETH/SOL, read news, explain the last decision, lower an allocation, or pause entries. Free-form AI tool calling is available in AEGIS with a configured provider. "
+                + (
+                    "Latest rationale: "
+                    + data["items"][0]
+                    .get("proposal", {})
+                    .get("rationale", "No executable consensus.")
+                    if data["items"]
+                    else "Run Analyze BTC to create an evidence packet."
+                )
             )
         e.store.audit(
             "assistant.tool",

@@ -22,6 +22,50 @@ async def client(tmp_path):
 HEADERS = {"Authorization": "Bearer fixture-api-token"}
 
 
+@pytest.mark.parametrize(
+    "message",
+    [
+        "What are my current open positions?",
+        "What is my total P&L today?",
+        "Show my exposure by token",
+    ],
+)
+async def test_research_chat_reads_actual_portfolio_and_pnl_without_a_model_key(client, message):
+    response = await client.post("/api/chat", headers=HEADERS, json={"message": message})
+    assert response.status_code == 200
+    body = response.json()
+    portfolio = (await client.get("/api/portfolio", headers=HEADERS)).json()
+    assert body["tool"] == "read_portfolio"
+    for key in ("positions", "realized_pnl", "unrealized_pnl", "daily_pnl", "fees"):
+        assert body["data"][key] == portfolio[key]
+    assert "Realized P&L" in body["response"] and "SIMULATION" not in body["data"].get("source", "")
+    assert (await client.get("/api/history/ledger", headers=HEADERS)).json()["total"] == 0
+
+
+async def test_research_chat_explains_swap_queries_without_misreading_them_as_orders(client):
+    response = await client.post(
+        "/api/chat", headers=HEADERS, json={"message": "Why did you execute that last swap?"}
+    )
+    assert response.status_code == 200
+    assert "No simulated fills" in response.json()["response"]
+    assert response.json()["tool"] == "read_latest_run"
+    run = (await client.post("/api/runs", headers=HEADERS, json={"symbol": "BTC"})).json()
+    explained = (
+        await client.post(
+            "/api/chat", headers=HEADERS, json={"message": "Explain the last decision"}
+        )
+    ).json()
+    assert explained["data"]["run"]["id"] == run["id"]
+
+
+async def test_research_chat_unknown_request_explains_command_mode(client):
+    result = (
+        await client.post("/api/chat", headers=HEADERS, json={"message": "Hello there"})
+    ).json()
+    assert "command mode" in result["response"] and "configured provider" in result["response"]
+    assert "not an LLM" in result["engine"]
+
+
 async def test_research_brief_api_uses_the_requested_persisted_run(client):
     run = (
         await client.post("/api/runs", headers=HEADERS, json={"symbol": "ETH", "notional": "75"})

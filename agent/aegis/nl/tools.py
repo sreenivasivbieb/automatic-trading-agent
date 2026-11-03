@@ -10,6 +10,7 @@ from aegis.data import StrictModel
 from aegis.risk.policy import (
     CAPS,
     RISK_PRESETS,
+    SUPPORTED_ASSETS,
     TICK_SECONDS_RANGE,
     ActiveStrategy,
     SupportedAsset,
@@ -240,7 +241,7 @@ def execute_tool(runtime, call: ToolCall) -> dict:
     return {"mode": "paper", "fill": fill, "decisions": related}
 
 
-def interpret(text: str) -> ToolCall:
+def interpret(text: str, *, target_assets: tuple[str, ...] | None = None) -> ToolCall:
     t = text.lower().strip()
     if re.search(
         r"withdraw|private.?key|seed phrase|recovery phrase|ignore.*rules|disable.*(risk|guard)|raw.*transaction|steal",
@@ -249,7 +250,7 @@ def interpret(text: str) -> ToolCall:
         raise ValueError(
             "PAPER: withdrawal, keys, raw transactions and bypassing safeguards are unavailable"
         )
-    if t in {"pause", "stop trading", "pause trading"}:
+    if re.fullmatch(r"(?:please )?(?:pause|stop)(?:(?: the| my)? (?:agent|bot|trading))?[.!]?", t):
         return ToolCall(name="pause")
     if t in {"resume", "start", "resume trading"}:
         return ToolCall(name="resume")
@@ -288,14 +289,33 @@ def interpret(text: str) -> ToolCall:
                 },
             },
         )
-    # The complete demo commands use one atomic schema, including mixed-parameter requests.
+    # Unsupported settlement or edge requests must fail before applying a recognized sub-clause.
+    if re.search(r"\busdc(?:\.e)?\b", t) and re.search(
+        r"\b(?:set|lower|cut|change|switch|focus|trade|trading|allocation)\b", t
+    ):
+        raise ValueError(
+            "PAPER: this runtime settles in USDT, not USDC. No changes applied; request a USDT budget or USDT pair."
+        )
+    if re.search(r"(?:spread|edge).*?(?:above|over|at least|minimum|threshold).*?\d", t):
+        raise ValueError(
+            "PAPER: minimum spread/edge is not a configurable preference in this runtime. No changes applied; set supported risk preferences separately."
+        )
+    # Mixed supported preferences are applied atomically through the same schema.
     absolute = re.search(
         r"(?:position(?: size)?|allocation|size)[^\d+-]{0,15}([+-]?\d+(?:\.\d+)?)\s*usdt", t
     )
-    seconds = re.search(r"frequency[^\d+-]{0,12}([+-]?\d+)\s*(?:s\b|seconds?\b)", t)
+    seconds = re.search(
+        r"(?:frequency[^\d+-]{0,12}|\bevery\s*)([+-]?\d+)\s*(seconds?\b|s\b|minutes?\b|mins?\b|m\b)",
+        t,
+    )
     focus = bool(re.search(r"\b(?:focus|target assets)\b", t))
     patch = {}
-    if "conservative" in t or "careful" in t or "less risk" in t:
+    if (
+        "conservative" in t
+        or "careful" in t
+        or "less risk" in t
+        or re.search(r"\blow[ -]risk\b", t)
+    ):
         patch.update(risk_level="conservative", **RISK_PRESETS["conservative"])
     elif "aggressive" in t or "more risk" in t:
         patch.update(risk_level="aggressive", **RISK_PRESETS["aggressive"])
@@ -332,15 +352,31 @@ def interpret(text: str) -> ToolCall:
     restrict = focus or (
         re.search(r"\bonly\b", t) and re.search(r"\b(?:trade|trading|target|allow|buy)\b", t)
     )
-    if restrict and re.search(r"hsk|eth|btc|bitcoin", t):
+    selection_text = re.split(r"\bonly\b", t, maxsplit=1)[-1] if restrict else t
+    patterns = [
+        ("WHSK", r"\b(?:w?hsk)\b"),
+        ("WETH", r"\b(?:w?eth|ethereum)\b"),
+        ("WBTC", r"\b(?:w?btc|bitcoin)\b"),
+    ]
+    removal = re.search(r"\b(?:stop trading|do not trade|don't trade|exclude|remove)\s+(.+)", t)
+    if removal and "only" not in t:
+        if target_assets is None:
+            raise ValueError(
+                "Read current target assets before removing one, or specify the complete remaining list with 'only trade'."
+            )
+        removed = {asset for asset, pattern in patterns if re.search(pattern, removal[1])}
+        if not removed:
+            raise ValueError("Choose a supported target asset to remove. No changes applied.")
+        patch["target_assets"] = [asset for asset in target_assets if asset not in removed]
+        if not patch["target_assets"]:
+            raise ValueError(
+                "Removing every target is not a valid preference. Pause the agent to stop entries; no settings changed."
+            )
+    elif restrict and re.search(r"hsk|eth|btc|bitcoin", selection_text):
         patch["target_assets"] = [
             a
-            for a, pattern in [
-                ("WHSK", r"\b(?:w?hsk)\b"),
-                ("WETH", r"\b(?:w?eth|ethereum)\b"),
-                ("WBTC", r"\b(?:w?btc|bitcoin)\b"),
-            ]
-            if re.search(pattern, t)
+            for a, pattern in patterns
+            if a in SUPPORTED_ASSETS and re.search(pattern, selection_text)
         ]
     if absolute or seconds or focus:
         # Only fields of the update schema; preset sizes/trade caps return via the preset.
@@ -353,11 +389,13 @@ def interpret(text: str) -> ToolCall:
         if absolute:
             update["position_size_usdt"] = absolute[1]
         if seconds:
-            update["frequency_seconds"] = int(seconds[1])
+            update["frequency_seconds"] = int(seconds[1]) * (
+                60 if seconds[2].startswith("m") else 1
+            )
         return ToolCall(name="update_strategy_config", arguments=update)
     if patch:
         return ToolCall(name="set_params", arguments=patch)
-    if re.search(r"(?:explain|why).*?(?:latest|last) (?:decision|trade)", t):
+    if re.search(r"(?:explain|why).*?(?:latest|last) (?:decision|trade|swap)", t):
         return ToolCall(name="explain_latest_decision")
     if "decision" in t:
         match = re.search(r"\b(\d+)\b", t)
@@ -418,7 +456,7 @@ def chat(runtime, text: str) -> dict:
             )
         call = ToolCall(name="explain_trade", arguments={"trade_id": fills[0]["id"]})
     else:
-        call = interpret(text)
+        call = interpret(text, target_assets=runtime.params.target_assets)
     data = execute_tool(runtime, call)
     if data.get("kind") == "params_change":
         reply = (
@@ -480,6 +518,8 @@ def chat(runtime, text: str) -> dict:
         reply = "PAPER: emergency stop latched. Entries paused; bounded stable exits continue. Review is required before resuming."
     else:
         reply = f"PAPER: {'paused' if data['paused'] else 'running'}; market data {data['data_status']}; uptime {data['uptime_seconds']} seconds."
+        if not re.search(r"\b(?:status|health|uptime|running|paused)\b", text, re.I):
+            reply += " Command mode did not recognize a supported action. Try 'Show my positions and P&L', 'Pause the agent', or 'Set position size to 5 USDT and frequency to 30s'. Free-form AI tool calling needs a configured provider."
     runtime.ledger.record("tool_called", {"tool": call.name, "mode": "paper"})
     return {
         "mode": "paper",

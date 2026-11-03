@@ -60,7 +60,7 @@ Use the local session/CSRF client or configured bearer authentication. Health/re
 - `PUT /api/settings/news-scoring` → [change_news_scoring](../backend/api.py#L953)
 - `GET /api/wallet/{address}` → [wallet](../backend/api.py#L960)
 - `POST /api/chat` → [chat](../backend/api.py#L969)
-- `GET /{path:path}` → [frontend](../backend/api.py#L1116)
+- `GET /{path:path}` → [frontend](../backend/api.py#L1183)
 
 ## Cloud HTTP routes
 
@@ -199,7 +199,7 @@ Cognito access-token identity and tenant-aware repositories protect application 
 - [create_app.change_news_scoring](../backend/api.py#L953) — `async change_news_scoring(body: VersionedNewsScoring, e: Engine=Depends(engine))`
 - [create_app.wallet](../backend/api.py#L960) — `async wallet(address: str, request: Request)`
 - [create_app.chat](../backend/api.py#L969) — `async chat(body: ChatRequest, e: Engine=Depends(engine))`
-- [create_app.frontend](../backend/api.py#L1116) — `async frontend(path: str)`
+- [create_app.frontend](../backend/api.py#L1183) — `async frontend(path: str)`
 
 ### backend/backtesting.py
 
