@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Badge, Empty, Panel, number } from "../ui";
 import { useAegis } from "./context";
 import { utcTime } from "./types";
+import { MarketRouteDetails } from "./MarketRouteDetails";
 
 export function AegisMarketAnalysis() {
   const { state, selectedAsset, setSelectedAsset } = useAegis();
@@ -52,9 +53,12 @@ export function AegisMarketAnalysis() {
           />
         ) : (
           <div className="aegis-risk">
-            <div className="inline gap">
-              <strong className="aegis-price">
-                {number(market.price, 8)} USDT
+            <div className="inline gap wrap">
+              <strong
+                className="aegis-price"
+                title={`Pool mark: ${market.price} USDT`}
+              >
+                {number(market.price, Number(market.price) < 1 ? 8 : 2)} USDT
               </strong>
               <Badge>
                 {state.valuation_fresh
@@ -141,6 +145,10 @@ export function AegisMarketAnalysis() {
             ) : (
               <code className="aegis-address">Pool {market.pool}</code>
             )}
+            <MarketRouteDetails
+              asset={asset}
+              paramsVersion={state.params_version}
+            />
           </div>
         )}
       </Panel>

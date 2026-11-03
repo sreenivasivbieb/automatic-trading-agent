@@ -916,6 +916,38 @@ class PaperRuntime:
             "disclosure": "PAPER · live HSKSwap quotes, virtual funds and modeled costs. Decisions are local; no public on-chain verification is claimed.",
         }
 
+    def market_details(self, asset: str) -> dict:
+        from aegis.market_details import MarketDetails, inspect_routes, snapshot_marks
+
+        if asset not in SUPPORTED_ASSETS:
+            raise ValueError("Choose a supported HSKSwap analysis asset")
+        market = self.live.refresh()
+        marks = snapshot_marks(self.live, market)
+        nav = Decimal(self.ledger.pnl(marks)["nav_usdt"])
+        budget = self._entry_size(nav)
+        terms = self.gateway.connector.terms
+        routes, unavailable = inspect_routes(
+            self.live, market, asset, budget, marks, self.gateway.risk, terms
+        )
+        return MarketDetails(
+            asset=asset,
+            chain_id=self.live.chain_id,
+            explorer=self.live.network.explorer,
+            data_source=self.live.name,
+            data_status="LIVE" if self.live.name == "hskswap_v3" else "TEST_FIXTURE",
+            block_number=market.block_number,
+            block_hash=market.block_hash,
+            block_timestamp=market.block_timestamp,
+            params_version=self.version,
+            entry_budget_usdt=dec(budget),
+            target_enabled=asset in self.params.target_assets,
+            entries_paused=self.halted.is_set(),
+            active_strategies=list(self.params.active_strategies),
+            routes=routes,
+            unavailable_routes=unavailable,
+            costs=terms,
+        ).model_dump(mode="json")
+
     def _candidate(self, patch: dict, expected_version: int) -> AgentParams:
         if expected_version != self.version:
             raise ValueError("Settings changed; refresh before applying this change")

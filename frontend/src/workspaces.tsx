@@ -26,6 +26,7 @@ import {
 import { api } from "./api";
 import { CandleChart, EquityChart, Sparkline } from "./charts";
 import { PerformancePreview } from "./discovery";
+import { ResearchBrief } from "./ResearchBrief";
 import type {
   Article,
   Backtest,
@@ -284,9 +285,16 @@ export function NewsRows({
           <span className="publisher-icon">{article.publisher[0]}</span>
           <span className="news-text">
             <span className="news-meta">
-              {article.publisher}
-              <span>·</span>
-              {article.fixture ? "SYNTHETIC" : timestamp(article.published_at)}
+              <span className="news-publisher">{article.publisher}</span>
+              <span aria-hidden="true">·</span>
+              <time dateTime={article.published_at ?? undefined}>
+                {article.fixture
+                  ? "SYNTHETIC"
+                  : timestamp(article.published_at)}
+              </time>
+              {article.stale && !article.fixture && (
+                <span className="news-stale">STALE</span>
+              )}
               {article.urgency === "breaking" && (
                 <span className="breaking">BREAKING</span>
               )}
@@ -325,7 +333,7 @@ export function ArticleDetail({
 }) {
   return (
     <Modal title="News evidence" close={close} wide>
-      <div className="inline gap">
+      <div className="inline gap wrap">
         <StatusBadge
           value={
             article.fixture ? "FIXTURE" : article.stale ? "STALE" : "AVAILABLE"
@@ -853,23 +861,49 @@ export function Markets(
   );
 }
 
-export function NewsWorkspace({ data, act }: WorkspaceProps) {
+export function NewsWorkspace({ data, act, busy }: WorkspaceProps) {
   const [query, setQuery] = useState(""),
     [asset, setAsset] = useState("ALL"),
     [category, setCategory] = useState("ALL"),
     [breaking, setBreaking] = useState(false),
     [article, setArticle] = useState<Article | null>(null),
     [breakingError, setBreakingError] = useState<string | null>(null),
-    [breakingFeed, setBreakingFeed] = useState<typeof data.news | null>(null);
+    [breakingFeed, setBreakingFeed] = useState<Dashboard["news"] | null>(null),
+    [refreshedFeed, setRefreshedFeed] = useState<Dashboard["news"] | null>(
+      null,
+    ),
+    [refreshError, setRefreshError] = useState<{
+      message: string;
+      source: string;
+      at: number;
+    } | null>(null);
+  // A manual response is authoritative until the shared poll supplies newer
+  // data. Source changes never mix fixture stories with a live provider.
+  useEffect(() => {
+    if (
+      refreshedFeed &&
+      (refreshedFeed.source !== data.news.source ||
+        Date.parse(data.news.retrieved_at) >
+          Date.parse(refreshedFeed.retrieved_at))
+    )
+      setRefreshedFeed(null);
+    if (
+      refreshError &&
+      (refreshError.source !== data.news.source ||
+        Date.parse(data.news.retrieved_at) > refreshError.at)
+    )
+      setRefreshError(null);
+  }, [data.news.source, data.news.retrieved_at, refreshedFeed, refreshError]);
   useEffect(() => {
     if (!breaking) return;
     let active = true,
       pending = false;
+    setBreakingError(null);
     const load = async () => {
       if (pending) return;
       pending = true;
       try {
-        const result = await api<typeof data.news>("/news?breaking=true");
+        const result = await api<Dashboard["news"]>("/news?breaking=true");
         if (active) {
           setBreakingFeed(result);
           setBreakingError(null);
@@ -894,59 +928,123 @@ export function NewsWorkspace({ data, act }: WorkspaceProps) {
   }, [breaking, data.news.source]);
   const matchingBreaking =
       breakingFeed?.source === data.news.source ? breakingFeed : null,
-    loading = breaking && !matchingBreaking && !breakingError,
-    feed = breaking && matchingBreaking ? matchingBreaking : data.news;
-  const articles = (
-    breaking ? (matchingBreaking?.articles ?? []) : feed.articles
-  ).filter(
+    latest =
+      refreshedFeed?.source === data.news.source &&
+      Date.parse(refreshedFeed.retrieved_at) >=
+        Date.parse(data.news.retrieved_at)
+        ? refreshedFeed
+        : data.news,
+    feed = breaking ? matchingBreaking : latest,
+    transportError = breaking
+      ? breakingError
+      : refreshError?.source === data.news.source
+        ? refreshError.message
+        : null,
+    loading = breaking && !feed && !transportError,
+    feedError = transportError ?? feed?.error,
+    status = transportError
+      ? feed?.articles.length
+        ? "STALE"
+        : "UNAVAILABLE"
+      : loading
+        ? "LOADING"
+        : (feed?.status ?? "UNAVAILABLE"),
+    hasFilters = !!query.trim() || asset !== "ALL" || category !== "ALL",
+    categories = [...new Set((feed?.articles ?? []).map((a) => a.category))];
+  const articles = (feed?.articles ?? []).filter(
     (a) =>
       (asset === "ALL" || a.assets.includes(asset)) &&
       (category === "ALL" || a.category === category) &&
-      `${a.title} ${a.summary}`.toLowerCase().includes(query.toLowerCase()) &&
+      (a.title + " " + a.summary)
+        .toLowerCase()
+        .includes(query.trim().toLowerCase()) &&
       (!breaking || a.urgency === "breaking"),
   );
+  const refresh = () => {
+    const requestBreaking = breaking;
+    void act(
+      async () => {
+        if (requestBreaking) setBreakingError(null);
+        else setRefreshError(null);
+        try {
+          const result = await api<Dashboard["news"]>(
+            "/news/refresh?breaking=" + requestBreaking,
+            "POST",
+          );
+          if (requestBreaking) setBreakingFeed(result);
+          else setRefreshedFeed(result);
+          if (
+            result.status === "UNAVAILABLE" ||
+            (result.status === "STALE" && result.error)
+          )
+            throw new Error(result.error ?? "News provider is unavailable");
+        } catch (error) {
+          const message =
+            error instanceof Error ? error.message : "News refresh failed";
+          if (requestBreaking) setBreakingError(message);
+          else
+            setRefreshError({
+              message,
+              source: data.news.source,
+              at: Date.now(),
+            });
+          throw error;
+        }
+      },
+      requestBreaking
+        ? "Breaking feed refreshed."
+        : "Latest headlines refreshed.",
+    );
+  };
   return (
-    <>
+    <div className="news-workspace">
       <div className="intelligence-banner">
-        <span className="intelligence-icon">
+        <span className="intelligence-icon" aria-hidden="true">
           <Zap size={24} />
         </span>
-        <div>
+        <div className="news-intro">
           <span className="eyebrow">Evidence before action</span>
-          <h2>The narrative, with its receipts.</h2>
+          <h2>Crypto news and sources</h2>
           <p>
-            Source-linked stories. Transparent sentiment estimates. Market
-            confirmation required.
+            Read recent stories, check publication times and open the original
+            sources.
           </p>
         </div>
-        <div className="right">
-          <StatusBadge
-            value={
-              breakingError ? "UNAVAILABLE" : loading ? "LOADING" : feed.status
-            }
-          />
+        <div className="news-feed-status" aria-live="polite">
+          <StatusBadge value={status} />
           <small>
             {loading
               ? "Fetching breaking reports…"
-              : `Retrieved ${timestamp(feed.retrieved_at)}`}
+              : feed
+                ? "Retrieved " + timestamp(feed.retrieved_at)
+                : "No feed response yet"}
           </small>
         </div>
       </div>
-      {feed.limited && (
-        <p className="note" role="status">
+      {feedError && (
+        <p className="note news-feed-message" role="alert">
+          {feedError}{" "}
+          {feed?.articles.length
+            ? "Showing the last retrieved stories; their original timestamps are retained."
+            : "Use Refresh news to retry."}
+        </p>
+      )}
+      {feed?.limited && (
+        <p className="note news-feed-message" role="status">
           Provider-limited feed
           {feed.max_results != null
-            ? ` · up to ${feed.max_results} results`
+            ? " · up to " + feed.max_results + " results"
             : ""}
           . {feed.limitation}
         </p>
       )}
-      <div className="toolbar wrap">
+      <div className="toolbar wrap news-toolbar">
         <label className="search-input">
           <Search size={16} />
           <input
             aria-label="Search headlines"
             placeholder="Search loaded headlines…"
+            maxLength={200}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />
@@ -956,7 +1054,7 @@ export function NewsWorkspace({ data, act }: WorkspaceProps) {
           value={asset}
           onChange={(e) => setAsset(e.target.value)}
         >
-          {["ALL", "BTC", "ETH", "SOL"].map((a) => (
+          {["ALL", "BTC", "ETH", "SOL", "HSK"].map((a) => (
             <option key={a} value={a}>
               {a === "ALL" ? "All assets" : a}
             </option>
@@ -968,41 +1066,38 @@ export function NewsWorkspace({ data, act }: WorkspaceProps) {
           onChange={(e) => setCategory(e.target.value)}
         >
           <option value="ALL">All categories</option>
-          {[...new Set(feed.articles.map((a) => a.category))].map((c) => (
+          {categories.map((c) => (
             <option key={c}>{c}</option>
           ))}
+          {category !== "ALL" && !categories.includes(category) && (
+            <option value={category}>{category} (no stories)</option>
+          )}
         </select>
         <button
-          className={`button ${breaking ? "primary" : "secondary"}`}
+          className={"button " + (breaking ? "primary" : "secondary")}
+          aria-pressed={breaking}
+          disabled={busy}
           onClick={() => setBreaking(!breaking)}
         >
-          <Zap size={14} />
-          Breaking
+          <Zap size={14} /> Breaking
         </button>
         <button
           className="icon-button"
           aria-label="Refresh news"
-          onClick={() =>
-            void act(async () => {
-              const latest = await api<typeof data.news>(
-                `/news/refresh?breaking=${breaking}`,
-                "POST",
-              );
-              if (breaking) {
-                setBreakingFeed(latest);
-                setBreakingError(null);
-              }
-              if (latest.status === "UNAVAILABLE")
-                throw new Error(latest.error ?? "News provider is unavailable");
-            }, "News refresh completed")
-          }
+          title="Refresh news"
+          disabled={busy || loading}
+          onClick={refresh}
         >
-          <RefreshCw size={16} />
+          <RefreshCw size={16} className={busy ? "spin" : ""} />
         </button>
       </div>
       <Panel
         title="Headlines & evidence"
-        subtitle={`${articles.length} matching stories · source: ${feed.source}`}
+        subtitle={
+          articles.length +
+          " matching stories · source: " +
+          (feed?.source ?? data.news.source)
+        }
         action={
           <Badge>
             <Filter size={11} /> Local feed filters
@@ -1013,27 +1108,53 @@ export function NewsWorkspace({ data, act }: WorkspaceProps) {
           <NewsRows articles={articles} open={setArticle} />
         ) : (
           <Empty
-            title="No matching stories"
+            title={
+              loading
+                ? "Loading breaking news"
+                : status === "UNAVAILABLE"
+                  ? "News is unavailable"
+                  : hasFilters
+                    ? "No matching stories"
+                    : breaking
+                      ? "No recent breaking stories"
+                      : "No stories available"
+            }
             description={
-              breakingError ??
-              (loading
-                ? "Fetching the documented breaking-news API."
-                : feed.error) ??
-              "Change the filters or refresh the documented API feed."
+              loading
+                ? "Fetching the breaking-news feed."
+                : (feedError ??
+                  (hasFilters
+                    ? "Clear the filters or try another search."
+                    : breaking
+                      ? "Only reports with valid publication times within the last two hours are marked breaking. Try the latest feed or refresh."
+                      : "Refresh the feed to check for new reports."))
+            }
+            action={
+              hasFilters ? (
+                <button
+                  className="button secondary"
+                  onClick={() => {
+                    setQuery("");
+                    setAsset("ALL");
+                    setCategory("ALL");
+                  }}
+                >
+                  Clear news filters
+                </button>
+              ) : undefined
             }
           />
         )}
       </Panel>
       <p className="note">
-        Sentiment is a configurable lexicon estimate, not ground truth.
-        Publisher excerpts are not independent full-article verification. Stale,
-        unavailable or singly sourced stories cannot independently authorize a
-        trade.
+        Sentiment is a configurable lexicon estimate. Publisher excerpts are not
+        independent full-article verification. Stale, unavailable or singly
+        sourced stories cannot independently authorize a trade.
       </p>
       {article && (
         <ArticleDetail article={article} close={() => setArticle(null)} />
       )}
-    </>
+    </div>
   );
 }
 
@@ -1531,6 +1652,7 @@ export function Observatory({ data, navigate, analyze, busy }: WorkspaceProps) {
               </pre>
             </Panel>
           )}
+          <ResearchBrief key={run.id} run={run} />
           <div className="bottom-grid section-gap">
             <Panel title="Strategy signals">
               <div className="signal-list">

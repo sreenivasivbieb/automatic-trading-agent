@@ -1,0 +1,218 @@
+{
+  "status": "PASS",
+  "checked_at": "2026-11-03T13:30:22.477682+00:00",
+  "scope": "Read-only HashKey mainnet QuoterV2 inspection, isolated virtual ledger",
+  "mode": "paper",
+  "models_invoked": false,
+  "transactions_sent": 0,
+  "assets": {
+    "WHSK": {
+      "schema_version": 1,
+      "asset": "WHSK",
+      "chain_id": 177,
+      "explorer": "https://hsk.blockscout.com",
+      "data_source": "hskswap_v3",
+      "data_status": "LIVE",
+      "block_number": 29682742,
+      "block_hash": "0x27ae4d7147feabac03f67e83c02f7e2a27fdce26b7975e4a3b94a6b2ccf05961",
+      "block_timestamp": 1793712619,
+      "params_version": 1,
+      "entry_budget_usdt": "5",
+      "target_enabled": true,
+      "entries_paused": true,
+      "active_strategies": [
+        "mean_reversion",
+        "arbitrage",
+        "momentum_v1",
+        "mean_reversion_v1",
+        "trend_following_v1",
+        "breakout_v1",
+        "spread_research_v1"
+      ],
+      "routes": [
+        {
+          "path": [
+            "USDT",
+            "WHSK"
+          ],
+          "pools": [
+            {
+              "address": "0x4ff515761864e7838b0adb8b5b2b8b7a068905dc",
+              "token0": "WHSK",
+              "token1": "USDT",
+              "sqrt_price_x96": "23438473547361597933538",
+              "tick": -300685,
+              "liquidity_raw": "1475831005908433993",
+              "balance0_raw": "4989121165215825168524532",
+              "balance1_raw": "436622935712",
+              "unlocked": true
+            }
+          ],
+          "fee_tiers": [
+            3000
+          ],
+          "amount_in_raw": "5000000",
+          "amount_out_raw": "56958785780932993557",
+          "amount_out": "56.958785780932993557",
+          "modeled_fill_floor_raw": "56901826995152060563",
+          "modeled_fill_floor": "56.901826995152060563",
+          "lp_fee_bps": "30.000",
+          "price_impact_bps": "0.114175739484556227697888780177637159505115621465307993539108524942041678234087",
+          "gas_units_estimate": 73959,
+          "created_at": 1793712639,
+          "expires_at": 1793712659,
+          "best": true,
+          "output_gap_to_best_bps": "0",
+          "quote_risk": "PASS",
+          "risk_reason": "Quote preflight passed; entry and execution gates still apply."
+        }
+      ],
+      "unavailable_routes": 0,
+      "costs": {
+        "extra_slippage_bps": 10,
+        "network_fee_usdt": "0.01",
+        "disclosure": "LP fees included by QuoterV2; additional slippage is modeled; network fee is a configurable USDT expense model, not measured chain gas."
+      },
+      "note": "Read-only QuoterV2 comparison at one block; no trade is authorized. LP fees and price impact are included in quoted output. The fill floor and USDT network expense are paper models. Quoter gas units are not a measured transaction fee. Quote preflight covers freshness, impact, allowed tokens and pool balances; portfolio, strategy, cooldown and Guard checks still run at execution."
+    },
+    "WETH": {
+      "schema_version": 1,
+      "asset": "WETH",
+      "chain_id": 177,
+      "explorer": "https://hsk.blockscout.com",
+      "data_source": "hskswap_v3",
+      "data_status": "LIVE",
+      "block_number": 29682750,
+      "block_hash": "0xb60ef6450a78a88f117deac6456f622c9fa76cf03ab88ad7f728ec37a04cd482",
+      "block_timestamp": 1793712635,
+      "params_version": 1,
+      "entry_budget_usdt": "5",
+      "target_enabled": true,
+      "entries_paused": true,
+      "active_strategies": [
+        "mean_reversion",
+        "arbitrage",
+        "momentum_v1",
+        "mean_reversion_v1",
+        "trend_following_v1",
+        "breakout_v1",
+        "spread_research_v1"
+      ],
+      "routes": [
+        {
+          "path": [
+            "USDT",
+            "WETH"
+          ],
+          "pools": [
+            {
+              "address": "0xb92b79ed6b370d5cfee2e14b1d0983c258304c16",
+              "token0": "WETH",
+              "token1": "USDT",
+              "sqrt_price_x96": "3778174146080741013992812",
+              "tick": -199027,
+              "liquidity_raw": "1012957283335421",
+              "balance0_raw": "21246604485373350180",
+              "balance1_raw": "48310224780",
+              "unlocked": true
+            }
+          ],
+          "fee_tiers": [
+            3000
+          ],
+          "amount_in_raw": "5000000",
+          "amount_out_raw": "2191873925968008",
+          "amount_out": "0.002191873925968008",
+          "modeled_fill_floor_raw": "2189682052042039",
+          "modeled_fill_floor": "0.002189682052042039",
+          "lp_fee_bps": "30.000",
+          "price_impact_bps": "1.03187437384670068834801853197652422641475783654727019819367629456285991061446",
+          "gas_units_estimate": 81347,
+          "created_at": 1793712656,
+          "expires_at": 1793712676,
+          "best": true,
+          "output_gap_to_best_bps": "0",
+          "quote_risk": "PASS",
+          "risk_reason": "Quote preflight passed; entry and execution gates still apply."
+        }
+      ],
+      "unavailable_routes": 0,
+      "costs": {
+        "extra_slippage_bps": 10,
+        "network_fee_usdt": "0.01",
+        "disclosure": "LP fees included by QuoterV2; additional slippage is modeled; network fee is a configurable USDT expense model, not measured chain gas."
+      },
+      "note": "Read-only QuoterV2 comparison at one block; no trade is authorized. LP fees and price impact are included in quoted output. The fill floor and USDT network expense are paper models. Quoter gas units are not a measured transaction fee. Quote preflight covers freshness, impact, allowed tokens and pool balances; portfolio, strategy, cooldown and Guard checks still run at execution."
+    },
+    "WBTC": {
+      "schema_version": 1,
+      "asset": "WBTC",
+      "chain_id": 177,
+      "explorer": "https://hsk.blockscout.com",
+      "data_source": "hskswap_v3",
+      "data_status": "LIVE",
+      "block_number": 29682758,
+      "block_hash": "0xd6aa3c546e97b1f7ed09cdcd42432a72db6237f3d97cd4c3760bd7ad9e064cc1",
+      "block_timestamp": 1793712651,
+      "params_version": 1,
+      "entry_budget_usdt": "5",
+      "target_enabled": true,
+      "entries_paused": true,
+      "active_strategies": [
+        "mean_reversion",
+        "arbitrage",
+        "momentum_v1",
+        "mean_reversion_v1",
+        "trend_following_v1",
+        "breakout_v1",
+        "spread_research_v1"
+      ],
+      "routes": [
+        {
+          "path": [
+            "USDT",
+            "WBTC"
+          ],
+          "pools": [
+            {
+              "address": "0xd9ea2ce468957ba49ccc38c4758ed6ecd561449a",
+              "token0": "WBTC",
+              "token1": "USDT",
+              "sqrt_price_x96": "2205006888086788730092821164219",
+              "tick": 66526,
+              "liquidity_raw": "1823343427",
+              "balance0_raw": "65524018",
+              "balance1_raw": "50748104885",
+              "unlocked": true
+            }
+          ],
+          "fee_tiers": [
+            3000
+          ],
+          "amount_in_raw": "5000000",
+          "amount_out_raw": "6435",
+          "amount_out": "0.00006435",
+          "modeled_fill_floor_raw": "6428",
+          "modeled_fill_floor": "0.00006428",
+          "lp_fee_bps": "30.000",
+          "price_impact_bps": "1.28655452156713203335059707800157255688543881368526446373654646368917329328354",
+          "gas_units_estimate": 82294,
+          "created_at": 1793712671,
+          "expires_at": 1793712691,
+          "best": true,
+          "output_gap_to_best_bps": "0",
+          "quote_risk": "PASS",
+          "risk_reason": "Quote preflight passed; entry and execution gates still apply."
+        }
+      ],
+      "unavailable_routes": 0,
+      "costs": {
+        "extra_slippage_bps": 10,
+        "network_fee_usdt": "0.01",
+        "disclosure": "LP fees included by QuoterV2; additional slippage is modeled; network fee is a configurable USDT expense model, not measured chain gas."
+      },
+      "note": "Read-only QuoterV2 comparison at one block; no trade is authorized. LP fees and price impact are included in quoted output. The fill floor and USDT network expense are paper models. Quoter gas units are not a measured transaction fee. Quote preflight covers freshness, impact, allowed tokens and pool balances; portfolio, strategy, cooldown and Guard checks still run at execution."
+    }
+  },
+  "ledger_mutations_by_inspection": 0
+}

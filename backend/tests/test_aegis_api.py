@@ -38,6 +38,19 @@ async def client(tmp_path):
 H = {"Authorization": "Bearer aegis-test"}
 
 
+async def test_read_only_quote_details_are_authenticated_validated_and_do_not_trade(client):
+    assert (await client.get("/api/aegis/market-details")).status_code == 401
+    state = (await client.get("/api/aegis/state", headers=H)).json()
+    result = await client.get("/api/aegis/market-details?asset=WHSK", headers=H)
+    assert result.status_code == 200, result.text
+    assert result.json()["routes"][0]["amount_out_raw"].isdigit()
+    assert result.json()["entries_paused"]
+    assert (await client.get("/api/aegis/market-details?asset=DOGE", headers=H)).status_code == 422
+    after = (await client.get("/api/aegis/state", headers=H)).json()
+    for key in ("fills", "decisions", "params", "tick_count", "positions", "paused"):
+        assert after[key] == state[key]
+
+
 async def test_original_strategy_settings_invalidate_inflight_library_snapshots(client):
     state = (await client.get("/api/aegis/state", headers=H)).json()
     strategies = (await client.get("/api/strategies", headers=H)).json()["items"]

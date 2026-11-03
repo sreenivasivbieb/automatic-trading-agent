@@ -114,10 +114,8 @@ export function SelectorSettings() {
             value={String(draft.mode)}
             onChange={(e) => setDraft({ ...draft, mode: e.target.value })}
           >
-            <option value="dominant">Dominant: one strategy per asset</option>
-            <option value="consensus">
-              Consensus: every qualifying strategy
-            </option>
+            <option value="dominant">One strategy per asset</option>
+            <option value="consensus">All qualifying strategies</option>
           </select>
         </label>
         <details>

@@ -5,7 +5,7 @@
 }
 .aegis-loop-summary {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 160px), 1fr));
   gap: 18px;
   padding: 20px 22px;
 }
@@ -17,7 +17,7 @@
 .aegis-loop-summary span,
 .aegis-loop-summary small {
   color: var(--muted);
-  font-size: 11px;
+  font-size: 12px;
 }
 .aegis-loop-summary strong {
   font-size: 17px;
@@ -25,7 +25,7 @@
 }
 .aegis-pipeline {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 154px), 1fr));
   list-style: none;
   gap: 12px;
   margin: 0;
@@ -41,7 +41,7 @@
   display: grid;
   gap: 12px;
   cursor: pointer;
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1.5;
 }
 .aegis-pipeline .badge {
@@ -49,7 +49,7 @@
 }
 .aegis-pipeline p,
 .aegis-loop-footnote {
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1.7;
   color: var(--muted);
 }
@@ -67,14 +67,6 @@
   flex-wrap: wrap;
   gap: 8px;
   margin-bottom: 14px;
-}
-@media (max-width: 1250px) {
-  .aegis-pipeline {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  .aegis-loop-summary {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
 }
 @media (max-width: 550px) {
   .aegis-pipeline,
@@ -334,7 +326,7 @@
 }
 .aegis-market-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
   gap: 16px;
 }
 .aegis-curve {
@@ -394,11 +386,24 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
   padding: 22px;
   gap: 18px;
+  align-items: start;
 }
 .aegis-form label {
   display: grid;
   gap: 8px;
   font-size: 13px;
+  min-width: 0;
+  align-content: start;
+  line-height: 1.6;
+}
+.aegis-form > label.inline {
+  display: flex;
+  align-items: flex-start;
+  grid-column: 1 / -1;
+}
+.aegis-form small {
+  font-size: 12px;
+  line-height: 1.6;
 }
 .aegis-form input,
 .aegis-form select {
@@ -421,6 +426,10 @@
 }
 .aegis-form input[type="checkbox"] {
   width: 16px;
+  height: 16px;
+  padding: 0;
+  flex: 0 0 16px;
+  margin-top: 2px;
 }
 .aegis-form > button {
   justify-self: start;

@@ -1,0 +1,31 @@
+{
+  "status": "PASS",
+  "checked_at": "2026-11-03T13:36:24.411Z",
+  "mode": "SIMULATION",
+  "models_invoked": false,
+  "blockchain_transactions_sent": 0,
+  "checks": [
+    "Visible live headlines and article evidence match the authenticated news API, including original source URL",
+    "Client-side search and clearing filters work on actual loaded stories",
+    "Breaking feed, explicit refresh and return to latest work against the real provider"
+  ],
+  "latest": {
+    "status": "AVAILABLE",
+    "source": "cryptocurrency.cv",
+    "articles": 3,
+    "limited": true,
+    "max_results": 3,
+    "provider_total": 2053,
+    "retrieved_at": "2026-11-03T13:36:25.207287Z",
+    "publication_times_present": 3
+  },
+  "breaking": {
+    "status": "AVAILABLE",
+    "articles": 10,
+    "recent_visible_articles": 10,
+    "limited": false,
+    "retrieved_at": "2026-11-03T13:36:26.893219Z"
+  },
+  "refresh_status": "AVAILABLE",
+  "console_errors": []
+}

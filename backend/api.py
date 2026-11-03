@@ -22,6 +22,7 @@ from pydantic import Field
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from aegis.data import field_bounds
+from aegis.market_details import MarketDetails
 from aegis.service import AegisService
 from backend.analytics import aggregate, chart_indicators, correlations
 from backend.backtesting import backtest
@@ -45,6 +46,7 @@ from backend.models import (
     now,
     uid,
 )
+from backend.research_brief import ResearchBrief, build_brief
 from backend.selection import SelectionConfig
 from backend.settings import ProviderRefresh, get_settings
 from backend.storage import Store
@@ -392,6 +394,12 @@ def create_app(db_path=None, *, testing=False, transport=None, api_token=None, a
     @app.get("/api/aegis/state")
     async def aegis_state(request: Request):
         return request.app.state.aegis.view()
+
+    @app.get("/api/aegis/market-details", response_model=MarketDetails)
+    async def aegis_market_details(
+        request: Request, asset: Literal["WHSK", "WETH", "WBTC"] = "WHSK"
+    ):
+        return await request.app.state.aegis.call("market_details", asset)
 
     @app.get("/api/aegis/vault")
     async def aegis_vault(network: Literal["testnet", "mainnet"] = "testnet"):
@@ -757,6 +765,13 @@ def create_app(db_path=None, *, testing=False, transport=None, api_token=None, a
         if result is None:
             raise ValueError("Unknown agent run")
         return result
+
+    @app.get("/api/runs/{run_id}/brief", response_model=ResearchBrief)
+    async def run_brief(run_id: str, e: Engine = Depends(engine)):
+        result = e.store.get("runs", run_id)
+        if result is None:
+            raise ValueError("Unknown agent run")
+        return build_brief(result)
 
     @app.get("/api/risk")
     async def risk(e: Engine = Depends(engine)):

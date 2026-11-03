@@ -1,0 +1,141 @@
+{
+  "schema_version": 1,
+  "run_id": "a4d39a43-70a3-4943-b2c0-a3e98b355fc3",
+  "symbol": "BTC",
+  "mode": "SIMULATION",
+  "run_status": "COMPLETED",
+  "recorded_at": "2026-11-03T13:40:56.055380+00:00",
+  "decision": "HOLD",
+  "headline": "BTC · HOLD · no order",
+  "rationale": "No enabled deterministic consensus, conflicting evidence, or advisory disagreement. No order proposed.",
+  "execution_status": "NO_ORDER",
+  "agreement": {
+    "BUY": 0,
+    "SELL": 0,
+    "HOLD": 5,
+    "REJECTED": 0
+  },
+  "findings": [
+    {
+      "domain": "Market & technicals",
+      "status": "AVAILABLE",
+      "summary": "300 closed candles from coinbase_exchange.",
+      "metrics": {
+        "as_of": "2026-11-03T13:00:00+00:00",
+        "price": 77299.05,
+        "rsi": 55.286086090539726,
+        "ema_fast": 76904.4259666489,
+        "ema_slow": 77045.27625444943,
+        "sma50": 77473.54,
+        "macd": -140.85028780053835,
+        "macd_signal": -231.58510746627707,
+        "atr": 387.2535758638759,
+        "bb_lower": 76386.45526608075,
+        "bb_upper": 77234.58573391927,
+        "bb_mid": 76810.52050000001,
+        "support": 76238.54,
+        "resistance": 77467.18,
+        "volume_ratio": 0.843761160357964,
+        "realized_vol_annualized": 0.28841774846152274,
+        "trend_distance": 0.0022522528336770264,
+        "trend": "down",
+        "regime": "mixed",
+        "volatility": "normal",
+        "regime_risk_multiplier": 0.75,
+        "annualization": "Hourly returns; sqrt(365*24). Descriptive estimate, not forecast.",
+        "source": "coinbase_exchange"
+      }
+    },
+    {
+      "domain": "News context",
+      "status": "AVAILABLE",
+      "summary": "3 recorded excerpts; 1 tagged for BTC.",
+      "metrics": {
+        "source": "cryptocurrency.cv",
+        "retrieved_at": "2026-11-03T13:40:55.635665+00:00",
+        "method": "Validated publisher excerpts; configurable lexicon sentiment, not model truth."
+      }
+    },
+    {
+      "domain": "Model debate",
+      "status": "SKIPPED",
+      "summary": "LLM research is not configured. Deterministic analysis remains available; social, macro and fundamentals are unavailable.",
+      "metrics": {}
+    }
+  ],
+  "citations": [
+    {
+      "id": "9a5680a67c9a8a5829bc",
+      "title": "Bitcoin still below $79,146: reclaim it or lose $73,878?",
+      "publisher": "TradingView Crypto Ideas",
+      "url": "https://www.tradingview.com/chart/BTCUSD/bMrl39un-Bitcoin-still-below-79-146-reclaim-it-or-lose-73-878",
+      "published_at": "2026-11-03T13:39:35Z",
+      "retrieved_at": "2026-11-03T13:40:55.635665Z",
+      "fixture": false,
+      "stale": false,
+      "relevant": true
+    },
+    {
+      "id": "3d21241828a24bdf3a0e",
+      "title": "⛽ ETH Gas: 🐢 0.409458213 | 🚶 0.409487698 | 🚀 0.493481108 Gwei",
+      "publisher": "Etherscan",
+      "url": "https://etherscan.io/gastracker",
+      "published_at": "2026-11-03T13:38:30.437000Z",
+      "retrieved_at": "2026-11-03T13:40:55.635665Z",
+      "fixture": false,
+      "stale": false,
+      "relevant": false
+    },
+    {
+      "id": "797e5d3efbee350280bc",
+      "title": "US-Iran Reportedly Agree To Concessions On Nuclear File, Oil Plunges",
+      "publisher": "ZeroHedge",
+      "url": "https://www.zerohedge.com/energy/irgc-claims-3-more-tankers-blown-naval-mines-hormuz",
+      "published_at": "2026-11-03T13:37:00Z",
+      "retrieved_at": "2026-11-03T13:40:55.635665Z",
+      "fixture": false,
+      "stale": false,
+      "relevant": false
+    }
+  ],
+  "gaps": [
+    "Social evidence unavailable in this run.",
+    "Macro evidence unavailable in this run.",
+    "Fundamentals evidence unavailable in this run.",
+    "The news provider limits this response to its current free-tier allowance. Configure an authorized server-side NEWS_API_KEY if your plan supports more results. No automatic payment or scraping.",
+    "Optional model debate did not complete; no model opinion is inferred."
+  ],
+  "risk_flags": [
+    "DISABLED"
+  ],
+  "risk_plan": {
+    "verdict": "NOT_EVALUATED",
+    "requested_notional": null,
+    "approved_notional": null,
+    "reference_price": null,
+    "stop_price": null,
+    "estimated_loss_at_stop": null,
+    "expected_costs": null,
+    "exit_policy": null,
+    "checks": [],
+    "reasons": [],
+    "note": "Stop loss is an estimate before fees and price gaps, not a guaranteed maximum loss."
+  },
+  "execution": {
+    "intent_id": null,
+    "receipt_id": null,
+    "transaction_hash": null,
+    "quote_source": null,
+    "quote_expires_at": null,
+    "quoted_trading_fee": null,
+    "quoted_network_fee": null,
+    "route": []
+  },
+  "methodology": "Compiled from the selected run's recorded indicators, rule signals, news metadata, optional model output and execution gates. Sources are context, not claim verification. Rule agreement is not a probability of profit. No current feed is substituted into history.",
+  "receipt": {
+    "algorithm": "SHA-256",
+    "digest": "99c3a00a83b616ac33c2a1bd18d43fe61171d0c0e2047789ec0ea2c24894890e",
+    "canonical_payload": "{\"agreement\":{\"BUY\":0,\"HOLD\":5,\"REJECTED\":0,\"SELL\":0},\"citations\":[{\"fixture\":false,\"id\":\"9a5680a67c9a8a5829bc\",\"published_at\":\"2026-11-03T13:39:35Z\",\"publisher\":\"TradingView Crypto Ideas\",\"relevant\":true,\"retrieved_at\":\"2026-11-03T13:40:55.635665Z\",\"stale\":false,\"title\":\"Bitcoin still below $79,146: reclaim it or lose $73,878?\",\"url\":\"https://www.tradingview.com/chart/BTCUSD/bMrl39un-Bitcoin-still-below-79-146-reclaim-it-or-lose-73-878\"},{\"fixture\":false,\"id\":\"3d21241828a24bdf3a0e\",\"published_at\":\"2026-11-03T13:38:30.437000Z\",\"publisher\":\"Etherscan\",\"relevant\":false,\"retrieved_at\":\"2026-11-03T13:40:55.635665Z\",\"stale\":false,\"title\":\"⛽ ETH Gas: 🐢 0.409458213 | 🚶 0.409487698 | 🚀 0.493481108 Gwei\",\"url\":\"https://etherscan.io/gastracker\"},{\"fixture\":false,\"id\":\"797e5d3efbee350280bc\",\"published_at\":\"2026-11-03T13:37:00Z\",\"publisher\":\"ZeroHedge\",\"relevant\":false,\"retrieved_at\":\"2026-11-03T13:40:55.635665Z\",\"stale\":false,\"title\":\"US-Iran Reportedly Agree To Concessions On Nuclear File, Oil Plunges\",\"url\":\"https://www.zerohedge.com/energy/irgc-claims-3-more-tankers-blown-naval-mines-hormuz\"}],\"decision\":\"HOLD\",\"execution\":{\"intent_id\":null,\"quote_expires_at\":null,\"quote_source\":null,\"quoted_network_fee\":null,\"quoted_trading_fee\":null,\"receipt_id\":null,\"route\":[],\"transaction_hash\":null},\"execution_status\":\"NO_ORDER\",\"findings\":[{\"domain\":\"Market & technicals\",\"metrics\":{\"annualization\":\"Hourly returns; sqrt(365*24). Descriptive estimate, not forecast.\",\"as_of\":\"2026-11-03T13:00:00+00:00\",\"atr\":387.2535758638759,\"bb_lower\":76386.45526608075,\"bb_mid\":76810.52050000001,\"bb_upper\":77234.58573391927,\"ema_fast\":76904.4259666489,\"ema_slow\":77045.27625444943,\"macd\":-140.85028780053835,\"macd_signal\":-231.58510746627707,\"price\":77299.05,\"realized_vol_annualized\":0.28841774846152274,\"regime\":\"mixed\",\"regime_risk_multiplier\":0.75,\"resistance\":77467.18,\"rsi\":55.286086090539726,\"sma50\":77473.54,\"source\":\"coinbase_exchange\",\"support\":76238.54,\"trend\":\"down\",\"trend_distance\":0.0022522528336770264,\"volatility\":\"normal\",\"volume_ratio\":0.843761160357964},\"status\":\"AVAILABLE\",\"summary\":\"300 closed candles from coinbase_exchange.\"},{\"domain\":\"News context\",\"metrics\":{\"method\":\"Validated publisher excerpts; configurable lexicon sentiment, not model truth.\",\"retrieved_at\":\"2026-11-03T13:40:55.635665+00:00\",\"source\":\"cryptocurrency.cv\"},\"status\":\"AVAILABLE\",\"summary\":\"3 recorded excerpts; 1 tagged for BTC.\"},{\"domain\":\"Model debate\",\"metrics\":{},\"status\":\"SKIPPED\",\"summary\":\"LLM research is not configured. Deterministic analysis remains available; social, macro and fundamentals are unavailable.\"}],\"gaps\":[\"Social evidence unavailable in this run.\",\"Macro evidence unavailable in this run.\",\"Fundamentals evidence unavailable in this run.\",\"The news provider limits this response to its current free-tier allowance. Configure an authorized server-side NEWS_API_KEY if your plan supports more results. No automatic payment or scraping.\",\"Optional model debate did not complete; no model opinion is inferred.\"],\"headline\":\"BTC · HOLD · no order\",\"methodology\":\"Compiled from the selected run's recorded indicators, rule signals, news metadata, optional model output and execution gates. Sources are context, not claim verification. Rule agreement is not a probability of profit. No current feed is substituted into history.\",\"mode\":\"SIMULATION\",\"rationale\":\"No enabled deterministic consensus, conflicting evidence, or advisory disagreement. No order proposed.\",\"recorded_at\":\"2026-11-03T13:40:56.055380+00:00\",\"risk_flags\":[\"DISABLED\"],\"risk_plan\":{\"approved_notional\":null,\"checks\":[],\"estimated_loss_at_stop\":null,\"exit_policy\":null,\"expected_costs\":null,\"note\":\"Stop loss is an estimate before fees and price gaps, not a guaranteed maximum loss.\",\"reasons\":[],\"reference_price\":null,\"requested_notional\":null,\"stop_price\":null,\"verdict\":\"NOT_EVALUATED\"},\"run_id\":\"a4d39a43-70a3-4943-b2c0-a3e98b355fc3\",\"run_status\":\"COMPLETED\",\"schema_version\":1,\"symbol\":\"BTC\"}",
+    "scope": "Local report integrity only; no public-chain or model-truth attestation."
+  }
+}

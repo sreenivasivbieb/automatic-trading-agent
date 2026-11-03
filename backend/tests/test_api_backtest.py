@@ -22,6 +22,22 @@ async def client(tmp_path):
 HEADERS = {"Authorization": "Bearer fixture-api-token"}
 
 
+async def test_research_brief_api_uses_the_requested_persisted_run(client):
+    run = (
+        await client.post("/api/runs", headers=HEADERS, json={"symbol": "ETH", "notional": "75"})
+    ).json()
+    endpoint = f"/api/runs/{run['id']}/brief"
+    assert (await client.get(endpoint)).status_code == 401
+    response = await client.get(endpoint, headers=HEADERS)
+    assert response.status_code == 200, response.text
+    brief = response.json()
+    assert brief["run_id"] == run["id"] and brief["symbol"] == "ETH"
+    assert brief["mode"] == "SIMULATION" and brief["citations"][0]["fixture"]
+    assert brief["execution"]["transaction_hash"] is None
+    assert (await client.get("/api/runs/unknown/brief", headers=HEADERS)).status_code == 409
+    assert (await client.get("/api/history/ledger", headers=HEADERS)).json()["total"] == 0
+
+
 async def test_workspace_read_contracts_and_versioned_refresh_settings(client):
     for path in [
         "/api/status",

@@ -1,0 +1,55 @@
+{
+  "status": "PASS",
+  "checked_at": "2026-11-03T13:40:54.163Z",
+  "scope": "Actual Coinbase/news research and mainnet HSKSwap read-only route inspection in isolated local UI",
+  "models_invoked": false,
+  "transactions_sent": 0,
+  "widths": [
+    {
+      "width": 1280,
+      "no_overflow": true
+    },
+    {
+      "width": 768,
+      "no_overflow": true
+    },
+    {
+      "width": 390,
+      "no_overflow": true
+    },
+    {
+      "width": 320,
+      "no_overflow": true
+    }
+  ],
+  "research": {
+    "run_id": "a4d39a43-70a3-4943-b2c0-a3e98b355fc3",
+    "decision": "HOLD",
+    "source": "coinbase_exchange",
+    "citations": 3,
+    "receipt": "99c3a00a83b616ac33c2a1bd18d43fe61171d0c0e2047789ec0ea2c24894890e",
+    "gaps": [
+      "Social evidence unavailable in this run.",
+      "Macro evidence unavailable in this run.",
+      "Fundamentals evidence unavailable in this run.",
+      "The news provider limits this response to its current free-tier allowance. Configure an authorized server-side NEWS_API_KEY if your plan supports more results. No automatic payment or scraping.",
+      "Optional model debate did not complete; no model opinion is inferred."
+    ]
+  },
+  "market": {
+    "asset": "WHSK",
+    "block": 29683067,
+    "block_hash": "0x8a7e9830d9cf9c70d8474200cef9fd481ef32afb768cf459267cb16fe9656533",
+    "budget_usdt": "5",
+    "route": [
+      "USDT",
+      "WHSK"
+    ],
+    "amount_out_raw": "56958785780932993557",
+    "lp_fee_bps": "30.000",
+    "price_impact_bps": "0.114175739484556227697888780177637159505115621465307993539108524942041678234087",
+    "quote_risk": "PASS",
+    "expires_at": 1793713307
+  },
+  "console_errors": []
+}

@@ -47,7 +47,14 @@ export function StatusBadge({ value }: { value: string }) {
     "AVAILABLE",
   ].includes(value)
     ? "positive"
-    : ["REJECTED", "FAILED", "EMERGENCY_STOP", "REVERTED"].includes(value)
+    : [
+          "REJECTED",
+          "FAILED",
+          "EMERGENCY_STOP",
+          "REVERTED",
+          "UNAVAILABLE",
+          "OFFLINE",
+        ].includes(value)
       ? "negative"
       : [
             "RUNNING",
@@ -148,8 +155,14 @@ export function Modal({
 }) {
   const ref = useRef<HTMLDialogElement>(null);
   useEffect(() => {
-    ref.current?.showModal();
-    return () => ref.current?.close();
+    const dialog = ref.current;
+    const trigger = document.activeElement;
+    dialog?.showModal();
+    return () => {
+      dialog?.close();
+      if (trigger instanceof HTMLElement && trigger.isConnected)
+        trigger.focus({ preventScroll: true });
+    };
   }, []);
   return (
     <dialog

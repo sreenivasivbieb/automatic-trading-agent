@@ -320,7 +320,9 @@ export function AegisDesk({
             {Object.entries(state.markets).map(([asset, m]) => (
               <div className="panel aegis-metric" key={asset}>
                 <span className="eyebrow">{asset} / USDT</span>
-                <strong>{number(m.price, 8)}</strong>
+                <strong title={`Pool mark: ${m.price} USDT`}>
+                  {number(m.price, Number(m.price) < 1 ? 8 : 2)}
+                </strong>
                 {state.explorer ? (
                   <a
                     href={`${state.explorer}/address/${m.pool}`}

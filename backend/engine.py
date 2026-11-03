@@ -178,6 +178,26 @@ class Engine:
                 "retrieved_at": feed.retrieved_at,
                 "article_count": len(feed.articles),
                 "evidence": [a.id for a in feed.articles],
+                "articles": [
+                    a.model_dump(
+                        mode="json",
+                        include={
+                            "id",
+                            "title",
+                            "publisher",
+                            "url",
+                            "published_at",
+                            "retrieved_at",
+                            "assets",
+                            "fixture",
+                            "stale",
+                        },
+                    )
+                    for a in feed.articles[:50]
+                ],
+                "limited": feed.limited,
+                "limitation": feed.limitation,
+                "citations_truncated": len(feed.articles) > 50,
                 "method": "Validated publisher excerpts; configurable lexicon sentiment, not model truth.",
                 "error": feed.error,
             }

@@ -1,0 +1,122 @@
+{
+  "checked_at": "2026-11-03T13:47:23.045881+00:00",
+  "status": "PASS",
+  "base_revision": "4987d73b23af632ac8dac62c9350ad04499fb6df",
+  "source_snapshot_sha256": "a95cc93f628525e0895cdab2998d6c3a6e0763e3c78caf827afcf4d8aefba36c",
+  "source_fingerprint_method": "SHA-256 of compact sorted JSON mapping changed/unignored source paths to their SHA-256; documentation and evidence excluded",
+  "source_files": {
+    "agent/aegis/market_details.py": "7cd2637cfcf5d1e48016c861fd422185a41e4e4ef69d80dd79907e2740650537",
+    "agent/aegis/runtime.py": "8dfb97789ba3427d41cea390302096e9a0d5b6118447fb6e51b2f8c01fc86fd5",
+    "agent/tests/test_market_details.py": "55d0f0b6af35fefeae3e454cc655bcb398436ef80e74de36dbdfec5eba1f11b8",
+    "backend/api.py": "9d54a21f8e4108e6a77dc7b8e9cd9d60d89e2d2fd85bca9b4460c475ec0f555b",
+    "backend/engine.py": "7eacf8555a42b74f2f5e796eb4e2b4b9207e0430db898b78b2a555e1311a28a3",
+    "backend/research_brief.py": "675c8d9dec1295ea0dec3adcac7942b21619114a7c4b92fab34512b6295eebaf",
+    "backend/tests/test_aegis_api.py": "dbe3f364585a275e017a811ebfc29c3fd81f3811e007aa854df66f888c108688",
+    "backend/tests/test_api_backtest.py": "646ce7a15816c20fc52f20c13124decb208d27b1539ba8797dbedfe88d2c3573",
+    "backend/tests/test_research_brief.py": "198ba1ceef0474ae68697fb6c8a76facab23483404d344af7e485a246dcab52f",
+    "e2e/layout-news.spec.ts": "7f8d7fcb7350c8307b9d1de05fb74eb3d3de21d6f3486e365ec4bec2df36ee1a",
+    "e2e/research-details.spec.ts": "f4b2d759cee78169020d0c98bc80a5adca4475505b10199a7a365f1b9c13e504",
+    "frontend/src/AegisDesk.tsx": "eeb3764b407a86edcc7f4c828fa76fddd5b38ee877a00fc9535344d8b711f76e",
+    "frontend/src/ResearchBrief.tsx": "4228c47a5d80d88e95e3467b1a945e445af606cca2d1b1c0068ad70a0464b491",
+    "frontend/src/aegis.css": "60fb0691deff70c44df4a117c952b1a48ee900003ffce0d812ad6373b47456f9",
+    "frontend/src/aegis/LiveControls.tsx": "eaf962a8bb838e67a0ec513408d276a31df9d57e6aabc7840caddb7e6abafd00",
+    "frontend/src/aegis/MarketAnalysis.tsx": "e4868909d19a4df0b94920cd5752a59d6b2bb8905eecddb9235584980e1d4fb2",
+    "frontend/src/aegis/MarketRouteDetails.tsx": "1b35a92928e7b3d9cfb3ad824a46e4338efbc0f0ae86b0a5354a90822aba7ba5",
+    "frontend/src/theme.css": "17014244de135976bf5063152e18646980b4b932e964e8922b2cab47d738376f",
+    "frontend/src/ui.tsx": "028a360347997130eac14da4eda7e7dcbbcf417ceeaa8233bc52cc4e874e24ae",
+    "frontend/src/workspaces.tsx": "50d2302b322af4a557e07390fb35da8b35f263c7d46742477c67b307058624da"
+  },
+  "reference": {
+    "url": "https://github.com/ansu555/omega-ai-app",
+    "revision": "88f843657cdfa73366263b8cd0ae394931e9930f",
+    "scope": "Independently implemented research brief, evidence citations, risk/receipt detail and executable-route presentation patterns"
+  },
+  "regressions": {
+    "python": {
+      "passed": 405,
+      "subtests_passed": 10,
+      "skipped": 1,
+      "warnings": 2,
+      "scope": "Backend, agent and three retained legacy suites; live connector test remains opt-in"
+    },
+    "browser": {
+      "passed": 38,
+      "scope": "Isolated labeled fixture API: existing research/AEGIS/platform flows, news failures/retry, report tampering/run-switch race, route expiry, mobile layout"
+    },
+    "solidity": {
+      "passed": 57,
+      "skipped": 1,
+      "scope": "Local Guard/Oracle/DecisionLog suites; live fork test remains opt-in"
+    },
+    "ruff_check": "PASS",
+    "ruff_format": "PASS",
+    "typescript_and_vite_build": "PASS",
+    "source_reference": "PASS",
+    "restart_smoke": {
+      "verified_at": "2026-11-03T13:42:14.644590+00:00",
+      "status": "PASSED",
+      "mode": "SIMULATION",
+      "frontend_served": true,
+      "frontend_index_sha256": "c61f406cd8f8aaf5d21af37ec9b72793f12c0de1d1023c29b18d316ecdd759c4",
+      "simulated_fills_before_restart": 1,
+      "simulated_fills_after_restart": 1,
+      "cash_persisted": true,
+      "equity_persisted": true,
+      "scheduler_after_restart": "PAUSED",
+      "live_enabled": false,
+      "blockchain_submission_attempted": false
+    },
+    "publication_scan": {
+      "files_checked": 574,
+      "issues": [],
+      "scope": "Git-tracked and unignored candidate files; bounded credential patterns and runtime-path policy. Not a complete security audit."
+    },
+    "personal_path_scan": {
+      "status": "PASS",
+      "files_checked": 28,
+      "issues": [],
+      "scope": "Changed/unignored publication candidates; personal home and temporary absolute paths; secret patterns checked by public_audit separately"
+    }
+  },
+  "layout": {
+    "states_checked": 56,
+    "widths": [
+      1512,
+      1280,
+      1024,
+      768,
+      390,
+      320
+    ],
+    "geometry_issues": 0,
+    "browser_errors": [],
+    "scope": "Nine core research/AEGIS routes at six widths plus chat at two widths; report/route expanded details separately checked at 1280/768/390/320"
+  },
+  "live_read_only": {
+    "research_and_route_ui": "frontend-live-ui-verification.json",
+    "news_ui": "news-live-ui-verification.json",
+    "exact_research_snapshot": "research-brief-live.json",
+    "mainnet_quotes": "hskswap-route-inspection-177.json",
+    "models_invoked": false,
+    "transactions_sent": 0,
+    "inspection_ledger_mutations": 0
+  },
+  "preserved": [
+    "Research home and coin artwork",
+    "Existing strategy library and entry controls",
+    "Adaptive sizing and versioned settings",
+    "Natural-language and Telegram adapters",
+    "Guard/Oracle/DecisionLog and signing boundary",
+    "Optional AWS workspace"
+  ],
+  "limits": [
+    "Report SHA-256 proves local snapshot consistency only; it is not an on-chain attestation or claim verification.",
+    "Quotes and provider allowances are observations at the recorded time, not future availability guarantees.",
+    "No credential-backed model call, Telegram delivery, new public transaction or profitability evaluation was performed.",
+    "Historical public testnet receipts are retained; they were not re-queried by this validation."
+  ],
+  "screenshots": [
+    "screenshots/research-brief-desktop.png",
+    "screenshots/hskswap-route-details-desktop.png"
+  ]
+}
